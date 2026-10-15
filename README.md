@@ -76,6 +76,9 @@ helps a browser that still shows it.
 2. Search for "HRV" and pick **HRV Airflow Diagram**, **HRV Recovery Balance** or **HRV Moisture Balance**. The
    picker shows a rendered preview of each card. A new card starts with an empty config and shows sample
    values until you pick a sensor (see [Sample values](#sample-values)).
+
+   ![The Add card picker listing the three cards, each with a sample preview](docs/images/card-picker.png)
+
 3. Open each group (outdoor air, supply air, extract air, fans, bypass, ...) and pick your unit's sensors.
    The preview updates as you go.
 4. Turn on **Advanced settings** for the less common options, marked "Advanced" in [Options](#options): for
@@ -84,7 +87,7 @@ helps a browser that still shows it.
    advanced option set.
 5. Save. **Show code editor** shows the same config as YAML; see [Options](#options) and [Examples](#examples).
 
-![The visual editor of the recovery balance card, with its groups collapsed and the live preview](docs/images/editor.png)
+![The visual editor of the airflow diagram card, with the exchanger type first, its groups collapsed and the live sample preview](docs/images/editor.png)
 
 ### Sample values
 
@@ -560,7 +563,7 @@ npm run capture                  # README images of the three cards from the pre
 with Playwright and writes the diagram in light and dark theme, the compact layout and on an ERV, the recovery bar,
 the moisture bar and the animated GIF of the bypass opening and closing (encoded in Node with `gifenc`, at most
 3 MB). The mock states keep installation identifiers out of view. Two images are taken by hand from a live
-dashboard: `editor.png` (the visual editor) and the card picker screenshot; check them for entity IDs with a device
+dashboard: `editor.png` (the diagram card's visual editor, opened from the card picker so no sensor is chosen) and `card-picker.png`; check them for entity IDs with a device
 serial and for host names before committing.
 
 Only `npm run release` writes `dist/`; `npm run build` writes `build/`, so a work-in-progress bundle cannot end up

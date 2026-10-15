@@ -96,14 +96,12 @@
 
 ## 6. Release and live migration
 
-- [ ] 6.1 Retake the README images with `npm run capture`, including an ERV image of the diagram card and the
+- [x] 6.1 Retake the README images with `npm run capture`, including an ERV image of the diagram card and the
   recovery bar without the water entry, taken in heating mode (the most used) instead of the free cooling scenario,
   and add a card picker screenshot taken by hand on the live installation; verify every image the README links
   exists and shows the v0.2 behaviour
-  - Progress: `scripts/capture.mjs` takes the diagram (HRV light, dark, compact, GIF, ERV) and both bar images from
-    the preview page (92fb481). The recovery bar is now captured in heating mode (the "heating (winter)" scenario).
-    Still to do: retake `editor.png` and the card picker screenshot on the live installation after
-    6.3 deploys the v0.2 bundle.
+  - Done: `scripts/capture.mjs` takes the diagram (HRV light, dark, compact, GIF, ERV) and both bar images from
+    the preview page; `editor.png` and `card-picker.png` were taken by hand on the live installation (v0.2.0).
 - [x] 6.2 Set the version to `0.2.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
 - [x] 6.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
