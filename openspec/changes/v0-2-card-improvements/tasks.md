@@ -66,7 +66,7 @@
   IDs; verify a unit test that runs the calculation on the sample (heating mode, a saving above the badge
   threshold, positive extracted and recovered moisture) and that `npm run check:ids` passes with the sample in
   the bundle
-- [ ] 4.2 Implement sample mode in `HrvCard.setConfig` and the render path of the three cards: the option check
+- [x] 4.2 Implement sample mode in `HrvCard.setConfig` and the render path of the three cards: the option check
   only, sample config with smoothing off, merged states, no tap targets and the "Sample values" note; verify card
   tests for each card with `{}` (renders, note shown, no history request, a tap opens nothing), with only
   `exchanger_type: erv` (ERV sample), with an invalid option (configuration error) and with one entity set (the
