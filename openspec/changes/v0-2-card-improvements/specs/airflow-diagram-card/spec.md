@@ -54,20 +54,26 @@ open.
 - **WHEN** the config sets `status.heating_saving`, `status.cooling_saving` and `status.moisture_recovery`
 - **THEN** the card renders as before, with the same calculated badge and moisture figure
 
-### Requirement: Badge and moisture figure open their entity
-Tapping the saving badge SHALL open the more-info dialog of the saving entity for the calculation's current mode:
-`status.heating_saving` while the calculation is in heating mode, `status.cooling_saving` while it is in cooling mode.
-Tapping the ERV moisture figure SHALL open the `status.moisture_recovery` entity. While the role it would open is not
-configured, or the badge shows no calculated saving, a figure SHALL NOT be tappable or focusable and SHALL NOT open
-any dialog.
+### Requirement: Badge opens a saving entity
+Tapping the saving badge SHALL open the more-info dialog of the configured saving entity that reads the higher power,
+compared in the same unit. With one saving role, a state that is not a number, or equal readings, it SHALL open the
+role of the calculation's mode instead (`status.heating_saving` in heating, `status.cooling_saving` in cooling). While
+that role is not configured, or the badge shows no calculated saving, the badge SHALL NOT be tappable or focusable.
 
-#### Scenario: Heating saving opened while heating
-- **WHEN** both saving roles are configured, the calculation is in heating mode and the user taps the badge
-- **THEN** the more-info dialog of the heating saving entity opens
+#### Scenario: Higher saving opened
+- **WHEN** both saving roles are configured, the heating saving reads 1.2 kW, the cooling saving 0 kW, and the user
+  taps the badge
+- **THEN** the more-info dialog of the heating saving entity opens, also while the calculation is already in cooling
+  mode
 
 #### Scenario: Cooling saving opened while cooling
-- **WHEN** both saving roles are configured, the calculation is in cooling mode and the user taps the badge
+- **WHEN** both saving roles are configured, the cooling saving reads more than the heating saving and the user taps
+  the badge
 - **THEN** the more-info dialog of the cooling saving entity opens
+
+#### Scenario: Saving state not a number
+- **WHEN** both saving roles are configured, the heating saving is unavailable and the calculation is in cooling mode
+- **THEN** a tap on the badge opens the cooling saving entity
 
 #### Scenario: Mode without its saving entity
 - **WHEN** only `status.heating_saving` is configured and the calculation is in cooling mode
@@ -76,6 +82,18 @@ any dialog.
 #### Scenario: No saving entity
 - **WHEN** neither saving role is configured and the user taps the badge
 - **THEN** no more-info dialog opens, also not the supply air temperature's
+
+### Requirement: Moisture figure opens its entity
+Tapping the ERV moisture figure SHALL open the more-info dialog of the `status.moisture_recovery` entity. Without that
+role configured, the figure SHALL NOT be tappable or focusable and SHALL NOT open any dialog.
+
+#### Scenario: Moisture recovery entity configured
+- **WHEN** `status.moisture_recovery` is configured and the user taps the moisture figure
+- **THEN** the more-info dialog of the moisture recovery entity opens
+
+#### Scenario: No moisture recovery entity
+- **WHEN** `status.moisture_recovery` is not configured
+- **THEN** the moisture figure has no `tabindex` and a tap opens no dialog
 
 ## MODIFIED Requirements
 

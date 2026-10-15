@@ -104,13 +104,18 @@ y 152 of 200), under the crossing streams. It is shown in both layouts. A figure
 `status.heating_saving`, `status.cooling_saving` and `status.moisture_recovery` join `RolePath`, `ROLE_LABELS` and
 the editor's status section as advanced sensor pickers ("Saved heating power", "Saved cooling power", "Moisture
 recovery rate"). They are not in `STATUS_ROLES` or `TOP_ROLES`, so they never get a label or a grid cell. The badge
-opens the saving role of the calculation's `mode` (`heating` or `cooling`, the same field that makes the badge warm
-or cold), and the figure opens the moisture recovery role. Each sets `data-entity`, `role="button"` and `tabindex`
+opens the saving entity that reads the higher power (both converted to W). With one role, a non-numeric state or a
+tie, it opens the role of the calculation's `mode` (`heating` or `cooling`, the same field that makes the badge warm
+or cold). The figure opens the moisture recovery role. Each sets `data-entity`, `role="button"` and `tabindex`
 only while the role it would open is configured; a badge without a calculated saving (hidden or "n/a") opens nothing.
 
 - *Why two saving roles and not one?* Installations (this one included) keep the heating and the cooling saving as
   separate sensors, because their energy totals are separate. One role would open the wrong one half the year. The
-  user chose (2026-10-15) two roles picked by the calculation's mode over a combined helper. `status.saving` from the
+  user chose (2026-10-15) two roles over a combined helper.
+- *Why the higher reading and not only the calculation's mode?* The saving sensors decide heating or cooling on
+  their own inputs (in this installation unsmoothed, in the template macro), while the card's mode follows its
+  smoothed inputs. Near the switch point they disagree for minutes, and a tap on the badge would open a sensor
+  reading 0. The review of group 5 found this; the user chose (2026-10-15) the entity with the higher power. `status.saving` from the
   first implementation is replaced before any release, so no config carries it.
 
 - *Why not fall back to power or supply temperature?* Neither is the figure the user tapped. A tap that opens
