@@ -36,10 +36,12 @@ function hassWith(bypass: string): CardHass {
   };
 }
 
-async function render(config: CardConfig, bypass: string) {
+/** Renders the card with the bypass position's state and any extra states. */
+async function render(config: CardConfig, bypass: string, extra: readonly HassEntityState[] = []) {
   const card = document.createElement('hrv-ventilation-card');
   card.setConfig(config);
-  card.hass = hassWith(bypass);
+  const base = hassWith(bypass);
+  card.hass = { ...base, states: { ...base.states, ...Object.fromEntries(extra.map((s) => [s.entity_id, s])) } };
   document.body.append(card);
   await card.updateComplete;
   const root = card.shadowRoot;
@@ -50,6 +52,11 @@ async function render(config: CardConfig, bypass: string) {
 afterEach(() => {
   document.body.innerHTML = '';
 });
+
+/** A keydown as the browser sends it, bubbling out of the shadow root. */
+const keydown = (element: Element, key: string, init: KeyboardEventInit = {}): void => {
+  element.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, composed: true, ...init }));
+};
 
 const opacity = (root: ShadowRoot, selector: string): string | null | undefined =>
   root.querySelector(selector)?.getAttribute('opacity');
@@ -133,14 +140,10 @@ describe('the drawing', () => {
     expect(root.querySelector('svg .exchanger')?.getAttribute('class')).toBe('exchanger hrv');
   });
 
-  test('airflow-diagram-card "ERV": exchanger_type erv gives the ERV exchanger, with its own fill', async () => {
+  test('airflow-diagram-card "ERV": exchanger_type erv gives the ERV exchanger', async () => {
     const { root } = await render({ ...CONFIG, exchanger_type: 'erv' }, '0');
+    // The fill itself, and its contrast in both themes, is checked in the browser test.
     expect(root.querySelector('svg .exchanger')?.getAttribute('class')).toBe('exchanger erv');
-    const css = [HrvVentilationCard.styles]
-      .flat()
-      .map((style) => ('cssText' in style ? style.cssText : ''))
-      .join('');
-    expect(css).toMatch(/\.exchanger\.erv\s*\{\s*fill: color-mix\(in srgb, var\(--secondary-background-color\)/);
   });
 
   test('a bypass position such as 7 % gives rounded opacities', async () => {
@@ -175,8 +178,7 @@ describe('the labels', () => {
     const { card, root } = await render(CONFIG, '50');
     const opened = moreInfo(card);
     const label = labelWith(root, '50 %');
-    for (const key of ['Enter', ' ', 'a'])
-      label.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, composed: true }));
+    for (const key of ['Enter', ' ', 'a']) keydown(label, key);
     expect(opened).toEqual(['sensor.hrv_bypass', 'sensor.hrv_bypass']);
   });
 
@@ -184,8 +186,8 @@ describe('the labels', () => {
     const { card, root } = await render(CONFIG, '50');
     const opened = moreInfo(card);
     const label = labelWith(root, '50 %');
-    label.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', repeat: true, bubbles: true, composed: true }));
-    label.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, composed: true }));
+    keydown(label, 'Enter', { repeat: true });
+    keydown(label, 'Enter', { ctrlKey: true });
     expect(opened).toEqual([]);
   });
 
@@ -218,10 +220,7 @@ describe('the labels', () => {
     const ROLES = { saving: 'sensor.hrv_saving', moisture_recovery: 'sensor.hrv_moisture' };
 
     async function renderCalculation(config: CardConfig) {
-      const card = document.createElement('hrv-ventilation-card');
-      card.setConfig(config);
-      const base = hassWith('0');
-      const extra = [
+      const { card, root } = await render(config, '0', [
         state('sensor.hrv_ah_out', '4', 'g/m³'),
         state('sensor.hrv_ah_sup', '6', 'g/m³'),
         state('sensor.hrv_ah_ext', '8', 'g/m³'),
@@ -230,12 +229,7 @@ describe('the labels', () => {
         state('binary_sensor.hrv_cooling', 'off'),
         state(ROLES.saving, '400', 'W'),
         state(ROLES.moisture_recovery, '400', 'g/h'),
-      ];
-      card.hass = { ...base, states: { ...base.states, ...Object.fromEntries(extra.map((s) => [s.entity_id, s])) } };
-      document.body.append(card);
-      await card.updateComplete;
-      const root = card.shadowRoot;
-      if (!root) throw new Error('no shadow root');
+      ]);
       const find = (selector: string): HTMLElement => {
         const found = root.querySelector<HTMLElement>(selector);
         if (!found) throw new Error(`no ${selector}`);
@@ -246,7 +240,7 @@ describe('the labels', () => {
 
     const press = (element: HTMLElement): void => {
       element.click();
-      element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
+      keydown(element, 'Enter');
     };
 
     test('airflow-diagram-card "Tapping between seasons" opens the heating season sensor', async () => {
@@ -312,7 +306,9 @@ describe('the labels', () => {
       expect(root.querySelectorAll('.top .label')).toHaveLength(0);
       expect(root.querySelector('.status')).toBeNull();
       expect(
-        root.querySelectorAll('.label[data-entity^="sensor.hrv_saving"], .label[data-entity^="sensor.hrv_moisture"]'),
+        root.querySelectorAll(
+          '.label:not(.figure)[data-entity="sensor.hrv_saving"], .label:not(.figure)[data-entity="sensor.hrv_moisture"]',
+        ),
       ).toHaveLength(0);
     });
   });
@@ -335,15 +331,8 @@ describe('the animated flow', () => {
   };
 
   async function renderFlows(config: CardConfig, supply: string, exhaust: string) {
-    const card = document.createElement('hrv-ventilation-card');
-    card.setConfig(config);
-    const base = hassWith('50');
     const flows = [state('sensor.hrv_supply_flow', supply, 'm³/h'), state('sensor.hrv_exhaust_flow', exhaust, 'm³/h')];
-    card.hass = { ...base, states: { ...base.states, ...Object.fromEntries(flows.map((s) => [s.entity_id, s])) } };
-    document.body.append(card);
-    await card.updateComplete;
-    const root = card.shadowRoot;
-    if (!root) throw new Error('no shadow root');
+    const { card, root } = await render(config, '50', flows);
     const style = root.querySelector('svg')?.getAttribute('style') ?? '';
     return { card, root, style };
   }

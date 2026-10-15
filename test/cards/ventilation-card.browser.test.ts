@@ -63,12 +63,10 @@ async function show(
 
 /** The boxes of everything shown as text or icon, and of the arrowheads, which labels must not cover either. */
 function shownBoxes(root: ShadowRoot): { name: string; box: DOMRect }[] {
-  return [...root.querySelectorAll('.label:not(.hidden), .badge, .figure, ha-icon.season, svg .head')].map(
-    (element) => ({
-      name: element.textContent.trim() || element.tagName,
-      box: element.getBoundingClientRect(),
-    }),
-  );
+  return [...root.querySelectorAll('.label:not(.hidden), .badge, ha-icon.season, svg .head')].map((element) => ({
+    name: element.textContent.trim() || element.tagName,
+    box: element.getBoundingClientRect(),
+  }));
 }
 
 const middle = (rect: DOMRect): number => rect.top + rect.height / 2;
@@ -95,8 +93,8 @@ describe('airflow diagram layout', () => {
   for (const [theme, type] of [
     ['light', 'hrv'],
     ['dark', 'hrv'],
+    // The moisture figure's place does not depend on the theme.
     ['light', 'erv'],
-    ['dark', 'erv'],
   ] as const) {
     for (const width of [280, 320, COMPACT_BELOW, 360, 400, 600]) {
       test(`${theme}, ${type}, ${String(width)} px: no labels overlap or leave the card, text at least 11 px`, async () => {
@@ -116,7 +114,7 @@ describe('airflow diagram layout', () => {
           boxes.slice(i + 1).flatMap((b) => (overlap(a.box, b.box) ? [`${a.name} / ${b.name}`] : [])),
         );
         expect(overlapping).toEqual([]);
-        for (const label of root.querySelectorAll('.label, .badge, .figure')) {
+        for (const label of root.querySelectorAll('.label, .badge')) {
           expect(parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(11);
         }
       });

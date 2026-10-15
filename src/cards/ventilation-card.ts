@@ -234,23 +234,20 @@ export class HrvVentilationCard extends HrvCard {
      * A label: its icon centred vertically on its value. A flex box applies no text-overflow to its children, so the
      * value carries the ellipsis of a value too long for its cell.
      */
-    .label,
-    .figure {
+    .label {
       display: inline-flex;
       align-items: center;
       gap: 3px;
       max-width: 100%;
       white-space: nowrap;
     }
-    .label .value,
-    .figure .value {
+    .label .value {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     /* A label's icon: a box as high as its text. Home Assistant's icon sizes its own svg from --mdc-icon-size. */
-    .label ha-icon,
-    .figure ha-icon {
+    .label ha-icon {
       --mdc-icon-size: 1.15em;
       display: flex;
       flex: none;
@@ -482,7 +479,8 @@ export class HrvVentilationCard extends HrvCard {
   }
 
   /**
-   * The ERV's moisture recovery figure: an icon with the magnitude, like a label, with the direction in its tooltip.
+   * The ERV's moisture recovery figure: an icon with the magnitude, styled as a label, with the direction in its
+   * tooltip.
    * Tapping it opens the moisture recovery entity (status.moisture_recovery); without one it is not tappable.
    */
   private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
@@ -490,7 +488,7 @@ export class HrvVentilationCard extends HrvCard {
     const entity = this.settings?.moistureRecovery;
     return html`<div class="on-drawing moisture-recovery">
       <span
-        class="figure"
+        class="label figure"
         title=${figure.title}
         aria-label=${figure.title}
         role=${ifDefined(entity && 'button')}
