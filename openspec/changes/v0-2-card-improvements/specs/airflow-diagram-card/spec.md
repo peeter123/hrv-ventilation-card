@@ -45,25 +45,36 @@ as moisture kept out, and the tooltip SHALL name the direction with the magnitud
 - **THEN** no moisture recovery figure is shown
 
 ### Requirement: Saving and moisture recovery entities
-The card SHALL take two more optional roles from its config: a saved power entity (`status.saving`) and a moisture
-recovery entity (`status.moisture_recovery`). They do not change any figure. They only set what the badge and the
-moisture figure open.
+The card SHALL take three more optional roles from its config: a saved heating power entity
+(`status.heating_saving`), a saved cooling power entity (`status.cooling_saving`) and a moisture recovery entity
+(`status.moisture_recovery`). They do not change any figure. They only set what the badge and the moisture figure
+open.
 
 #### Scenario: Roles configured
-- **WHEN** the config sets `status.saving` and `status.moisture_recovery`
+- **WHEN** the config sets `status.heating_saving`, `status.cooling_saving` and `status.moisture_recovery`
 - **THEN** the card renders as before, with the same calculated badge and moisture figure
 
 ### Requirement: Badge and moisture figure open their entity
-Tapping the saving badge SHALL open the more-info dialog of the `status.saving` entity, and tapping the ERV moisture
-figure that of the `status.moisture_recovery` entity. Without its role configured, a figure SHALL NOT be tappable or
-focusable and SHALL NOT open any dialog.
+Tapping the saving badge SHALL open the more-info dialog of the saving entity for the calculation's current mode:
+`status.heating_saving` while the calculation is in heating mode, `status.cooling_saving` while it is in cooling mode.
+Tapping the ERV moisture figure SHALL open the `status.moisture_recovery` entity. While the role it would open is not
+configured, or the badge shows no calculated saving, a figure SHALL NOT be tappable or focusable and SHALL NOT open
+any dialog.
 
-#### Scenario: Saving entity configured
-- **WHEN** `status.saving` is configured and the user taps the badge
-- **THEN** the more-info dialog of the saving entity opens
+#### Scenario: Heating saving opened while heating
+- **WHEN** both saving roles are configured, the calculation is in heating mode and the user taps the badge
+- **THEN** the more-info dialog of the heating saving entity opens
+
+#### Scenario: Cooling saving opened while cooling
+- **WHEN** both saving roles are configured, the calculation is in cooling mode and the user taps the badge
+- **THEN** the more-info dialog of the cooling saving entity opens
+
+#### Scenario: Mode without its saving entity
+- **WHEN** only `status.heating_saving` is configured and the calculation is in cooling mode
+- **THEN** the badge is not tappable or focusable and a tap opens no dialog
 
 #### Scenario: No saving entity
-- **WHEN** `status.saving` is not configured and the user taps the badge
+- **WHEN** neither saving role is configured and the user taps the badge
 - **THEN** no more-info dialog opens, also not the supply air temperature's
 
 ## MODIFIED Requirements
@@ -72,7 +83,7 @@ focusable and SHALL NOT open any dialog.
 The card SHALL take every displayed entity from its config, grouped by role: the four air streams (temperature,
 relative humidity, absolute humidity each), fans (level, supply flow, exhaust flow), bypass (position, mode, next
 change), status (operating mode, profile target temperature, temperature profile, next fan change, filter days
-remaining, power, running mean outdoor temperature, saved power, moisture recovery) and seasons (heating, cooling).
+remaining, power, running mean outdoor temperature, saved heating power, saved cooling power, moisture recovery) and seasons (heating, cooling).
 
 #### Scenario: Card configured for another unit
 - **WHEN** the config points the roles at a different unit's entities
@@ -169,7 +180,7 @@ The card SHALL offer a visual editor with an exchanger type choice first, then o
 in collapsible sections per group, with the four temperatures marked as required, and an animation switch. Pickers
 SHALL only offer entities of a fitting domain. The smoothing window, air density, cold and warm colours, layout
 choice, show-unavailable switch, nominal flow and the next fan change, next bypass change, target temperature,
-temperature profile, saved power and moisture recovery pickers SHALL be advanced settings.
+temperature profile, saved heating power, saved cooling power and moisture recovery pickers SHALL be advanced settings.
 
 #### Scenario: Editing the card
 - **WHEN** the user opens the card's editor with the advanced settings off
@@ -177,10 +188,10 @@ temperature profile, saved power and moisture recovery pickers SHALL be advanced
   status and seasons, followed by the animation switch
 - **AND** the season pickers only offer binary sensors
 - **AND** the status section shows no next fan change, next bypass change, target temperature, temperature
-  profile, saved power or moisture recovery picker
+  profile, saved heating power, saved cooling power or moisture recovery picker
 
 #### Scenario: Advanced settings on
 - **WHEN** the user turns the advanced settings on
-- **THEN** the niche status pickers, including saved power and moisture recovery, appear in the status section,
+- **THEN** the niche status pickers, including the two saved power pickers and moisture recovery, appear in the status section,
   and the colours, layout, unavailable values, nominal flow and a calculation section with smoothing and air
   density appear

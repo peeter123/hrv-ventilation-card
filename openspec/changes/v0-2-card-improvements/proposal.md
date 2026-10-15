@@ -20,9 +20,11 @@ card's title mixes the subject with the direction. The backlog put this v0.2 bef
   while moisture is kept out) low in the exchanger, under the crossing streams.
 - **Airflow card, label icons.** Icons are centred vertically on their text in the top row and the status grid.
 - **Airflow card, status grid.** Each value is centred in its column. The grid stays centred on the card.
-- **Airflow card, tap targets.** The saving badge no longer opens the supply air temperature. Two new optional
-  roles, `status.saving` (power saved) and `status.moisture_recovery`, are advanced pickers. Tapping the badge or
-  the ERV moisture figure opens that entity. Without one, the figure is not tappable.
+- **Airflow card, tap targets.** The saving badge no longer opens the supply air temperature. Three new optional
+  roles, `status.heating_saving` and `status.cooling_saving` (power saved while heating or cooling) and
+  `status.moisture_recovery`, are advanced pickers. Tapping the badge opens the saving entity of the current heating
+  or cooling mode, tapping the ERV moisture figure the moisture recovery entity. Without its entity, a figure is not
+  tappable.
 - **Recovery balance card.** The legend no longer shows the water recovered or kept out. The two lanes of the bar
   are exactly equal in height.
 - **Moisture balance card.** The title is "Moisture Recovery" in every state, in the same format as "Heat Recovery".

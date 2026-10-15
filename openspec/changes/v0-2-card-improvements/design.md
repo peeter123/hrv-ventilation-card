@@ -101,10 +101,17 @@ y 152 of 200), under the crossing streams. It is shown in both layouts. A figure
 
 ### Badge and moisture figure open optional roles
 
-`status.saving` and `status.moisture_recovery` join `RolePath`, `ROLE_LABELS` and the editor's status section as
-advanced sensor pickers ("Saved power", "Moisture recovery rate"). They are not in `STATUS_ROLES` or `TOP_ROLES`,
-so they never get a label or a grid cell. The badge and the figure set `data-entity`, `role="button"` and
-`tabindex` only while their role is configured.
+`status.heating_saving`, `status.cooling_saving` and `status.moisture_recovery` join `RolePath`, `ROLE_LABELS` and
+the editor's status section as advanced sensor pickers ("Saved heating power", "Saved cooling power", "Moisture
+recovery rate"). They are not in `STATUS_ROLES` or `TOP_ROLES`, so they never get a label or a grid cell. The badge
+opens the saving role of the calculation's `mode` (`heating` or `cooling`, the same field that makes the badge warm
+or cold), and the figure opens the moisture recovery role. Each sets `data-entity`, `role="button"` and `tabindex`
+only while the role it would open is configured; a badge without a calculated saving (hidden or "n/a") opens nothing.
+
+- *Why two saving roles and not one?* Installations (this one included) keep the heating and the cooling saving as
+  separate sensors, because their energy totals are separate. One role would open the wrong one half the year. The
+  user chose (2026-10-15) two roles picked by the calculation's mode over a combined helper. `status.saving` from the
+  first implementation is replaced before any release, so no config carries it.
 
 - *Why not fall back to power or supply temperature?* Neither is the figure the user tapped. A tap that opens
   something unrelated is the bug being fixed. The backlog integration will provide sensors for these two roles.
@@ -174,12 +181,13 @@ editor.
 2. Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=` (number in
    `private/installation.md`). Existing configs render the same apart from the visual fixes. The diagram stays HRV
    grey until step 3.
-3. On both dashboards' diagram cards, add `exchanger_type: erv`, plus `status.saving` and
-   `status.moisture_recovery` pointing at the installation's thermal saving and moisture recovery template sensors
+3. On both dashboards' diagram cards, add `exchanger_type: erv`, plus `status.heating_saving`,
+   `status.cooling_saving` and `status.moisture_recovery` pointing at the installation's heating and cooling thermal
+   saving and moisture recovery template sensors
    (IDs in `private/installation.md`). Use `python_transform` with the latest `config_hash`, locating the cards by
    type.
 4. Check with Playwright (service workers blocked): blue-grey exchanger, moisture figure at the bottom, badge
-   opening the saving sensor, equal lanes, no water entry, moisture subtitle, centred icons and cells. Check the
+   opening the saving sensor of the current mode, equal lanes, no water entry, moisture subtitle, centred icons and cells. Check the
    picker previews from "Add card".
 5. Push `main` and the tag `v0.2.0` to `peeter123/hrv-ventilation-card`, with the user's confirmation. The user
    publishes the release in the GitHub UI.

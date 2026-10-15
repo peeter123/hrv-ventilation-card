@@ -80,27 +80,42 @@
 - [x] 4.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
-## 5. Release and live migration
+## 5. Saving roles by heating or cooling mode
 
-- [ ] 5.1 Retake the README images with `npm run capture`, including an ERV image of the diagram card and the
+- [ ] 5.1 Replace `status.saving` with `status.heating_saving` and `status.cooling_saving` (`RolePath`,
+  `ROLE_LABELS` "Saved heating power" and "Saved cooling power", advanced pickers in the editor's status section,
+  both in the sample) and let the badge open the role of the calculation's `mode` (design: "Badge and moisture figure
+  open optional roles"); verify card tests for the airflow spec scenarios "Heating saving opened while heating",
+  "Cooling saving opened while cooling", "Mode without its saving entity" (no `tabindex`) and "No saving entity",
+  the editor tests for "Editing the card" and "Advanced settings on", and that `status.saving` is gone from `src/`
+- [ ] 5.2 Update the diagram's options table in `README.md` and the diagram section of `docs/hrv-ventilation.md`
+  (the two saving roles and which one the badge opens); verify the README tests pass and no doc mentions
+  `status.saving`
+- [ ] 5.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+  `npm run check` passes, then commit the group
+
+## 6. Release and live migration
+
+- [ ] 6.1 Retake the README images with `npm run capture`, including an ERV image of the diagram card and the
   recovery bar without the water entry, and add a card picker screenshot taken by hand on the live installation;
   verify every image the README links exists and shows the v0.2 behaviour
-- [ ] 5.2 Set the version to `0.2.0` in `package.json`, run `npm run release` and commit `dist/`; verify
+- [ ] 6.2 Set the version to `0.2.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
-- [ ] 5.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
+- [ ] 6.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
   Playwright (service workers blocked) on both dashboards that the existing cards render with the fixes (centred
   icons and status cells, equal lanes, no water entry, moisture subtitle) and the same values as before
-- [ ] 5.4 Add `exchanger_type: erv`, `status.saving` and `status.moisture_recovery` to the diagram cards on both
+- [ ] 6.4 Add `exchanger_type: erv`, `status.heating_saving`, `status.cooling_saving` and
+  `status.moisture_recovery` to the diagram cards on both
   dashboards (`python_transform`, cards located by type, IDs from `private/installation.md`); verify with
   Playwright screenshots the blue-grey exchanger and the moisture figure at desktop and phone width, that tapping
-  the badge opens the saving sensor and the figure the moisture recovery sensor, and that "Add card" lists the
+  the badge opens the saving sensor of the current mode and the figure the moisture recovery sensor, and that "Add card" lists the
   three cards with sample previews
-- [ ] 5.5 Update `private/installation.md` (resource `?v=`, the new config keys, the rollback to v0.1.0) and remove
+- [ ] 6.5 Update `private/installation.md` (resource `?v=`, the new config keys, the rollback to v0.1.0) and remove
   the v0.2 line from `BACKLOG.md`; verify no tracked file holds an entity ID with the device serial, a helper or a
   dashboard ID (`npm run check:ids` and a `git grep` for the serial prefix)
-- [ ] 5.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [ ] 6.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
-- [ ] 5.7 With the user's confirmation before each outward step, push `main` and the tag `v0.2.0` to
+- [ ] 6.7 With the user's confirmation before each outward step, push `main` and the tag `v0.2.0` to
   `peeter123/hrv-ventilation-card` (never `private/history`); the user publishes the release from the tag in the
   GitHub UI; verify the remote `main` equals the local one, no pushed commit holds an installation identifier, and
   `v0.2.0` is the latest release
