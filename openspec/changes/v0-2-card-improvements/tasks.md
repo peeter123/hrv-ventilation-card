@@ -116,7 +116,7 @@
 - [x] 6.5 Update `private/installation.md` (resource `?v=`, the new config keys, the rollback to v0.1.0) and remove
   the v0.2 line from `BACKLOG.md`; verify no tracked file holds an entity ID with the device serial, a helper or a
   dashboard ID (`npm run check:ids` and a `git grep` for the serial prefix)
-- [ ] 6.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 6.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
 - [ ] 6.7 With the user's confirmation before each outward step, push `main` and the tag `v0.2.0` to
   `peeter123/hrv-ventilation-card` (never `private/history`); the user publishes the release from the tag in the
