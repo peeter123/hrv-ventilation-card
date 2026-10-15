@@ -8,9 +8,9 @@ import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { optionValue } from '../lib/options';
-import { barStyles, hatch, renderBar, swatch } from './bar';
+import { hatch, renderBar, swatch } from './bar';
 import { BarCard } from './bar-card';
-import { checkConfig, sampleStyles } from './base-card';
+import { checkConfig } from './base-card';
 import {
   RECOVERY_OPTION_LIST,
   RECOVERY_OPTIONS,
@@ -32,8 +32,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
   // the swatches line up; narrower, a group per lane (name, recovered, lost under each other), side by side when
   // they fit. Each item keeps its swatch, words and value on one line.
   static override styles = [
-    barStyles,
-    sampleStyles,
+    BarCard.styles,
     css`
       ha-card {
         container-type: inline-size;
@@ -65,7 +64,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
   ];
 
   /** Height in masonry views: header, the two-lane bar and a legend of up to four lines. */
-  override getCardSize(): number {
+  protected override contentSize(): number {
     return 4;
   }
 

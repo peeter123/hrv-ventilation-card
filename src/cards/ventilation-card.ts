@@ -332,7 +332,7 @@ export class HrvVentilationCard extends HrvCard {
   private readonly ids = drawingIds();
 
   /** Height in masonry views (rows of 50 px): top row, the drawing at a typical column width and the status grid. */
-  getCardSize(): number {
+  protected contentSize(): number {
     return 6;
   }
 
@@ -387,6 +387,7 @@ export class HrvVentilationCard extends HrvCard {
    * Space, as Home Assistant's own labels do.
    */
   private readonly activate = (event: MouseEvent | KeyboardEvent): void => {
+    if (this.sample) return;
     if (event instanceof KeyboardEvent) {
       // Not on auto-repeat, and not with a modifier the browser or a screen reader may use.
       const modified = event.ctrlKey || event.altKey || event.metaKey;
@@ -399,14 +400,26 @@ export class HrvVentilationCard extends HrvCard {
   };
 
   /**
+   * The attributes of a tappable element: a button opening the entity's dialog. The sample opens nothing, so there
+   * it has no entity, no tab stop and the `fallback` role (an image where the element carries readable text).
+   */
+  private tap(entityId: string | undefined, fallback?: 'img') {
+    const entity = this.sample ? undefined : entityId;
+    return {
+      role: entity ? 'button' : fallback,
+      tabindex: entity ? '0' : undefined,
+      entity,
+    };
+  }
+
+  /**
    * A label. One without anything to show keeps its place, invisible and with its text, so a stack and the top row
    * keep their size while a value is unavailable; a next change with nothing planned shows a dimmed dash.
    */
   private label(label: DiagramLabel): TemplateResult {
     const hass = this.shownHass;
     const text = hass ? formatState(hass, label.entityId) : '';
-    // The sample opens no dialog: no entity, no button role (the label stays readable as an image).
-    const tap = !this.sample;
+    const tap = this.tap(label.entityId, 'img');
     const kind = label.role.split('.')[1] ?? '';
     const icon = label.icon ? html`<ha-icon .icon=${label.icon} aria-hidden="true"></ha-icon>` : nothing;
     // Nothing planned: a dimmed dash, while the tooltip and the more-info dialog still give the state.
@@ -415,11 +428,11 @@ export class HrvVentilationCard extends HrvCard {
     // Named by its role, since a value such as "18 °C" alone does not say which stream it is.
     return html`<span
       class="label ${kind} ${label.notPlanned ? 'not-planned' : ''}"
-      role=${tap ? 'button' : 'img'}
-      tabindex=${ifDefined(tap ? '0' : undefined)}
+      role=${ifDefined(tap.role)}
+      tabindex=${ifDefined(tap.tabindex)}
       aria-label="${ROLE_LABELS[label.role]}: ${text}"
       title=${roleTitle(label.role, text)}
-      data-entity=${ifDefined(tap ? label.entityId : undefined)}
+      data-entity=${ifDefined(tap.entity)}
       >${icon}${value}</span
     >`;
   }
@@ -452,14 +465,15 @@ export class HrvVentilationCard extends HrvCard {
 
   private season(icon: SeasonIcon | undefined): TemplateResult | typeof nothing {
     if (!icon) return nothing;
+    const tap = this.tap(icon.entityId, 'img');
     return html`<ha-icon
       class="season"
       .icon=${icon.icon}
       title=${icon.title}
       aria-label=${icon.title}
-      role=${this.sample ? 'img' : 'button'}
-      tabindex=${ifDefined(this.sample ? undefined : '0')}
-      data-entity=${ifDefined(this.sample ? undefined : icon.entityId)}
+      role=${ifDefined(tap.role)}
+      tabindex=${ifDefined(tap.tabindex)}
+      data-entity=${ifDefined(tap.entity)}
       style=${styleMap({ color: icon.color })}
     ></ha-icon>`;
   }
@@ -474,12 +488,12 @@ export class HrvVentilationCard extends HrvCard {
             '--badge-border': badge.tint,
           };
     // Tapping it opens the saved power entity (status.saving); without one it is not tappable.
-    const entity = this.sample ? undefined : this.settings?.saving;
+    const tap = this.tap(this.settings?.saving);
     return html`<span
       class="badge ${badge.kind}"
-      role=${ifDefined(entity && 'button')}
-      tabindex=${ifDefined(entity && '0')}
-      data-entity=${ifDefined(entity)}
+      role=${ifDefined(tap.role)}
+      tabindex=${ifDefined(tap.tabindex)}
+      data-entity=${ifDefined(tap.entity)}
       style=${styleMap(style)}
       >${badge.text}</span
     >`;
@@ -493,15 +507,15 @@ export class HrvVentilationCard extends HrvCard {
    */
   private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
     if (!figure) return nothing;
-    const entity = this.sample ? undefined : this.settings?.moistureRecovery;
+    const tap = this.tap(this.settings?.moistureRecovery, 'img');
     return html`<div class="on-drawing moisture-recovery">
       <span
         class="label figure"
         title=${figure.title}
         aria-label=${figure.title}
-        role=${entity ? 'button' : 'img'}
-        tabindex=${ifDefined(entity && '0')}
-        data-entity=${ifDefined(entity)}
+        role=${ifDefined(tap.role)}
+        tabindex=${ifDefined(tap.tabindex)}
+        data-entity=${ifDefined(tap.entity)}
         ><span class="value">${figure.text}</span></span
       >
     </div>`;

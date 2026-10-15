@@ -7,7 +7,7 @@ export abstract class BarCard extends HrvCard {
   static override styles: CSSResultGroup = [barStyles, sampleStyles];
 
   /** Height in masonry views (rows of 50 px): header, bar and a legend of one or two lines. */
-  getCardSize(): number {
+  protected contentSize(): number {
     return 3;
   }
 

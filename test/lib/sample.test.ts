@@ -5,41 +5,10 @@ import { SAVING_THRESHOLD } from '../../src/diagram/badge';
 import { asEntityId, entityAt, type RolePath } from '../../src/lib/config';
 import { formatState } from '../../src/lib/hass';
 import { SAMPLE_CONFIG, SAMPLE_STATES } from '../../src/lib/sample';
+import { ROLE_LABELS } from '../../src/strings';
 
-// Every role of the cards. Typed as a record, so a role added to RolePath does not compile until it is listed here.
-const ROLES: Record<RolePath, true> = {
-  'outdoor.temperature': true,
-  'outdoor.humidity': true,
-  'outdoor.absolute_humidity': true,
-  'supply.temperature': true,
-  'supply.humidity': true,
-  'supply.absolute_humidity': true,
-  'extract.temperature': true,
-  'extract.humidity': true,
-  'extract.absolute_humidity': true,
-  'exhaust.temperature': true,
-  'exhaust.humidity': true,
-  'exhaust.absolute_humidity': true,
-  'fans.level': true,
-  'fans.supply_flow': true,
-  'fans.exhaust_flow': true,
-  'bypass.position': true,
-  'bypass.mode': true,
-  'bypass.next_change': true,
-  'status.operating_mode': true,
-  'status.target_temperature': true,
-  'status.temperature_profile': true,
-  'status.next_fan_change': true,
-  'status.filter_days': true,
-  'status.power': true,
-  'status.rmot': true,
-  'status.saving': true,
-  'status.moisture_recovery': true,
-  'seasons.heating': true,
-  'seasons.cooling': true,
-};
 // The absolute humidities are left out on purpose: the sample gives relative humidity and the cards derive the rest.
-const SAMPLE_ROLES = (Object.keys(ROLES) as RolePath[]).filter((role) => !role.endsWith('absolute_humidity'));
+const SAMPLE_ROLES = (Object.keys(ROLE_LABELS) as RolePath[]).filter((role) => !role.endsWith('absolute_humidity'));
 
 const calculate = (): ReturnType<ReturnType<typeof createCalculator>> =>
   createCalculator(

@@ -74,7 +74,7 @@ helps a browser that still shows it.
 
 1. Open a dashboard, choose **Edit dashboard**, then **Add card** and the **By card** tab.
 2. Search for "HRV" and pick **HRV Airflow Diagram**, **HRV Recovery Balance** or **HRV Moisture Balance**. The
-   The picker shows a rendered preview of each card. A new card starts with an empty config and shows sample
+   picker shows a rendered preview of each card. A new card starts with an empty config and shows sample
    values until you pick a sensor (see [Sample values](#sample-values)).
 3. Open each group (outdoor air, supply air, extract air, fans, bypass, ...) and pick your unit's sensors.
    The preview updates as you go.

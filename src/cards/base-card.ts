@@ -76,6 +76,14 @@ export abstract class HrvCard extends LitElement {
     this.config = used;
   }
 
+  /** Height in masonry views without the sample note. */
+  protected abstract contentSize(): number;
+
+  /** Height in masonry views (rows of 50 px); the "Sample values" line is one more. */
+  getCardSize(): number {
+    return this.contentSize() + (this.sample ? 1 : 0);
+  }
+
   /** The hass to render with: the real one, or in sample mode the real states plus the sample's (built once per hass). */
   protected get shownHass(): CardHass | undefined {
     const { hass } = this;

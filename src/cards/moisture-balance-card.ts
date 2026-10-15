@@ -9,9 +9,9 @@ import type { CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { optionValue } from '../lib/options';
-import { barStyles, hatch, renderBar, swatch } from './bar';
+import { hatch, renderBar, swatch } from './bar';
 import { BarCard } from './bar-card';
-import { checkConfig, sampleStyles } from './base-card';
+import { checkConfig } from './base-card';
 import {
   BYPASS_COLOR,
   MOISTURE_OPTION_LIST,
@@ -30,8 +30,7 @@ export function checkMoistureConfig(config: CardConfig): void {
 
 export class HrvMoistureBalanceCard extends BarCard {
   static override styles = [
-    barStyles,
-    sampleStyles,
+    BarCard.styles,
     css`
       .swatches .item + .item {
         margin-left: 12px;
@@ -64,7 +63,7 @@ export class HrvMoistureBalanceCard extends BarCard {
   private settings?: MoistureSettings;
 
   /** Height in masonry views: title and subtitle, bar, the bypass strip and a legend of up to four lines. */
-  override getCardSize(): number {
+  protected override contentSize(): number {
     return 5;
   }
 

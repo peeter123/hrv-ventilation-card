@@ -34,12 +34,18 @@ export const SAMPLE_CONFIG: CardConfig = {
 const isGroup = (value: unknown): value is CardConfig =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+// An empty value (undefined, null, a blank string) keeps the sample's, as setsAnyRole counts it as not set, and a
+// value that is not a group does not replace a group of the sample.
+const isEmpty = (value: unknown): boolean =>
+  value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+
 const merge = (base: CardConfig, over: CardConfig): CardConfig => ({
   ...base,
   ...Object.fromEntries(
-    Object.entries(over).map(([key, value]) => {
+    Object.entries(over).flatMap(([key, value]): [string, unknown][] => {
       const inBase = base[key];
-      return [key, isGroup(value) && isGroup(inBase) ? merge(inBase, value) : value];
+      if (isEmpty(value) || (isGroup(inBase) && !isGroup(value))) return [];
+      return [[key, isGroup(value) && isGroup(inBase) ? merge(inBase, value) : value]];
     }),
   ),
 });
@@ -48,7 +54,7 @@ const merge = (base: CardConfig, over: CardConfig): CardConfig => ({
 export const setsAnyRole = (config: CardConfig): boolean =>
   Object.keys(ROLE_LABELS).some((role) => {
     const value = valueAt(config, role);
-    return value !== undefined && value !== null && (typeof value !== 'string' || value.trim() !== '');
+    return !isEmpty(value);
   });
 
 /** The user's config (its options; it sets no entity role) merged over the sample config. */

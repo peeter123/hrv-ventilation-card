@@ -69,6 +69,29 @@ describe.each(TAGS)('%s in sample mode', (tag) => {
     }).toThrow('Missing required entities');
   });
 
+  test.each([
+    ['undefined', { outdoor: { temperature: undefined } }],
+    ['blank', { outdoor: { temperature: '' } }],
+    ['null group', { outdoor: null }],
+  ])('an empty role value (%s) keeps the sample', async (_name, config) => {
+    const { root } = await show(tag, config);
+    expect(root.querySelectorAll('.sample-note')).toHaveLength(1);
+  });
+
+  test('the card size counts the note line only in sample mode', async () => {
+    const real = document.createElement(tag) as HrvCard;
+    const { card } = await show(tag, {});
+    real.setConfig({
+      outdoor: { temperature: 'sensor.o_t', absolute_humidity: 'sensor.o_ah' },
+      supply: { temperature: 'sensor.s_t', absolute_humidity: 'sensor.s_ah' },
+      extract: { temperature: 'sensor.e_t', absolute_humidity: 'sensor.e_ah' },
+      exhaust: { temperature: 'sensor.x_t' },
+      fans: { supply_flow: 'sensor.flow' },
+      bypass: { position: 'sensor.bypass' },
+    });
+    expect(card.getCardSize()).toBe(real.getCardSize() + 1);
+  });
+
   test.each([{ status: { power: 'bad' } }, { outdoor: { temperature: 'bad' } }])(
     'a malformed role value %j is not sample mode: a configuration error, no mixing',
     (config) => {
