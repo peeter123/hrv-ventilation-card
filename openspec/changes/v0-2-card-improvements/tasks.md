@@ -52,7 +52,7 @@
 - [x] 3.4 Add the exchanger type choice first in `DIAGRAM_SCHEMA`, with the labels "Heat recovery (HRV)" and
   "Energy recovery (ERV)", and the two new pickers as advanced fields in the status section; verify the editor
   tests for "Editing the card" and "Advanced settings on" from the airflow spec
-- [ ] 3.5 Add an exchanger type control to the preview page (`dev/`) and check HRV and ERV at 280 to 600 px in
+- [x] 3.5 Add an exchanger type control to the preview page (`dev/`) and check HRV and ERV at 280 to 600 px in
   both themes there; verify by a screenshot of each width with ERV in the light and dark theme
 - [ ] 3.6 Update the diagram's options table in `README.md` (`exchanger_type`, `status.saving`,
   `status.moisture_recovery`) and the diagram section of `docs/hrv-ventilation.md` (HRV and ERV, the moisture

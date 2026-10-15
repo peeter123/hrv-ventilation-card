@@ -73,6 +73,7 @@ function applyScenario(scenario: Scenario): void {
 
 const options = {
   config: 'full',
+  exchanger: 'hrv',
   layout: 'auto',
   showUnavailable: false,
   animation: true,
@@ -105,6 +106,7 @@ function cardConfig(tag: Tag): Record<string, unknown> {
   if (tag !== 'hrv-ventilation-card') return shared;
   return {
     ...shared,
+    exchanger_type: options.exchanger,
     layout: options.layout,
     show_unavailable: options.showUnavailable,
     animation: {
@@ -247,6 +249,10 @@ function renderControls(): void {
         <legend>card</legend>
         ${select('config', Object.keys(CONFIGS), options.config, (value) => {
           options.config = value;
+          updateConfig();
+        })}
+        ${select('exchanger', ['hrv', 'erv'], options.exchanger, (value) => {
+          options.exchanger = value;
           updateConfig();
         })}
         ${select('layout', ['auto', 'full', 'compact'], options.layout, (value) => {
