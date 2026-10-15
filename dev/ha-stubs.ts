@@ -52,22 +52,33 @@ export class HaCard extends LitElement {
 
 @customElement('ha-icon')
 export class HaIcon extends LitElement {
+  // As Home Assistant's: an inline host around an inline-flex icon box sized by --mdc-icon-size and aligned to the
+  // middle of the line (its ha-svg-icon), so the cards' icon alignment is tested against the real structure.
   static override styles = css`
     :host {
+      fill: currentColor;
+    }
+    .svg-icon {
       display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      vertical-align: middle;
       width: var(--mdc-icon-size, 24px);
       height: var(--mdc-icon-size, 24px);
     }
     svg {
+      display: block;
       width: 100%;
       height: 100%;
-      fill: currentColor;
     }
   `;
 
   @property() icon = '';
 
   protected override render(): unknown {
-    return html`<svg viewBox="0 0 24 24">${svg`<path d=${ICONS[this.icon] ?? mdiHelpCircleOutline}></path>`}</svg>`;
+    return html`<span class="svg-icon"
+      ><svg viewBox="0 0 24 24">${svg`<path d=${ICONS[this.icon] ?? mdiHelpCircleOutline}></path>`}</svg></span
+    >`;
   }
 }

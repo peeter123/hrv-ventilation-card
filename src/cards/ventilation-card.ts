@@ -93,11 +93,11 @@ export class HrvVentilationCard extends HrvCard {
       border-top: 1px solid var(--divider-color);
       color: var(--secondary-text-color);
     }
+    /* Each value centred in its column; a label too wide for it ends its value in an ellipsis. */
     .status .cell {
+      display: flex;
+      justify-content: center;
       min-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
     }
     .not-planned .value {
       opacity: 0.6;
@@ -209,15 +209,31 @@ export class HrvVentilationCard extends HrvCard {
       right: 0;
       align-items: flex-end;
     }
+    /*
+     * A label: its icon centred vertically on its value. A flex box applies no text-overflow to its children, so the
+     * value carries the ellipsis of a value too long for its cell.
+     */
     .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      max-width: 100%;
+      min-width: 0;
       cursor: pointer;
       white-space: nowrap;
     }
-    /* A label's icon: the height of its text, on the text's baseline. */
+    .label .value {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* A label's icon: a box as high as its text. Home Assistant's icon sizes its own svg from --mdc-icon-size. */
     .label ha-icon {
       --mdc-icon-size: 1.15em;
-      vertical-align: -0.2em;
-      margin-right: 3px;
+      display: flex;
+      flex: none;
+      width: 1.15em;
+      height: 1.15em;
     }
     .hidden {
       visibility: hidden;
@@ -359,9 +375,11 @@ export class HrvVentilationCard extends HrvCard {
     const kind = label.role.split('.')[1] ?? '';
     const icon = label.icon ? html`<ha-icon .icon=${label.icon} aria-hidden="true"></ha-icon>` : nothing;
     if (!label.visible)
-      return html`<span class="label ${kind} hidden" aria-hidden="true">${icon}${label.prefix}${text}</span>`;
+      return html`<span class="label ${kind} hidden" aria-hidden="true"
+        >${icon}<span class="value">${label.prefix}${text}</span></span
+      >`;
     // Nothing planned: a dimmed dash, while the tooltip and the more-info dialog still give the state.
-    const value = label.notPlanned ? html`<span class="value">${DIAGRAM.notPlanned}</span>` : text;
+    const value = html`<span class="value">${label.prefix}${label.notPlanned ? DIAGRAM.notPlanned : text}</span>`;
     // Named by its role, since a value such as "18 °C" alone does not say which stream it is.
     return html`<span
       class="label ${kind} ${label.notPlanned ? 'not-planned' : ''}"
@@ -370,7 +388,7 @@ export class HrvVentilationCard extends HrvCard {
       aria-label="${ROLE_LABELS[label.role]}: ${text}"
       title=${roleTitle(label.role, text)}
       data-entity=${label.entityId}
-      >${icon}${label.prefix}${value}</span
+      >${icon}${value}</span
     >`;
   }
 

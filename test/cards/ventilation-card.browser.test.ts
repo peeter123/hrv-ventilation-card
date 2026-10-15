@@ -4,7 +4,7 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import { commands, page } from 'vitest/browser';
 import '../../dev/ha-stubs';
-import { CONFIGS, MockHass, type MockValues } from '../../dev/mock-hass';
+import { CONFIGS, id, MockHass, type MockValues } from '../../dev/mock-hass';
 import '../../src/cards/ventilation-card';
 import { COMPACT_BELOW } from '../../src/diagram/labels';
 
@@ -151,6 +151,55 @@ describe('airflow diagram layout', () => {
     await frames();
     await card.updateComplete;
     expect(root.querySelector('.status')).toBeNull();
+  });
+
+  for (const width of [400, 600]) {
+    test(`airflow-diagram-card "Icon centred on its text": every top row and status icon at ${String(width)} px`, async () => {
+      const { root } = await show(width, 'light');
+      const labels = [...root.querySelectorAll('.top .label:not(.hidden), .status .label:not(.hidden)')];
+      expect(labels.length).toBeGreaterThan(8);
+      const middle = (rect: DOMRect): number => rect.top + rect.height / 2;
+      for (const label of labels) {
+        const icon = label.querySelector('ha-icon')?.getBoundingClientRect();
+        const value = label.querySelector('.value')?.getBoundingClientRect();
+        if (!icon || !value) throw new Error(`no icon or value in ${label.className}`);
+        expect(icon.height).toBeGreaterThan(10);
+        expect(Math.abs(middle(icon) - middle(value)), label.className).toBeLessThanOrEqual(1);
+      }
+    });
+  }
+
+  test('a status value too long for its cell ends in an ellipsis, with its full text in the tooltip', async () => {
+    const { card, root } = await show(400, 'light');
+    const hass = card.hass;
+    if (!hass) throw new Error('no hass');
+    const long = 'Manual override until the next scheduled change';
+    const entity = hass.states[id.operatingMode];
+    if (!entity) throw new Error('no operating mode');
+    card.hass = { ...hass, states: { ...hass.states, [id.operatingMode]: { ...entity, state: long } } };
+    await card.updateComplete;
+    const label = root.querySelector<HTMLElement>('.status .label.operating_mode');
+    const value = label?.querySelector<HTMLElement>('.value');
+    const cell = label?.parentElement?.getBoundingClientRect();
+    if (!label || !value || !cell) throw new Error('no operating mode label');
+    expect(value.scrollWidth).toBeGreaterThan(value.clientWidth);
+    expect(getComputedStyle(value).textOverflow).toBe('ellipsis');
+    expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(cell.right + 0.5);
+    expect(label.getBoundingClientRect().left).toBeGreaterThanOrEqual(cell.left - 0.5);
+    expect(label.title).toBe(`Operating mode: ${long}`);
+  });
+
+  test('airflow-diagram-card "Centred cells": the fan level and filter days share a horizontal centre', async () => {
+    for (const width of [400, 600]) {
+      const { root } = await show(width, 'light');
+      const centre = (selector: string): number => {
+        const rect = root.querySelector(selector)?.getBoundingClientRect();
+        if (!rect) throw new Error(`no ${selector}`);
+        return rect.left + rect.width / 2;
+      };
+      expect(Math.abs(centre('.status .label.level') - centre('.status .label.filter_days'))).toBeLessThanOrEqual(1);
+      document.body.innerHTML = '';
+    }
   });
 
   // Below the breakpoint, where layout: auto would be compact, so only the option can make it full.

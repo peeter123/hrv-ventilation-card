@@ -21,11 +21,11 @@
 
 ## 2. Airflow card layout fixes
 
-- [ ] 2.1 Make labels inline flex boxes with the icon centred on the text and the ellipsis on a `.value` span
+- [x] 2.1 Make labels inline flex boxes with the icon centred on the text and the ellipsis on a `.value` span
   (design: "Icon alignment"); verify a browser test at 400 and 600 px that every top row and status grid icon's
   vertical centre is within 1 px of its text's centre, and that a long status value still ends in an ellipsis with
   its full text in the tooltip
-- [ ] 2.2 Centre each status value in its cell; verify a browser test that the fan level and filter days in the
+- [x] 2.2 Centre each status value in its cell; verify a browser test that the fan level and filter days in the
   first column share a horizontal centre within 1 px, and that the existing no-overlap tests at 280, 320, 350, 400
   and 600 px still pass
 - [ ] 2.3 Update the diagram section of `README.md` and `docs/hrv-ventilation.md` where they describe the top row
