@@ -54,7 +54,7 @@
   tests for "Editing the card" and "Advanced settings on" from the airflow spec
 - [x] 3.5 Add an exchanger type control to the preview page (`dev/`) and check HRV and ERV at 280 to 600 px in
   both themes there; verify by a screenshot of each width with ERV in the light and dark theme
-- [ ] 3.6 Update the diagram's options table in `README.md` (`exchanger_type`, `status.saving`,
+- [x] 3.6 Update the diagram's options table in `README.md` (`exchanger_type`, `status.saving`,
   `status.moisture_recovery`) and the diagram section of `docs/hrv-ventilation.md` (HRV and ERV, the moisture
   figure, what the badge opens); verify the README tests pass
 - [ ] 3.7 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed

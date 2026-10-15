@@ -10,7 +10,7 @@ two live bars for the heat and moisture the exchanger recovers.
 - **Airflow diagram** (`custom:hrv-ventilation-card`): the four air streams around the exchanger, drawn by the
   card, coloured by temperature and animated in the direction of the air at a speed that follows the fan flow.
   The bypass path opens with the bypass position. Labels for temperature, humidity and flow, a saving badge in
-  watts, a top row with the season, power and running mean outdoor temperature, and a status grid with the fan
+  watts and, for an energy recovery unit, the moisture its exchanger recovers in g/h; a top row with the season, power and running mean outdoor temperature, and a status grid with the fan
   level, bypass mode and the unit's status. A compact layout for narrow columns, light and dark themes.
 - **Recovery balance** (`custom:hrv-recovery-balance-card`): a live bar of the heat (or cooling) the exchanger
   recovers and what is still lost with the ventilation air, split into temperature (sensible) and moisture
@@ -92,7 +92,8 @@ helps a browser that still shows it.
 supply air (bottom right, into the house), extract air (top right) to the exhaust air (bottom left). Each stream end
 shows its temperature and humidities and is coloured by its temperature; the supply and exhaust flow show above
 the tips of their arrows, the bypass position at the top of the exchanger and the saving badge, shaped like the
-exchanger, on its centre. A top row holds the season (left), the power (centred) and the running mean outdoor
+exchanger, on its centre. On an energy recovery unit (`exchanger_type: erv`) the exchanger is blue-grey instead of
+grey and shows the moisture it recovers at its bottom. A top row holds the season (left), the power (centred) and the running mean outdoor
 temperature (right), and a status grid below the drawing the fan level, the bypass mode and the unit's status.
 Every label there has an icon in front (lightning bolt for power, fan, crossing arrows for the bypass, timer, cog,
 thermometer, thermostat, air filter, thermometer with lines for RMOT), centred on its text, and a tooltip with its
@@ -187,12 +188,21 @@ motion; the drawing is the same, without movement.
 the warm colour in heating mode and with the cold colour in cooling mode while the saving is above 0.5 W, otherwise
 grey. It needs the calculation's sensors: the outdoor, supply and extract temperatures, a humidity for each of those
 three streams (see [Stream](#stream-object)) and `fans.supply_flow`; without them there is no badge. While one of
-them has no value the badge is hidden, or shows "n/a" with `show_unavailable: true`. Tapping it opens the supply air
-temperature.
+them has no value the badge is hidden, or shows "n/a" with `show_unavailable: true`. Tapping it opens the
+`status.saving` sensor; without one the badge is not tappable.
+
+**Exchanger type.** `hrv` (heat recovery, the default) draws the exchanger grey. `erv` (energy recovery, an enthalpy
+exchanger that also passes moisture) draws it blue-grey, derived from the theme so it stays legible in light and
+dark themes, and shows the moisture recovery figure at the bottom of the exchanger, opposite the bypass position: the
+moisture the exchanger hands back to the supply air, in g/h, from the same calculation and sensors as the badge.
+While the exchanger keeps moisture out (the outdoor air is more humid than the indoor air), the figure shows the
+amount with a crossed-out drop; its tooltip says which. It is hidden or "n/a" like the badge, is shown in both
+layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. The type changes only the
+drawing: the calculation and the bar cards are the same for both.
 
 **Layout.** With `layout: auto` the card switches to a compact layout below 340 px card width: only the four
-temperatures and relative humidities, the badge, the bypass position and the top row, without the flows, the
-absolute humidities and the status grid, so very narrow cards stay legible. A full-width card on a phone is about
+temperatures and relative humidities, the badge, the bypass position, the moisture figure (ERV) and the top row,
+without the flows, the absolute humidities and the status grid, so very narrow cards stay legible. A full-width card on a phone is about
 16 px narrower than the screen, so phones from 360 px wide show the full layout and only narrower screens or columns
 get the compact one. `full` and `compact` force one layout, for example `compact` on a phone you find too busy.
 Text stays at least 11 px high. The bypass position label is hidden while the bypass is closed; the next bypass change and next
