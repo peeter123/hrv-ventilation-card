@@ -1,0 +1,318 @@
+// The preview page (npm run dev): the three cards from the source, stacked as in a dashboard column at 280, 320, 350, 400
+// and 600 px in a light and a dark theme, with mock states from the controls. Vite reloads the page when a source
+// file changes.
+import './ha-stubs';
+import '../src/cards/moisture-balance-card';
+import '../src/cards/recovery-balance-card';
+import '../src/cards/ventilation-card';
+import { html, render, type TemplateResult } from 'lit';
+import type { HrvCard } from '../src/cards/base-card';
+import { STREAMS, type Stream } from '../src/lib/config';
+import { CONFIGS, id, MockHass, type MockValues, type SeasonChoice } from './mock-hass';
+
+const WIDTHS = [280, 320, 350, 400, 600];
+const THEMES = ['light', 'dark'] as const;
+const TAGS = ['hrv-ventilation-card', 'hrv-recovery-balance-card', 'hrv-moisture-balance-card'] as const;
+type Tag = (typeof TAGS)[number];
+
+const values: MockValues = {
+  temperature: { outdoor: 2, supply: 18.5, extract: 21.4, exhaust: 5.1 },
+  humidity: { outdoor: 85, supply: 45, extract: 50, exhaust: 80 },
+  flow: 180,
+  bypass: 0,
+  season: 'heating',
+  unavailable: new Set(),
+};
+
+type Scenario = Pick<MockValues, 'temperature' | 'humidity' | 'flow' | 'bypass' | 'season'>;
+
+/**
+ * Typical states of a unit with an enthalpy exchanger (about 85 % sensible efficiency): the button fills in all
+ * temperatures, humidities, the flow, the bypass and the season, and leaves the card options alone.
+ */
+const SCENARIOS: Readonly<Record<string, Scenario>> = {
+  'heating (winter)': {
+    temperature: { outdoor: 0, supply: 18.3, extract: 21.5, exhaust: 3.5 },
+    humidity: { outdoor: 90, supply: 44, extract: 50, exhaust: 95 },
+    flow: 180,
+    bypass: 0,
+    season: 'heating',
+  },
+  'cooling (summer)': {
+    temperature: { outdoor: 30, supply: 24.9, extract: 24, exhaust: 29.1 },
+    humidity: { outdoor: 50, supply: 58, extract: 55, exhaust: 47 },
+    flow: 220,
+    bypass: 0,
+    season: 'cooling',
+  },
+  'bypass 50 % (off season)': {
+    temperature: { outdoor: 16, supply: 19, extract: 23, exhaust: 20 },
+    humidity: { outdoor: 70, supply: 60, extract: 50, exhaust: 58 },
+    flow: 200,
+    bypass: 50,
+    season: 'between',
+  },
+  'bypass 100 % (night cooling)': {
+    temperature: { outdoor: 14, supply: 14.5, extract: 24, exhaust: 23.8 },
+    humidity: { outdoor: 80, supply: 78, extract: 50, exhaust: 51 },
+    flow: 300,
+    bypass: 100,
+    season: 'cooling',
+  },
+};
+
+function applyScenario(scenario: Scenario): void {
+  values.temperature = { ...scenario.temperature };
+  values.humidity = { ...scenario.humidity };
+  values.flow = scenario.flow;
+  values.bypass = scenario.bypass;
+  values.season = scenario.season;
+  updateStates();
+  renderControls();
+}
+
+const options = {
+  config: 'full',
+  layout: 'auto',
+  showUnavailable: false,
+  animation: true,
+  nominalFlow: 0,
+  // No smoothing by default, so the bars follow the controls at once.
+  smoothing: 0,
+};
+
+/** Entities the availability control can switch off. */
+const SWITCHABLE: Readonly<Record<string, string>> = {
+  'outdoor RH': id.humidity('outdoor'),
+  'exhaust T': id.temperature('exhaust'),
+  'supply flow': id.supplyFlow,
+  power: id.power,
+  'bypass mode': id.bypassMode,
+};
+
+function element(elementId: string): HTMLElement {
+  const found = document.getElementById(elementId);
+  if (!found) throw new Error(`#${elementId} is missing from index.html`);
+  return found;
+}
+
+const mock = new MockHass();
+/** Each card, with the box that shows its config error in its place, as Home Assistant's error card does. */
+const cards: { tag: Tag; card: HrvCard; error: HTMLElement; dark: boolean }[] = [];
+
+function cardConfig(tag: Tag): Record<string, unknown> {
+  const shared = { type: `custom:${tag}`, ...CONFIGS[options.config], smoothing: options.smoothing };
+  if (tag !== 'hrv-ventilation-card') return shared;
+  return {
+    ...shared,
+    layout: options.layout,
+    show_unavailable: options.showUnavailable,
+    animation: {
+      enabled: options.animation,
+      ...(options.nominalFlow > 0 ? { nominal_flow: options.nominalFlow } : {}),
+    },
+  };
+}
+
+function updateStates(): void {
+  const light = mock.build(values, false);
+  // One state map for both themes, so a state object stays the same between them.
+  const dark = { ...light, themes: { darkMode: true } };
+  for (const { card, dark: isDark } of cards) card.hass = isDark ? dark : light;
+}
+
+function updateConfig(): void {
+  for (const { tag, card, error } of cards) {
+    try {
+      card.setConfig(cardConfig(tag));
+      card.hidden = false;
+      error.hidden = true;
+    } catch (thrown) {
+      card.hidden = true;
+      error.hidden = false;
+      error.textContent = thrown instanceof Error ? thrown.message : String(thrown);
+    }
+  }
+}
+
+const number = (label: string, value: number, set: (value: number) => void, step = 1): TemplateResult =>
+  html`<label
+    >${label}
+    <input
+      type="number"
+      step=${step}
+      .value=${String(value)}
+      @input=${(event: Event) => {
+        const parsed = Number((event.target as HTMLInputElement).value);
+        if (Number.isFinite(parsed)) {
+          set(parsed);
+          updateStates();
+        }
+      }}
+  /></label>`;
+
+const slider = (label: string, value: number, max: number, set: (value: number) => void): TemplateResult =>
+  html`<label
+    >${label}
+    <input
+      type="range"
+      min="0"
+      max=${max}
+      .value=${String(value)}
+      @input=${(event: Event) => {
+        set(Number((event.target as HTMLInputElement).value));
+        updateStates();
+        renderControls();
+      }}
+    />
+    ${value}</label
+  >`;
+
+function select<T extends string>(
+  label: string,
+  choices: readonly T[],
+  value: T,
+  set: (value: T) => void,
+): TemplateResult {
+  return html`<label
+    >${label}
+    <select
+      @change=${(event: Event) => {
+        set((event.target as HTMLSelectElement).value as T);
+      }}
+    >
+      ${choices.map((choice) => html`<option ?selected=${choice === value}>${choice}</option>`)}
+    </select></label
+  >`;
+}
+
+const checkbox = (label: string, checked: boolean, set: (checked: boolean) => void): TemplateResult =>
+  html`<label
+    ><input
+      type="checkbox"
+      .checked=${checked}
+      @change=${(event: Event) => {
+        set((event.target as HTMLInputElement).checked);
+      }}
+    />${label}</label
+  >`;
+
+function renderControls(): void {
+  const stream = (name: Stream): TemplateResult =>
+    html`<fieldset>
+      <legend>${name}</legend>
+      ${number(
+        'T',
+        values.temperature[name],
+        (value) => {
+          values.temperature[name] = value;
+        },
+        0.1,
+      )}
+      ${number('RH', values.humidity[name], (value) => {
+        values.humidity[name] = value;
+      })}
+    </fieldset>`;
+  render(
+    html`
+      <fieldset>
+        <legend>scenario</legend>
+        ${Object.entries(SCENARIOS).map(
+          ([name, scenario]) =>
+            html`<button
+              type="button"
+              @click=${() => {
+                applyScenario(scenario);
+              }}
+            >
+              ${name}
+            </button>`,
+        )}
+      </fieldset>
+      ${STREAMS.map(stream)}
+      <fieldset>
+        <legend>fans and bypass</legend>
+        ${slider('flow', values.flow, 450, (value) => {
+          values.flow = value;
+        })}
+        ${slider('bypass %', values.bypass, 100, (value) => {
+          values.bypass = value;
+        })}
+        ${select<SeasonChoice>('season', ['heating', 'cooling', 'between'], values.season, (value) => {
+          values.season = value;
+          updateStates();
+        })}
+      </fieldset>
+      <fieldset>
+        <legend>card</legend>
+        ${select('config', Object.keys(CONFIGS), options.config, (value) => {
+          options.config = value;
+          updateConfig();
+        })}
+        ${select('layout', ['auto', 'full', 'compact'], options.layout, (value) => {
+          options.layout = value;
+          updateConfig();
+        })}
+        ${checkbox('show unavailable', options.showUnavailable, (checked) => {
+          options.showUnavailable = checked;
+          updateConfig();
+        })}
+        ${checkbox('animation', options.animation, (checked) => {
+          options.animation = checked;
+          updateConfig();
+        })}
+        ${number('nominal flow (0 = none)', options.nominalFlow, (value) => {
+          options.nominalFlow = value;
+          updateConfig();
+        })}
+        ${number('smoothing min', options.smoothing, (value) => {
+          options.smoothing = value;
+          updateConfig();
+        })}
+      </fieldset>
+      <fieldset>
+        <legend>unavailable</legend>
+        ${Object.entries(SWITCHABLE).map(([label, entityId]) =>
+          checkbox(label, values.unavailable.has(entityId), (checked) => {
+            const unavailable = new Set(values.unavailable);
+            if (checked) unavailable.add(entityId);
+            else unavailable.delete(entityId);
+            values.unavailable = unavailable;
+            updateStates();
+          }),
+        )}
+      </fieldset>
+    `,
+    element('controls'),
+  );
+}
+
+function renderCards(): void {
+  const main = element('cards');
+  for (const theme of THEMES) {
+    const section = document.createElement('section');
+    section.className = `theme ${theme}`;
+    section.innerHTML = `<h2>${theme}</h2>`;
+    for (const width of WIDTHS) {
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.style.width = `${String(width)}px`;
+      slot.innerHTML = `<span>${String(width)} px</span>`;
+      for (const tag of TAGS) {
+        const card = document.createElement(tag) as HrvCard;
+        const error = document.createElement('pre');
+        error.className = 'error';
+        error.hidden = true;
+        slot.append(card, error);
+        cards.push({ tag, card, error, dark: theme === 'dark' });
+      }
+      section.append(slot);
+    }
+    main.append(section);
+  }
+  updateConfig();
+  updateStates();
+}
+
+renderControls();
+renderCards();

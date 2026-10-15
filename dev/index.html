@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HRV cards preview</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Roboto, 'Segoe UI', system-ui, sans-serif;
+        font-size: 14px;
+        background: #e8e8e8;
+      }
+      .controls {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        padding: 10px 16px;
+        background: #fff;
+        border-bottom: 1px solid #ccc;
+      }
+      .controls fieldset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 10px;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin: 0;
+        padding: 4px 8px;
+      }
+      .controls input[type='number'] {
+        width: 4.5em;
+      }
+      .theme {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px;
+        background: var(--primary-background-color);
+      }
+      .theme h2 {
+        flex-basis: 100%;
+        margin: 0;
+        font-size: 14px;
+        color: var(--secondary-text-color);
+      }
+      .slot {
+        flex: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .slot [hidden] {
+        display: none;
+      }
+      .error {
+        margin: 0;
+        padding: 8px 12px;
+        border-left: 4px solid #db4437;
+        background: var(--card-background-color);
+        color: var(--primary-text-color);
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+      .slot span {
+        display: block;
+        font-size: 12px;
+        color: var(--secondary-text-color);
+      }
+      .light {
+        --primary-background-color: #fafafa;
+        --card-background-color: #ffffff;
+        --primary-text-color: #212121;
+        --secondary-text-color: #727272;
+        --disabled-text-color: #bdbdbd;
+        --divider-color: rgba(0, 0, 0, 0.12);
+        --secondary-background-color: #e5e5e5;
+        color-scheme: light;
+      }
+      .dark {
+        --primary-background-color: #111111;
+        --card-background-color: #1c1c1c;
+        --primary-text-color: #e1e1e1;
+        --secondary-text-color: #9b9b9b;
+        --disabled-text-color: #6f6f6f;
+        --divider-color: rgba(225, 225, 225, 0.12);
+        --secondary-background-color: #282828;
+        color-scheme: dark;
+      }
+    </style>
+    <script type="module" src="./preview.ts"></script>
+  </head>
+  <body>
+    <form class="controls" id="controls"></form>
+    <main id="cards"></main>
+  </body>
+</html>

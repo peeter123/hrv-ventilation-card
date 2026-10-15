@@ -1,0 +1,884 @@
+{
+  "description": "Golden vectors for the recovery calculation: fixed inputs and the results of the formulas of the author's template macro comfoair_q450.jinja (not published), rendered in Home Assistant 2026.10.1 on 2026-10-13 (the macro body inline, with the eight inputs as variables). Power in W, moisture in g/h, unrounded; units of the inputs: degrees C, g/m3, m3/h, %. Air density 1.2 kg/m3 (the macro's fixed value). The history vectors hold the inputs recorded at that moment; helpers_recorded lists the template helpers' recorded values (kW, g/h) that the expected figures match within the helpers' rounding. The 2026-09 moments predate the averaged humidity and the sensible/latent helpers (2026-10-04), so they use the raw absolute humidity; on 2026-09-30 the totals helper already existed and matches; on 2026-09-27 it still used an older formula, so that moment has no helper check.",
+  "tolerance": {
+    "w": 1,
+    "gh": 1
+  },
+  "vectors": [
+    {
+      "name": "winter_design",
+      "description": "design.md first vector: heating, bypass closed",
+      "inputs": {
+        "outdoor": {
+          "temperature": 0,
+          "absolute_humidity": 4.0
+        },
+        "supply": {
+          "temperature": 17,
+          "absolute_humidity": 6.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 7.5
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1723.7497,
+        "recovered_w": {
+          "sensible": 1324.2844,
+          "latent": 399.4653
+        },
+        "lost_w": {
+          "sensible": 314.0918,
+          "latent": 159.7861
+        },
+        "moisture_gh": {
+          "extracted": 805.0,
+          "recovered": 575.0,
+          "outside": 230.0
+        }
+      }
+    },
+    {
+      "name": "winter_cold",
+      "description": "heating, cold day",
+      "inputs": {
+        "outdoor": {
+          "temperature": -5,
+          "absolute_humidity": 2.5
+        },
+        "supply": {
+          "temperature": 16.5,
+          "absolute_humidity": 5.2
+        },
+        "extract": {
+          "temperature": 21.5,
+          "absolute_humidity": 6.8
+        },
+        "supply_flow": 180,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1644.5169,
+        "recovered_w": {
+          "sensible": 1306.8819,
+          "latent": 337.635
+        },
+        "lost_w": {
+          "sensible": 307.4172,
+          "latent": 200.08
+        },
+        "moisture_gh": {
+          "extracted": 774.0,
+          "recovered": 486.0,
+          "outside": 288.0
+        }
+      }
+    },
+    {
+      "name": "heating_low_flow",
+      "description": "heating at low flow",
+      "inputs": {
+        "outdoor": {
+          "temperature": 8,
+          "absolute_humidity": 6.5
+        },
+        "supply": {
+          "temperature": 18,
+          "absolute_humidity": 7.4
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 8.2
+        },
+        "supply_flow": 100,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 402.0537,
+        "recovered_w": {
+          "sensible": 339.5287,
+          "latent": 62.525
+        },
+        "lost_w": {
+          "sensible": 102.615,
+          "latent": 55.5778
+        },
+        "moisture_gh": {
+          "extracted": 170.0,
+          "recovered": 90.0,
+          "outside": 80.0
+        }
+      }
+    },
+    {
+      "name": "frost",
+      "description": "heating below zero",
+      "inputs": {
+        "outdoor": {
+          "temperature": -12,
+          "absolute_humidity": 1.5
+        },
+        "supply": {
+          "temperature": 15,
+          "absolute_humidity": 4.5
+        },
+        "extract": {
+          "temperature": 20,
+          "absolute_humidity": 6.0
+        },
+        "supply_flow": 150,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1677.3513,
+        "recovered_w": {
+          "sensible": 1364.7263,
+          "latent": 312.625
+        },
+        "lost_w": {
+          "sensible": 255.5687,
+          "latent": 156.3125
+        },
+        "moisture_gh": {
+          "extracted": 675.0,
+          "recovered": 450.0,
+          "outside": 225.0
+        }
+      }
+    },
+    {
+      "name": "heating_high_flow",
+      "description": "heating at high flow",
+      "inputs": {
+        "outdoor": {
+          "temperature": 2,
+          "absolute_humidity": 5.0
+        },
+        "supply": {
+          "temperature": 18,
+          "absolute_humidity": 7.0
+        },
+        "extract": {
+          "temperature": 22,
+          "absolute_humidity": 8.5
+        },
+        "supply_flow": 450,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 3066.62,
+        "recovered_w": {
+          "sensible": 2441.37,
+          "latent": 625.25
+        },
+        "lost_w": {
+          "sensible": 617.7825,
+          "latent": 468.9375
+        },
+        "moisture_gh": {
+          "extracted": 1575.0,
+          "recovered": 900.0,
+          "outside": 675.0
+        }
+      }
+    },
+    {
+      "name": "cooling_full_bypass",
+      "description": "cooling through the bypass, extract air as reference",
+      "inputs": {
+        "outdoor": {
+          "temperature": 15,
+          "absolute_humidity": 9.0
+        },
+        "supply": {
+          "temperature": 17,
+          "absolute_humidity": 9.5
+        },
+        "extract": {
+          "temperature": 24,
+          "absolute_humidity": 10.5
+        },
+        "supply_flow": 230,
+        "bypass": 100
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 710.4272,
+        "recovered_w": {
+          "sensible": 550.6411,
+          "latent": 159.7861
+        },
+        "lost_w": {
+          "sensible": 157.4024,
+          "latent": 79.8931
+        },
+        "moisture_gh": {
+          "extracted": 345.0,
+          "recovered": 115.0,
+          "outside": 230.0
+        }
+      }
+    },
+    {
+      "name": "cooling_bypass_40",
+      "description": "bypass 40 % on a mild day: cooling",
+      "inputs": {
+        "outdoor": {
+          "temperature": 16,
+          "absolute_humidity": 10.0
+        },
+        "supply": {
+          "temperature": 19,
+          "absolute_humidity": 10.4
+        },
+        "extract": {
+          "temperature": 23.5,
+          "absolute_humidity": 11.0
+        },
+        "supply_flow": 230,
+        "bypass": 40
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 450.1786,
+        "recovered_w": {
+          "sensible": 354.3069,
+          "latent": 95.8717
+        },
+        "lost_w": {
+          "sensible": 235.8481,
+          "latent": 63.9144
+        },
+        "moisture_gh": {
+          "extracted": 230.0,
+          "recovered": 92.0,
+          "outside": 138.0
+        }
+      }
+    },
+    {
+      "name": "cooling_bypass_5",
+      "description": "bypass barely open: cooling",
+      "inputs": {
+        "outdoor": {
+          "temperature": 18,
+          "absolute_humidity": 11.0
+        },
+        "supply": {
+          "temperature": 21,
+          "absolute_humidity": 11.2
+        },
+        "extract": {
+          "temperature": 23,
+          "absolute_humidity": 11.5
+        },
+        "supply_flow": 200,
+        "bypass": 5
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 178.8443,
+        "recovered_w": {
+          "sensible": 137.161,
+          "latent": 41.6833
+        },
+        "lost_w": {
+          "sensible": 205.044,
+          "latent": 27.7889
+        },
+        "moisture_gh": {
+          "extracted": 100.0,
+          "recovered": 40.0,
+          "outside": 60.0
+        }
+      }
+    },
+    {
+      "name": "full_bypass_heating_weather",
+      "description": "full bypass while outdoor is cold: still cooling mode",
+      "inputs": {
+        "outdoor": {
+          "temperature": 10,
+          "absolute_humidity": 7.0
+        },
+        "supply": {
+          "temperature": 11,
+          "absolute_humidity": 7.1
+        },
+        "extract": {
+          "temperature": 22,
+          "absolute_humidity": 9.0
+        },
+        "supply_flow": 230,
+        "bypass": 100
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 1166.2351,
+        "recovered_w": {
+          "sensible": 862.6414,
+          "latent": 303.5936
+        },
+        "lost_w": {
+          "sensible": 78.0892,
+          "latent": 15.9786
+        },
+        "moisture_gh": {
+          "extracted": 460.0,
+          "recovered": 23.0,
+          "outside": 437.0
+        }
+      }
+    },
+    {
+      "name": "hot_day",
+      "description": "cooling with the outdoor air as reference (outdoor enthalpy higher)",
+      "inputs": {
+        "outdoor": {
+          "temperature": 32,
+          "absolute_humidity": 14.0
+        },
+        "supply": {
+          "temperature": 26,
+          "absolute_humidity": 12.5
+        },
+        "extract": {
+          "temperature": 24,
+          "absolute_humidity": 11.0
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 717.0557,
+        "recovered_w": {
+          "sensible": 477.3765,
+          "latent": 239.6792
+        },
+        "lost_w": {
+          "sensible": 161.5022,
+          "latent": 239.6792
+        },
+        "moisture_gh": {
+          "extracted": -690.0,
+          "recovered": -345.0,
+          "outside": -345.0
+        }
+      }
+    },
+    {
+      "name": "hot_humid_day",
+      "description": "cooling with the outdoor air as reference, humid",
+      "inputs": {
+        "outdoor": {
+          "temperature": 29,
+          "absolute_humidity": 16.0
+        },
+        "supply": {
+          "temperature": 25.5,
+          "absolute_humidity": 14.0
+        },
+        "extract": {
+          "temperature": 24,
+          "absolute_humidity": 12.0
+        },
+        "supply_flow": 300,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 785.5183,
+        "recovered_w": {
+          "sensible": 368.685,
+          "latent": 416.8333
+        },
+        "lost_w": {
+          "sensible": 161.595,
+          "latent": 416.8333
+        },
+        "moisture_gh": {
+          "extracted": -1200.0,
+          "recovered": -600.0,
+          "outside": -600.0
+        }
+      }
+    },
+    {
+      "name": "opposite_signs",
+      "description": "heating mode, supply cooled while moisture is added",
+      "inputs": {
+        "outdoor": {
+          "temperature": 22,
+          "absolute_humidity": 6.0
+        },
+        "supply": {
+          "temperature": 21.5,
+          "absolute_humidity": 9.0
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 10.0
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 448.1032,
+        "recovered_w": {
+          "sensible": -31.2551,
+          "latent": 479.3583
+        },
+        "lost_w": {
+          "sensible": -36.6026,
+          "latent": 159.7861
+        },
+        "moisture_gh": {
+          "extracted": 920.0,
+          "recovered": 690.0,
+          "outside": 230.0
+        }
+      }
+    },
+    {
+      "name": "house_gaining",
+      "description": "outdoor more humid than extract: extracted negative",
+      "inputs": {
+        "outdoor": {
+          "temperature": 12,
+          "absolute_humidity": 10.0
+        },
+        "supply": {
+          "temperature": 19,
+          "absolute_humidity": 9.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 9.0
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 467.183,
+        "recovered_w": {
+          "sensible": 547.0761,
+          "latent": -79.8931
+        },
+        "lost_w": {
+          "sensible": 155.2634,
+          "latent": -79.8931
+        },
+        "moisture_gh": {
+          "extracted": -230.0,
+          "recovered": -115.0,
+          "outside": -115.0
+        }
+      }
+    },
+    {
+      "name": "zero_flow",
+      "description": "design vector at zero flow: all figures 0",
+      "inputs": {
+        "outdoor": {
+          "temperature": 0,
+          "absolute_humidity": 4.0
+        },
+        "supply": {
+          "temperature": 17,
+          "absolute_humidity": 6.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 7.5
+        },
+        "supply_flow": 0,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 0.0,
+        "recovered_w": {
+          "sensible": 0.0,
+          "latent": 0.0
+        },
+        "lost_w": {
+          "sensible": 0.0,
+          "latent": 0.0
+        },
+        "moisture_gh": {
+          "extracted": 0.0,
+          "recovered": 0.0,
+          "outside": 0.0
+        }
+      }
+    },
+    {
+      "name": "near_equal",
+      "description": "all streams almost equal",
+      "inputs": {
+        "outdoor": {
+          "temperature": 20,
+          "absolute_humidity": 8.0
+        },
+        "supply": {
+          "temperature": 20.2,
+          "absolute_humidity": 8.1
+        },
+        "extract": {
+          "temperature": 20.5,
+          "absolute_humidity": 8.2
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 31.8341,
+        "recovered_w": {
+          "sensible": 15.8555,
+          "latent": 15.9786
+        },
+        "lost_w": {
+          "sensible": 23.6704,
+          "latent": 15.9786
+        },
+        "moisture_gh": {
+          "extracted": 46.0,
+          "recovered": 23.0,
+          "outside": 23.0
+        }
+      }
+    },
+    {
+      "name": "summer_night_bypass",
+      "description": "cool dry night, full bypass",
+      "inputs": {
+        "outdoor": {
+          "temperature": 14,
+          "absolute_humidity": 8.0
+        },
+        "supply": {
+          "temperature": 15,
+          "absolute_humidity": 8.1
+        },
+        "extract": {
+          "temperature": 24,
+          "absolute_humidity": 10.0
+        },
+        "supply_flow": 300,
+        "bypass": 100
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 1319.7592,
+        "recovered_w": {
+          "sensible": 923.7675,
+          "latent": 395.9917
+        },
+        "lost_w": {
+          "sensible": 102.0725,
+          "latent": 20.8417
+        },
+        "moisture_gh": {
+          "extracted": 600.0,
+          "recovered": 30.0,
+          "outside": 570.0
+        }
+      }
+    },
+    {
+      "name": "negative_delta_heating",
+      "description": "heating mode, supply enthalpy below outdoor: the total is clamped at 0",
+      "inputs": {
+        "outdoor": {
+          "temperature": 20,
+          "absolute_humidity": 8.0
+        },
+        "supply": {
+          "temperature": 19.5,
+          "absolute_humidity": 7.8
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 9.0
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 0.0,
+        "recovered_w": {
+          "sensible": -39.5021,
+          "latent": -31.9572
+        },
+        "lost_w": {
+          "sensible": 120.075,
+          "latent": 191.7433
+        },
+        "moisture_gh": {
+          "extracted": 230.0,
+          "recovered": -46.0,
+          "outside": 276.0
+        }
+      }
+    },
+    {
+      "name": "hot_day_asymmetric",
+      "description": "outdoor air as reference, supply humidity not halfway (losses differ from recovered)",
+      "inputs": {
+        "outdoor": {
+          "temperature": 32,
+          "absolute_humidity": 14.0
+        },
+        "supply": {
+          "temperature": 26,
+          "absolute_humidity": 13.0
+        },
+        "extract": {
+          "temperature": 24,
+          "absolute_humidity": 11.0
+        },
+        "supply_flow": 230,
+        "bypass": 0
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 635.6178,
+        "recovered_w": {
+          "sensible": 475.8317,
+          "latent": 159.7861
+        },
+        "lost_w": {
+          "sensible": 163.047,
+          "latent": 319.5722
+        },
+        "moisture_gh": {
+          "extracted": -690.0,
+          "recovered": -230.0,
+          "outside": -460.0
+        }
+      }
+    },
+    {
+      "name": "hot_day_bypass_open",
+      "description": "bypass open while the outdoor air has the higher enthalpy: outdoor as reference",
+      "inputs": {
+        "outdoor": {
+          "temperature": 30,
+          "absolute_humidity": 15.0
+        },
+        "supply": {
+          "temperature": 27,
+          "absolute_humidity": 13.0
+        },
+        "extract": {
+          "temperature": 24,
+          "absolute_humidity": 11.0
+        },
+        "supply_flow": 230,
+        "bypass": 50
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 562.7167,
+        "recovered_w": {
+          "sensible": 243.1445,
+          "latent": 319.5722
+        },
+        "lost_w": {
+          "sensible": 241.7185,
+          "latent": 319.5722
+        },
+        "moisture_gh": {
+          "extracted": -920.0,
+          "recovered": -460.0,
+          "outside": -460.0
+        }
+      }
+    },
+    {
+      "name": "history_2026-09-27_1040",
+      "description": "recorded 2026-09-27 10:40 CEST, bypass 63 %; raw absolute humidity (no averages existed yet)",
+      "inputs": {
+        "outdoor": {
+          "temperature": 17.5,
+          "absolute_humidity": 10.580189704895
+        },
+        "supply": {
+          "temperature": 21.0,
+          "absolute_humidity": 10.8041076660156
+        },
+        "extract": {
+          "temperature": 22.6000003814697,
+          "absolute_humidity": 11.0456295013428
+        },
+        "supply_flow": 225.5,
+        "bypass": 63.0
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 161.4751,
+        "recovered_w": {
+          "sensible": 123.6383,
+          "latent": 37.8368
+        },
+        "lost_w": {
+          "sensible": 269.5241,
+          "latent": 35.079
+        },
+        "moisture_gh": {
+          "extracted": 104.9567,
+          "recovered": 50.4935,
+          "outside": 54.4632
+        }
+      }
+    },
+    {
+      "name": "history_2026-09-30_1200",
+      "description": "recorded 2026-09-30 12:00 CEST, bypass closed, opposite signs; raw absolute humidity (no averages existed yet)",
+      "inputs": {
+        "outdoor": {
+          "temperature": 25.8000011444092,
+          "absolute_humidity": 11.0729417800903
+        },
+        "supply": {
+          "temperature": 25.1000003814697,
+          "absolute_humidity": 11.5726642608643
+        },
+        "extract": {
+          "temperature": 24.8999996185303,
+          "absolute_humidity": 11.9009170532227
+        },
+        "supply_flow": 225.199996948242,
+        "bypass": 0.0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 25.8779,
+        "recovered_w": {
+          "sensible": -52.3044,
+          "latent": 78.1823
+        },
+        "lost_w": {
+          "sensible": -14.4218,
+          "latent": 51.3556
+        },
+        "moisture_gh": {
+          "extracted": 186.46,
+          "recovered": 112.5375,
+          "outside": 73.9225
+        }
+      },
+      "helpers_recorded": {
+        "heating_power_kw": 0.026,
+        "cooling_power_kw": 0
+      }
+    },
+    {
+      "name": "history_2026-10-06_1300",
+      "description": "recorded 2026-10-06 13:00 CEST, house gaining moisture; 10-min absolute humidity averages",
+      "inputs": {
+        "outdoor": {
+          "temperature": 18.5,
+          "absolute_humidity": 12.832
+        },
+        "supply": {
+          "temperature": 23.2000007629395,
+          "absolute_humidity": 12.37
+        },
+        "extract": {
+          "temperature": 23.6000003814697,
+          "absolute_humidity": 11.89
+        },
+        "supply_flow": 229.5,
+        "bypass": 0.0
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 293.927,
+        "recovered_w": {
+          "sensible": 367.5877,
+          "latent": -73.6607
+        },
+        "lost_w": {
+          "sensible": 30.0271,
+          "latent": -76.5306
+        },
+        "moisture_gh": {
+          "extracted": -216.189,
+          "recovered": -106.029,
+          "outside": -110.16
+        }
+      },
+      "helpers_recorded": {
+        "heating_power_kw": 0.294,
+        "cooling_power_kw": 0,
+        "heating_sensible_kw": 0.368,
+        "heating_latent_kw": -0.074,
+        "moisture_recovery_rate_gh": -106,
+        "moisture_loss_rate_gh": -110,
+        "moisture_loss_rate_hrv_gh": -216
+      }
+    },
+    {
+      "name": "history_2026-10-12_1830",
+      "description": "recorded 2026-10-12 18:30 CEST, bypass 76 % (free cooling); 10-min absolute humidity averages",
+      "inputs": {
+        "outdoor": {
+          "temperature": 15.1999998092651,
+          "absolute_humidity": 7.92
+        },
+        "supply": {
+          "temperature": 20.5,
+          "absolute_humidity": 9.104
+        },
+        "extract": {
+          "temperature": 23.8000011444092,
+          "absolute_humidity": 10.538
+        },
+        "supply_flow": 230.33332824707,
+        "bypass": 76.0
+      },
+      "expected": {
+        "mode": "cooling",
+        "saving_w": 491.9892,
+        "recovered_w": {
+          "sensible": 262.5238,
+          "latent": 229.4654
+        },
+        "lost_w": {
+          "sensible": 417.2476,
+          "latent": 189.4609
+        },
+        "moisture_gh": {
+          "extracted": 603.0127,
+          "recovered": 272.7147,
+          "outside": 330.298
+        }
+      },
+      "helpers_recorded": {
+        "heating_power_kw": 0,
+        "cooling_power_kw": 0.492,
+        "cooling_sensible_kw": 0.263,
+        "cooling_latent_kw": 0.229,
+        "cooling_loss_sensible_kw": 0.417,
+        "cooling_loss_latent_kw": 0.189,
+        "moisture_recovery_rate_gh": 273,
+        "moisture_loss_rate_gh": 330,
+        "moisture_loss_rate_hrv_gh": 603
+      }
+    }
+  ]
+}

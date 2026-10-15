@@ -1,0 +1,63 @@
+schema: spec-driven
+
+context: |
+  Home Assistant Lovelace cards (and later a custom integration) for HRV/ERV ventilation units. Developed against
+  one live installation (a Zehnder ComfoAir Q450 on the zehnder_comfoair_q integration), but meant to be
+  published on GitHub for others to install.
+  This folder is its own git repo, nested in a private Home Assistant config workspace. That workspace's deploy
+  script uploads dist/ to /config/www/custom/hrv-ventilation-card/ and private/templates/ to /config/custom_templates/
+  on the live host; files produced by a build tool are not uploaded automatically and need an explicit deploy.
+  Nothing installation-specific (entity IDs, device serials, Lovelace resource ids, hostnames) may ship in code
+  or examples meant for others; installation notes and the formula macro belong in the git-ignored private/ folder only (private/installation.md);
+  docs/hrv-ventilation.md holds the public explanation.
+  The live installation must keep working throughout every change; plan the migration of its dashboards.
+  Plain text only in names, labels and UI strings: no emoji.
+  UI text keeps every number with its unit: a no-break space between them (NBSP in src/strings.ts), never a
+  plain space, so no card width breaks a line between a value and its unit.
+
+rules:
+  proposal:
+    - State explicitly what is out of scope and which follow-up change covers it
+  tasks:
+    - Include verification on the live installation (screenshot or state check), not only unit tests
+    - Include updating README.md and docs/hrv-ventilation.md for every behaviour change
+
+operations:
+  apply:
+    guidance:
+      - Keep the quality hook green; fix what it reports before moving to the next task
+      - End every task with npm run check (once it exists), /code-review on the task's changes (fix confirmed findings) and a commit of the task; skip the commit when the task changed no files
+      - End every task group with /code-review on the group's changes (and /simplify for larger groups), fix confirmed findings, and only then tick the group's review task
+      - Run npm run check before ticking any task that changes code
+      - Run implementation sessions from this folder so the project hook and /opsx commands are loaded
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

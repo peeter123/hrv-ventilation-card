@@ -1,0 +1,6 @@
+dist/
+build/
+openspec/
+.claude/
+package-lock.json
+*.md

@@ -1,0 +1,21 @@
+// How fast the air moves along a stream of the airflow diagram. Pure: the card turns the speed into the duration of
+// the dashes' CSS animation.
+import { numericValue, type StateLike } from '../lib/availability';
+
+/** The speed range with a nominal flow: a quarter to twice the medium speed. */
+export const MIN_SPEED = 0.25;
+export const MAX_SPEED = 2;
+
+/**
+ * The speed factor of a stream from its flow entity's state, 1 being the medium speed, or 0 while the stream stands
+ * still. A flow of 0 or less stops it. Otherwise, with a nominal flow (in the entity's unit), the factor is flow /
+ * nominal flow, clamped to 0.25 to 2; without one it is the medium speed. Without a flow entity, or while it has no
+ * value (unavailable, unknown), the stream moves at the medium speed, as nothing says the fans have stopped.
+ */
+export function flowSpeed(flow: StateLike | undefined, nominalFlow: number | undefined): number {
+  const value = numericValue(flow);
+  if (value === undefined) return 1;
+  if (value <= 0) return 0;
+  if (nominalFlow === undefined || nominalFlow <= 0) return 1;
+  return Math.min(Math.max(value / nominalFlow, MIN_SPEED), MAX_SPEED);
+}

@@ -1,0 +1,51 @@
+{
+  "name": "hrv-ventilation-card",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lovelace cards for heat and energy recovery ventilation units",
+  "type": "module",
+  "engines": {
+    "node": "^22.13 || ^24 || >=26"
+  },
+  "scripts": {
+    "dev": "vite --open /dev/index.html",
+    "build": "vite build",
+    "release": "npm run check && npm run build && node scripts/check-release.mjs",
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:browser": "vitest run --project browser",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:ids": "vite build --logLevel warn && node scripts/check-ids.mjs",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run check:ids",
+    "capture": "node scripts/capture.mjs"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@happy-dom/global-registrator": "^21.0.1",
+    "@mdi/js": "^7.4.47",
+    "@types/node": "^24.19.2",
+    "@types/pngjs": "^6.0.5",
+    "@vitest/browser-playwright": "^5.0.4",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-lit": "^2.3.1",
+    "eslint-plugin-wc": "^3.1.0",
+    "gifenc": "^1.0.3",
+    "globals": "^17.13.0",
+    "happy-dom": "^21.0.1",
+    "playwright": "^1.64.0",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4",
+    "yaml": "^2.9.1"
+  }
+}

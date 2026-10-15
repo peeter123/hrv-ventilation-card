@@ -1,0 +1,9 @@
+.claude/settings.local.json
+node_modules/
+build/
+.env
+.env.*
+!.env.sample
+test/**/__screenshots__/
+.vitest/
+private/
