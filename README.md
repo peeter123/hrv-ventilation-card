@@ -572,7 +572,7 @@ commands need that too).
 
 Planned with OpenSpec (CLI `openspec`, installed globally with npm).
 
-- **Done: configurable cards** (`openspec/changes/configurable-cards/`): TypeScript + Lit rewrite, every entity
+- **Done: configurable cards** (v0.1.0; `openspec/changes/archive/2026-10-15-configurable-cards/`, specs in `openspec/specs/`): TypeScript + Lit rewrite, every entity
   from the card config, visual editors, the drawn diagram, and the migration of the author's dashboards.
 - **Done: calculation in the card.** The cards calculate from the unit's raw sensors and need no helpers.
 - **Next: v0.2 of the cards**, with improvements to the cards themselves.
