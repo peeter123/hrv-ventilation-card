@@ -109,7 +109,7 @@
 - [x] 6.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
   Playwright (service workers blocked) on both dashboards that the existing cards render with the fixes (centred
   icons and status cells, equal lanes, no water entry, moisture subtitle) and the same values as before
-- [ ] 6.4 Add `exchanger_type: erv`, `status.heating_saving`, `status.cooling_saving` and
+- [x] 6.4 Add `exchanger_type: erv`, `status.heating_saving`, `status.cooling_saving` and
   `status.moisture_recovery` to the diagram cards on both
   dashboards (`python_transform`, cards located by type, IDs from `private/installation.md`); verify with
   Playwright screenshots the blue-grey exchanger and the moisture figure at desktop and phone width, that tapping
