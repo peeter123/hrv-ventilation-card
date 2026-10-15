@@ -161,6 +161,17 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   no `role`, `tabindex` or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the
   supply air temperature: a dialog unrelated to the figure tapped, which is why there is no fallback. The pointer
   cursor follows `data-entity`, so only what opens a dialog shows it.
+- **Sample mode.** A card whose config sets no entity role at all (only `type`, optionally options) renders the
+  built-in sample values of `src/lib/sample.ts`: a heating day (outdoor 2 °C, supply 18.5 °C, extract 21.5 °C,
+  exhaust 5.5 °C, 200 m³/h, bypass closed, house drying) on made-up IDs in the non-HA domain `hrv_sample.*`, so
+  nothing collides with a real entity. A muted "Sample values" note sits at the bottom right, so the sample is not
+  mistaken for live data. Options still apply (`exchanger_type: erv` draws the ERV with the moisture figure) and
+  invalid options still give a configuration error. Nothing in a sample card opens a more-info dialog, and no
+  history is requested (smoothing is off). As soon as any role has a value, valid or not, the card uses only the
+  configured entities with the usual required-role checks, so picking one entity in the editor shows the
+  missing-entities error until the required ones are set; the sample is never mixed with real values. The cards are
+  in the card picker with `preview: true`, and `getStubConfig()` returns `{}`, so a card added from the picker opens
+  in sample mode with an empty editor. The preview page has a "no entities (sample values)" row per theme.
 - **Checking a change in a live Home Assistant:** load the dashboard in a fresh browser context (Playwright, service
   workers blocked), because a long-lived browser profile can keep an old module even after the resource `?v=`
   changed. To compare the cards with other sensors, read both in one `page.evaluate`: the card's shadow-root text

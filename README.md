@@ -74,7 +74,8 @@ helps a browser that still shows it.
 
 1. Open a dashboard, choose **Edit dashboard**, then **Add card** and the **By card** tab.
 2. Search for "HRV" and pick **HRV Airflow Diagram**, **HRV Recovery Balance** or **HRV Moisture Balance**. The
-   editor opens with an empty config; the preview names the sensors that are still missing.
+   The picker shows a rendered preview of each card. A new card starts with an empty config and shows sample
+   values until you pick a sensor (see [Sample values](#sample-values)).
 3. Open each group (outdoor air, supply air, extract air, fans, bypass, ...) and pick your unit's sensors.
    The preview updates as you go.
 4. Turn on **Advanced settings** for the less common options, marked "Advanced" in [Options](#options): for
@@ -84,6 +85,18 @@ helps a browser that still shows it.
 5. Save. **Show code editor** shows the same config as YAML; see [Options](#options) and [Examples](#examples).
 
 ![The visual editor of the recovery balance card, with its groups collapsed and the live preview](docs/images/editor.png)
+
+### Sample values
+
+A card whose config sets no sensor at all (only `type`, and optionally options) shows built-in sample values: a
+heating day with outdoor air at 2 °C, supply 18.5 °C, extract 21.5 °C, exhaust 5.5 °C, 200 m³/h and the bypass
+closed. A muted "Sample values" note at the bottom right marks it. This is what the card picker preview and a
+freshly added card show. Options still apply, so `exchanger_type: erv` shows the ERV drawing and its moisture
+figure, and an invalid option still gives a configuration error. Nothing in a sample card opens a more-info dialog.
+
+To leave the sample, pick any sensor in the editor (or add any role to the YAML). The card then uses only your
+sensors, and the preview names the required ones that are still missing until you have set them. The sample is
+never mixed with real values.
 
 ## Options
 
@@ -554,7 +567,7 @@ a dashboard column, at 280, 320, 350, 400 and 600 px in a light and a dark theme
 layout, show unavailable, animation, nominal flow, smoothing). The flow is one value for supply and exhaust, as the
 unit keeps them in balance. Smoothing is off by default, so the bars follow the controls at once. The scenario
 buttons fill in all the states at once: heating (winter), cooling (summer), bypass 50 % (off season) and bypass
-100 % (night cooling). A card whose config it rejects shows the error in its place. `dev/ha-stubs.ts` stands in
+100 % (night cooling). Each theme also has a "no entities (sample values)" row with the cards in sample mode. A card whose config it rejects shows the error in its place. `dev/ha-stubs.ts` stands in
 for Home Assistant's `ha-card` and `ha-icon`, so the page needs no Home Assistant.
 
 **Live checks:** the scripts that drive a live Home Assistant in a browser read `HA_URL` and `HA_TOKEN` (a
