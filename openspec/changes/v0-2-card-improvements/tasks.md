@@ -73,7 +73,7 @@
   missing-roles error, no note)
 - [x] 4.3 Set `preview: true` in `CARD_ENTRIES`; verify the `index` tests (each entry has a preview, still
   registered once when loaded twice)
-- [ ] 4.4 Add a no-entities slot to the preview page; verify a screenshot of the three cards in sample mode in
+- [x] 4.4 Add a no-entities slot to the preview page; verify a screenshot of the three cards in sample mode in
   both themes
 - [ ] 4.5 Document sample mode and the picker preview in `README.md` (how to leave the sample: pick any entity)
   and `docs/hrv-ventilation.md`; verify the README tests pass
