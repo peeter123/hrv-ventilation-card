@@ -1,0 +1,93 @@
+import { describe, expect, test } from 'vitest';
+import { createCalculator } from '../../src/calc/inputs';
+import { SmoothingStore } from '../../src/calc/smoothing';
+import { SAVING_THRESHOLD } from '../../src/diagram/badge';
+import { asEntityId, entityAt, type RolePath } from '../../src/lib/config';
+import { formatState } from '../../src/lib/hass';
+import { SAMPLE_CONFIG, SAMPLE_STATES } from '../../src/lib/sample';
+
+// Every role of the cards. Typed as a record, so a role added to RolePath does not compile until it is listed here.
+const ROLES: Record<RolePath, true> = {
+  'outdoor.temperature': true,
+  'outdoor.humidity': true,
+  'outdoor.absolute_humidity': true,
+  'supply.temperature': true,
+  'supply.humidity': true,
+  'supply.absolute_humidity': true,
+  'extract.temperature': true,
+  'extract.humidity': true,
+  'extract.absolute_humidity': true,
+  'exhaust.temperature': true,
+  'exhaust.humidity': true,
+  'exhaust.absolute_humidity': true,
+  'fans.level': true,
+  'fans.supply_flow': true,
+  'fans.exhaust_flow': true,
+  'bypass.position': true,
+  'bypass.mode': true,
+  'bypass.next_change': true,
+  'status.operating_mode': true,
+  'status.target_temperature': true,
+  'status.temperature_profile': true,
+  'status.next_fan_change': true,
+  'status.filter_days': true,
+  'status.power': true,
+  'status.rmot': true,
+  'status.saving': true,
+  'status.moisture_recovery': true,
+  'seasons.heating': true,
+  'seasons.cooling': true,
+};
+// The absolute humidities are left out on purpose: the sample gives relative humidity and the cards derive the rest.
+const SAMPLE_ROLES = (Object.keys(ROLES) as RolePath[]).filter((role) => !role.endsWith('absolute_humidity'));
+
+const calculate = (): ReturnType<ReturnType<typeof createCalculator>> =>
+  createCalculator(
+    { ...SAMPLE_CONFIG, smoothing: 0 },
+    new SmoothingStore(),
+  )({
+    states: SAMPLE_STATES,
+    // History never arrives (the card also sets smoothing to 0): the calculation uses the current values.
+    callWS: () => new Promise(() => undefined),
+  });
+// The sample config sets every role, so the entity ID of a role is always there.
+const entityId = (role: RolePath): string => entityAt(SAMPLE_CONFIG, role) ?? '';
+const sampleState = (role: RolePath): string | undefined => SAMPLE_STATES[entityId(role)]?.state;
+
+describe('the sample', () => {
+  test('sets every role the cards show, to a state in the sample, under the made-up domain', () => {
+    for (const role of SAMPLE_ROLES) {
+      expect(entityId(role), role).toMatch(/^hrv_sample\./);
+      expect(asEntityId(entityId(role)), role).toBeDefined();
+      expect(SAMPLE_STATES[entityId(role)], role).toBeDefined();
+    }
+  });
+
+  test('holds no state for an entity the config does not set', () => {
+    const configured = new Set(SAMPLE_ROLES.map(entityId));
+    expect(Object.keys(SAMPLE_STATES).filter((id) => !configured.has(id))).toEqual([]);
+  });
+
+  test('is a heating day: a saving above the badge threshold, a drying house, positive moisture recovery', () => {
+    const { result } = calculate();
+    expect(result?.mode).toBe('heating');
+    expect(result?.saving).toBeGreaterThan(SAVING_THRESHOLD);
+    expect(result?.moisture?.extracted).toBeGreaterThan(0);
+    expect(result?.moisture?.recovered).toBeGreaterThan(0);
+  });
+
+  test('the saved power and moisture recovery states match the calculation', () => {
+    const { result } = calculate();
+    expect(Number(sampleState('status.saving'))).toBeCloseTo(result?.saving ?? NaN, -2);
+    expect(Number(sampleState('status.moisture_recovery'))).toBeCloseTo(result?.moisture?.recovered ?? NaN, -1);
+  });
+
+  test('formats like real sensors through the formatState fallback, a number with its unit', () => {
+    const format = (role: RolePath): string => formatState({ states: SAMPLE_STATES }, entityId(role));
+    expect(format('outdoor.temperature')).toBe('2 °C');
+    expect(format('supply.humidity')).toBe('45 %');
+    expect(format('fans.supply_flow')).toBe('200 m³/h');
+    expect(format('status.filter_days')).toBe('120 d');
+    expect(format('bypass.mode')).toBe('Auto');
+  });
+});
