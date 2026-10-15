@@ -62,7 +62,7 @@
 
 ## 4. Sample values and card picker preview
 
-- [ ] 4.1 Add `src/lib/sample.ts` with the sample config and states (design: "Sample mode"), with `hrv_sample.*`
+- [x] 4.1 Add `src/lib/sample.ts` with the sample config and states (design: "Sample mode"), with `hrv_sample.*`
   IDs; verify a unit test that runs the calculation on the sample (heating mode, a saving above the badge
   threshold, positive extracted and recovered moisture) and that `npm run check:ids` passes with the sample in
   the bundle
