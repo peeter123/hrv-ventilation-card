@@ -1,6 +1,7 @@
 // The shared bar in a real browser: every segment's fill has the bar's box, so the stripes of adjacent hatched parts
-// line up as one pattern.
+// line up as one pattern, and the two lanes of the recovery bar are equally high.
 import { afterEach, expect, test } from 'vitest';
+import { commands } from 'vitest/browser';
 import '../../dev/ha-stubs';
 import { CONFIGS, MockHass, type MockValues } from '../../dev/mock-hass';
 import '../../src/cards/moisture-balance-card';
@@ -20,19 +21,34 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
+declare module 'vitest/browser' {
+  interface BrowserCommands {
+    emulateDevicePixelRatio: (ratio: number | null) => Promise<void>;
+  }
+}
+
+/** A bar card at the given width with every recovery part, rendered; its shadow root. */
+async function show(
+  tag: 'hrv-recovery-balance-card' | 'hrv-moisture-balance-card',
+  width: number,
+): Promise<ShadowRoot> {
+  const wrapper = document.createElement('div');
+  wrapper.style.width = `${String(width)}px`;
+  const card = document.createElement(tag);
+  card.setConfig({ type: `custom:${tag}`, ...CONFIGS['full'], smoothing: 0 });
+  card.hass = new MockHass().build(VALUES, false);
+  wrapper.append(card);
+  document.body.append(wrapper);
+  await card.updateComplete;
+  const root = card.shadowRoot;
+  if (!root) throw new Error('no shadow root');
+  return root;
+}
+
 for (const tag of ['hrv-recovery-balance-card', 'hrv-moisture-balance-card'] as const) {
   for (const width of [280, 437, 600]) {
     test(`${tag}, ${String(width)} px: every fill covers the bar exactly`, async () => {
-      const wrapper = document.createElement('div');
-      wrapper.style.width = `${String(width)}px`;
-      const card = document.createElement(tag);
-      card.setConfig({ type: `custom:${tag}`, ...CONFIGS['full'], smoothing: 0 });
-      card.hass = new MockHass().build(VALUES, false);
-      wrapper.append(card);
-      document.body.append(wrapper);
-      await card.updateComplete;
-      const root = card.shadowRoot;
-      if (!root) throw new Error('no shadow root');
+      const root = await show(tag, width);
       const bar = root.querySelector('.bar');
       if (!bar) throw new Error('no bar');
       const inside = bar.getBoundingClientRect().left + bar.clientLeft;
@@ -46,3 +62,31 @@ for (const tag of ['hrv-recovery-balance-card', 'hrv-moisture-balance-card'] as 
     });
   }
 }
+
+for (const ratio of [1, 2]) {
+  test(`recovery-balance-card "Equal lanes": both lanes equally high at device pixel ratio ${String(ratio)}`, async () => {
+    await commands.emulateDevicePixelRatio(ratio);
+    try {
+      expect(window.devicePixelRatio).toBe(ratio);
+      const root = await show('hrv-recovery-balance-card', 437);
+      const bar = root.querySelector('.bar');
+      const lanes = [...root.querySelectorAll('.lane')].map((lane) => lane.getBoundingClientRect());
+      expect(bar?.getBoundingClientRect().height).toBe(28);
+      expect(lanes.map((lane) => lane.height)).toEqual([13, 13]);
+      // The divider lies across the middle, between the lanes, and takes no height from them.
+      const divider = root.querySelector('.divider')?.getBoundingClientRect();
+      expect(divider?.height).toBe(1);
+      expect((divider?.top ?? 0) + 0.5).toBe(lanes[1]?.top);
+    } finally {
+      await commands.emulateDevicePixelRatio(null);
+    }
+  });
+}
+
+test('the one-lane moisture bar keeps its 22 px height and has no divider', async () => {
+  const root = await show('hrv-moisture-balance-card', 437);
+  expect(root.querySelector('.bar')?.getBoundingClientRect().height).toBe(22);
+  expect(root.querySelectorAll('.lane')).toHaveLength(1);
+  expect(root.querySelector('.lane')?.getBoundingClientRect().height).toBe(20);
+  expect(root.querySelector('.divider')).toBeNull();
+});

@@ -54,8 +54,15 @@ export const barStyles = css`
     position: relative;
     flex: 1 1 0;
   }
-  .lane + .lane {
-    border-top: 1px solid var(--hrv-bar-outline);
+  /* The line between two lanes lies over them, like the zero line, so it takes no height from either lane. */
+  .divider {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    margin-top: -0.5px;
+    background: var(--hrv-bar-outline);
   }
   .seg {
     position: absolute;
@@ -113,8 +120,8 @@ export function fillBox({ left, width }: Segment): { left: string; width: string
 }
 
 /**
- * The bar: one lane per row of segments, all on the same scale, and the zero line in the centre across them. Two or
- * more lanes make the bar taller and are divided by a line.
+ * The bar: one lane per row of segments, all on the same scale, and the zero line in the centre across them. Two
+ * lanes make the bar taller and are divided by a line across its middle.
  */
 export function renderBar(lanes: readonly (readonly DrawnSegment[])[]): TemplateResult {
   return html`<div class="bar ${lanes.length > 1 ? 'lanes' : ''}">
@@ -136,6 +143,7 @@ export function renderBar(lanes: readonly (readonly DrawnSegment[])[]): Template
           })}
         </div>`,
     )}
+    ${lanes.length === 2 ? html`<div class="divider"></div>` : nothing}
     <div class="zero"></div>
   </div>`;
 }

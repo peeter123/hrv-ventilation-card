@@ -5,7 +5,7 @@
 - [x] 1.1 Remove the water entry from the recovery legend (`recoveryView`) and delete `RECOVERY.water` and
   `RECOVERY.waterKeptOut`; verify the `recovery-view` unit tests cover the "Water recovered" and "Water kept out"
   scenarios (two lanes and the scale, no water entry) and `npm run check` passes
-- [ ] 1.2 Replace the lane border with a divider overlay in `src/cards/bar.ts` (design: "Equal lanes"); verify a
+- [x] 1.2 Replace the lane border with a divider overlay in `src/cards/bar.ts` (design: "Equal lanes"); verify a
   test in `bar.browser.test.ts` that renders a two-lane bar at device pixel ratio 1 and 2 and asserts equal lane
   heights, and that the one-lane bar is unchanged at 22 px
 - [ ] 1.3 Give the moisture card the fixed title "Moisture Recovery" and a muted direction subtitle
