@@ -44,21 +44,16 @@ export function savingBadge(
 }
 
 export interface MoistureFigure {
-  /** A drop while moisture is recovered, a crossed-out drop while it is kept out. */
-  icon: string;
-  /** The magnitude, e.g. "120 g/h", or "n/a". */
+  /** The signed rate, e.g. "120 g/h", or "−418 g/h" while moisture is kept out; or "n/a". */
   text: string;
-  /** The tooltip, e.g. "Moisture recovered: 120 g/h". */
+  /** The tooltip, with the direction in words, e.g. "Moisture kept out: 418 g/h". */
   title: string;
 }
 
-const RECOVERED_ICON = 'mdi:water-outline';
-const KEPT_OUT_ICON = 'mdi:water-off-outline';
-
 /**
- * The moisture recovery figure of an ERV for a calculation result: the recovered moisture rate as a magnitude, with a
- * crossed-out drop while it is negative (moisture kept out). None for an HRV or without the badge's inputs (`badge`).
- * Without a moisture rate (an input has no value) it is hidden like the badge, or "n/a" with `showUnavailable`.
+ * The moisture recovery figure of an ERV for a calculation result: the recovered moisture rate, negative while the
+ * exchanger keeps moisture out. None for an HRV or without the badge's inputs (`badge`). Without a moisture rate (an
+ * input has no value) it is hidden like the badge, or "n/a" with `showUnavailable`.
  */
 export function moistureFigure(
   result: RecoveryResult | undefined,
@@ -67,14 +62,13 @@ export function moistureFigure(
 ): MoistureFigure | undefined {
   if (options.exchanger !== 'erv' || !options.badge) return undefined;
   const rate = result?.moisture?.recovered;
-  if (rate === undefined) {
-    return options.showUnavailable
-      ? { icon: RECOVERED_ICON, text: NO_VALUE, title: DIAGRAM.moistureNoValue }
-      : undefined;
-  }
-  const text = DIAGRAM.moisture(formatNumber(Math.abs(rate), locale));
-  // Kept out only when the magnitude shows as more than 0, so "0 g/h" never gets the crossed-out drop.
-  return rate <= -0.5
-    ? { icon: KEPT_OUT_ICON, text, title: DIAGRAM.moistureKeptOut(text) }
-    : { icon: RECOVERED_ICON, text, title: DIAGRAM.moistureRecovered(text) };
+  if (rate === undefined)
+    return options.showUnavailable ? { text: NO_VALUE, title: DIAGRAM.moistureNoValue } : undefined;
+  const text = DIAGRAM.moisture(formatNumber(rate, locale));
+  const magnitude = DIAGRAM.moisture(formatNumber(Math.abs(rate), locale));
+  // Kept out only when the sign shows: a rate that rounds to 0 is written "0 g/h", without one.
+  return {
+    text,
+    title: text === magnitude ? DIAGRAM.moistureRecovered(magnitude) : DIAGRAM.moistureKeptOut(magnitude),
+  };
 }

@@ -190,9 +190,12 @@ export class HrvVentilationCard extends HrvCard {
     .bypass-position {
       top: 20.5%;
     }
-    /* Just above the exchanger's inner outline (y 162), mirroring the bypass position. */
+    /*
+     * Low in the exchanger, under the crossing streams (bottom edge at y 152 of 200): high enough that a four-digit
+     * rate fits between the slanted sides on narrow cards, low enough to stay clear of the streams and the badge.
+     */
     .moisture-recovery {
-      bottom: 20.5%;
+      bottom: 24%;
     }
     /* On the exchanger's centre. */
     .saving {
@@ -479,9 +482,10 @@ export class HrvVentilationCard extends HrvCard {
   }
 
   /**
-   * The ERV's moisture recovery figure: an icon with the magnitude, styled as a label, with the direction in its
+   * The ERV's moisture recovery figure: the signed rate, styled as a label, with the direction in words in its
    * tooltip.
-   * Tapping it opens the moisture recovery entity (status.moisture_recovery); without one it is not tappable.
+   * Tapping it opens the moisture recovery entity (status.moisture_recovery); without one it is not tappable, and an
+   * image, so its label (with the direction in words) is still read out.
    */
   private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
     if (!figure) return nothing;
@@ -491,10 +495,10 @@ export class HrvVentilationCard extends HrvCard {
         class="label figure"
         title=${figure.title}
         aria-label=${figure.title}
-        role=${ifDefined(entity && 'button')}
+        role=${entity ? 'button' : 'img'}
         tabindex=${ifDefined(entity && '0')}
         data-entity=${ifDefined(entity)}
-        ><ha-icon .icon=${figure.icon} aria-hidden="true"></ha-icon><span class="value">${figure.text}</span></span
+        ><span class="value">${figure.text}</span></span
       >
     </div>`;
   }

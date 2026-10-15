@@ -76,38 +76,34 @@ describe('moistureFigure', () => {
     moisture: { extracted: 500, recovered, outside: 500 - recovered },
   });
 
-  test('airflow-diagram-card "Moisture recovered": a drop and "120 g/h"', () => {
+  test('airflow-diagram-card "Moisture recovered": "120 g/h"', () => {
     expect(moistureFigure(withMoisture(120.3), ERV, LOCALE)).toEqual({
-      icon: 'mdi:water-outline',
       text: nb('120 g/h'),
       title: nb('Moisture recovered: 120 g/h'),
     });
   });
 
-  test('airflow-diagram-card "Moisture kept out": a crossed-out drop and the magnitude "418 g/h"', () => {
+  test('airflow-diagram-card "Moisture kept out": "−418 g/h", the tooltip with the magnitude', () => {
     expect(moistureFigure(withMoisture(-418), ERV, LOCALE)).toEqual({
-      icon: 'mdi:water-off-outline',
-      text: nb('418 g/h'),
+      text: nb('−418 g/h'),
       title: nb('Moisture kept out: 418 g/h'),
     });
   });
 
-  test('a rate that shows as 0 g/h keeps the plain drop, whatever its sign', () => {
+  test('a rate that shows as 0 g/h has no sign and counts as recovered', () => {
     expect(moistureFigure(withMoisture(-0.4), ERV, LOCALE)).toEqual({
-      icon: 'mdi:water-outline',
       text: nb('0 g/h'),
       title: nb('Moisture recovered: 0 g/h'),
     });
   });
 
-  test('the magnitude is formatted with the locale', () => {
-    expect(moistureFigure(withMoisture(-1234), ERV, { language: 'de' })?.text).toBe(nb('1.234 g/h'));
+  test('the rate is formatted with the locale', () => {
+    expect(moistureFigure(withMoisture(-1234), ERV, { language: 'de' })?.text).toBe(nb('−1.234 g/h'));
   });
 
   test('airflow-diagram-card "Input unavailable": hidden, or "n/a" with show_unavailable, like the badge', () => {
     expect(moistureFigure(undefined, ERV, LOCALE)).toBeUndefined();
     expect(moistureFigure(undefined, { ...ERV, showUnavailable: true }, LOCALE)).toEqual({
-      icon: 'mdi:water-outline',
       text: 'n/a',
       title: 'Moisture recovery: n/a',
     });

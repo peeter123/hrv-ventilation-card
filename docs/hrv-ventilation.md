@@ -127,11 +127,14 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   humidity sensors still gets latent figures). HRV fills the exchanger with the theme's secondary background, ERV
   with `color-mix(in srgb, var(--secondary-background-color) 75%, #4f86b8)`: a blue-grey that stays light in light
   themes and dark in dark ones. The browser test checks the text on it at 4.5:1 or more in both preview themes.
-- **Moisture figure (ERV).** At `bottom: 20.5%`, just above the exchanger's inner outline (y 162 of 200), mirroring
-  the bypass position at `top: 20.5%`, in both layouts. It shows the calculation's recovered moisture rate as a
-  magnitude: a drop while moisture is recovered, a crossed-out drop while it is kept out (only once the magnitude
-  shows as more than 0 g/h). It needs the badge's inputs and follows the badge when one has no value. It sits on the
-  same calculation result as the badge, computed once per render.
+- **Moisture figure (ERV).** At `bottom: 24%` (bottom edge at y 152 of 200), under the crossing streams, in both
+  layouts. It shows the calculation's recovered moisture rate with its sign, negative while moisture is kept out;
+  the tooltip names the direction with the magnitude. It has no icon: at 11 px text below 400 px card width a
+  four-digit rate with an icon reached the exchanger's slanted outline, so the text sits a little higher than the
+  bypass position's mirror image instead, and a test checks a four-digit kept-out rate between the slanted sides
+  and clear of the streams at 280 to 600 px (measured: from 26 % it touches the streams). Without a role entity it
+  is `role="img"`, so its label is read out. It needs the badge's inputs and follows the badge when one has no
+  value. It sits on the same calculation result as the badge, computed once per render.
 - **Top row and status grid.** The season icon (left), power (centre) and RMOT (right) sit above the drawing; the
   fan level, bypass mode, operating mode, temperature profile, target temperature, next changes and filter days sit
   in a three-column grid below it, each cell fixed so nothing moves when a value changes, each value centred in its

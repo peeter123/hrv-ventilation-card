@@ -21,17 +21,20 @@ fill and legible in light and dark themes. Any other value SHALL be a configurat
 
 ### Requirement: Moisture recovery figure on ERV
 With `exchanger_type: erv` and the badge's inputs configured, the card SHALL show the calculated moisture recovery
-rate in g/h at the bottom of the exchanger, just inside its outline. A drop icon goes in front. A negative rate
-SHALL show its magnitude with a crossed-out drop icon, as moisture kept out.
+rate in g/h low in the exchanger, under the crossing streams, without an icon. A negative rate SHALL show its sign,
+as moisture kept out, and the tooltip SHALL name the direction with the magnitude.
 
 #### Scenario: Moisture recovered
 - **WHEN** the type is ERV and the calculated moisture recovery rate is 120 g/h
-- **THEN** the bottom of the exchanger shows a drop icon and "120 g/h", with the tooltip "Moisture recovered: 120 g/h"
+- **THEN** the bottom of the exchanger shows "120 g/h", with the tooltip "Moisture recovered: 120 g/h"
 
 #### Scenario: Moisture kept out
 - **WHEN** the type is ERV and the calculated moisture recovery rate is -418 g/h
-- **THEN** the bottom of the exchanger shows a crossed-out drop icon and "418 g/h", with the tooltip "Moisture kept
-  out: 418 g/h"
+- **THEN** the bottom of the exchanger shows "−418 g/h", with the tooltip "Moisture kept out: 418 g/h"
+
+#### Scenario: Four-digit rate on a narrow card
+- **WHEN** the type is ERV, the rate is -1500 g/h and the card is 280 to 600 px wide
+- **THEN** the figure's text stays between the exchanger's slanted sides, clear of the streams and the badge
 
 #### Scenario: Input unavailable
 - **WHEN** the type is ERV and the supply flow entity is unavailable
@@ -78,7 +81,7 @@ remaining, power, running mean outdoor temperature, saved power, moisture recove
 ### Requirement: Labels on the drawing
 Each stream's temperature and humidities SHALL be shown next to that stream's end on the drawing, the bypass
 position at the top of the exchanger, just inside its outline, the saving badge on its centre and, on an ERV, the
-moisture recovery figure at the bottom of the exchanger, just inside its outline. The supply and exhaust flow SHALL
+moisture recovery figure low in the exchanger, under the crossing streams. The supply and exhaust flow SHALL
 be shown above the tip of the supply and the exhaust arrow, clear of the bypass path. With the automatic layout,
 labels SHALL NOT overlap each other or the arrowheads and SHALL NOT extend outside the card at any card width from
 280 px.

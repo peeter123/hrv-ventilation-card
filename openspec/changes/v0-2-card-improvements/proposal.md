@@ -16,8 +16,8 @@ card's title mixes the subject with the direction. The backlog put this v0.2 bef
   "Sample values" note, instead of a configuration error. Once any entity is set, the card uses the real states and
   the usual config checks.
 - **Airflow card, exchanger type.** A new `exchanger_type` option (`hrv` default, `erv`) in the editor. HRV draws
-  the exchanger in grey as now. ERV draws it blue-grey and shows the calculated moisture recovery rate (g/h) at the
-  bottom of the exchanger, just inside its outline, opposite the bypass position at the top.
+  the exchanger in grey as now. ERV draws it blue-grey and shows the calculated moisture recovery rate (g/h, negative
+  while moisture is kept out) low in the exchanger, under the crossing streams.
 - **Airflow card, label icons.** Icons are centred vertically on their text in the top row and the status grid.
 - **Airflow card, status grid.** Each value is centred in its column. The grid stays centred on the card.
 - **Airflow card, tap targets.** The saving badge no longer opens the supply air temperature. Two new optional

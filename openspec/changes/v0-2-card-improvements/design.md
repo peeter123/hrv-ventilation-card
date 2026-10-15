@@ -84,12 +84,20 @@ In the editor, `exchanger_type` is the first field, a basic (not advanced) choic
 
 ### The moisture recovery figure is computed like the badge
 
-A pure `moistureFigure(result, options, locale)` next to `savingBadge` in `src/diagram/badge.ts` returns the icon
-(`mdi:water-outline`, or `mdi:water-off-outline` when the rate is negative), the magnitude text through a new
-`DIAGRAM.moisture` string (NBSP before g/h), and the tooltip. It returns nothing when the type is HRV or the
-config lacks the badge inputs. For no result, it returns the same hidden or "n/a" outcome as the badge. The
-card places it in an `.on-drawing.moisture-recovery` box at `bottom: 20.5%`, mirroring the bypass position's
-`top: 20.5%` inside the inner outline (y 162 of 200). It is shown in both layouts.
+A pure `moistureFigure(result, options, locale)` next to `savingBadge` in `src/diagram/badge.ts` returns the signed
+rate through a new `DIAGRAM.moisture` string (NBSP before g/h), negative ("−418 g/h") while moisture is kept out,
+and the tooltip, which names the direction with the magnitude ("Moisture kept out: 418 g/h"). It returns nothing
+when the type is HRV or the config lacks the badge inputs. For no result, it returns the same hidden or "n/a"
+outcome as the badge. The card places it in an `.on-drawing.moisture-recovery` box at `bottom: 24%` (bottom edge at
+y 152 of 200), under the crossing streams. It is shown in both layouts. A figure that opens no entity has
+`role="img"`, so its label is still read out.
+
+- *Why no icon, and why 24 %?* The first implementation had a drop icon (crossed out while kept out) at
+  `bottom: 20.5%`, mirroring the bypass position. At 11 px text below 400 px card width, a four-digit rate then put
+  the icon on the exchanger's slanted outline (measured). The user chose (2026-10-15) to drop the icon and move the
+  text up. Without the icon the sign carries the direction. Measured from 20.5 to 26 %: every position fits a
+  three-digit rate; from 23 % a four-digit kept-out rate keeps its text between the slanted sides from 300 px (at
+  280 px only the empty corners of its line box reach past them); at 26 % it touches the streams.
 
 ### Badge and moisture figure open optional roles
 

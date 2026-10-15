@@ -261,23 +261,75 @@ function contrast(a: string, b: string): number {
 }
 
 describe('exchanger type', () => {
+  /** Whether a point on the screen lies in the exchanger's hexagon, not only in its bounding box. */
+  const inExchanger = (root: ShadowRoot) => {
+    const exchanger = root.querySelector<SVGPolygonElement>('svg .exchanger');
+    const toDrawing = exchanger?.getScreenCTM()?.inverse();
+    if (!exchanger || !toDrawing) throw new Error('no exchanger');
+    return (x: number, y: number): boolean => exchanger.isPointInFill(new DOMPoint(x, y).matrixTransform(toDrawing));
+  };
+  const box = (root: ShadowRoot, selector: string): DOMRect => {
+    const found = root.querySelector(selector)?.getBoundingClientRect();
+    if (!found) throw new Error(`no ${selector}`);
+    return found;
+  };
+
   test('airflow-diagram-card "ERV at the narrowest width": bypass position, badge and figure inside the exchanger', async () => {
     const { root } = await show(280, 'light', 'auto', { ...VALUES, bypass: 50 }, { exchanger_type: 'erv' });
-    const exchanger = root.querySelector('svg .exchanger')?.getBoundingClientRect();
-    if (!exchanger) throw new Error('no exchanger');
-    const boxes = ['.bypass-position .label', '.saving .badge', '.moisture-recovery .figure'].map((selector) => {
-      const box = root.querySelector(selector)?.getBoundingClientRect();
-      if (!box) throw new Error(`no ${selector}`);
-      expect(box.left, selector).toBeGreaterThanOrEqual(exchanger.left);
-      expect(box.right, selector).toBeLessThanOrEqual(exchanger.right);
-      expect(box.top, selector).toBeGreaterThanOrEqual(exchanger.top);
-      expect(box.bottom, selector).toBeLessThanOrEqual(exchanger.bottom);
-      return box;
-    });
-    const [bypass, badge, figure] = boxes as [DOMRect, DOMRect, DOMRect];
+    const inside = inExchanger(root);
+    const [bypass, badge, figure] = ['.bypass-position .label', '.saving .badge', '.moisture-recovery .figure'].map(
+      (selector) => {
+        const rect = box(root, selector);
+        for (const [x, y] of [
+          [rect.left, rect.top],
+          [rect.right, rect.top],
+          [rect.left, rect.bottom],
+          [rect.right, rect.bottom],
+        ] as const) {
+          expect(inside(x, y), `${selector} corner ${String(x)}, ${String(y)}`).toBe(true);
+        }
+        return rect;
+      },
+    ) as [DOMRect, DOMRect, DOMRect];
+    expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/^\s*\d{3}\sg\/h\s*$/);
     expect(overlap(bypass, badge)).toBe(false);
     expect(overlap(badge, figure)).toBe(false);
     expect(overlap(bypass, figure)).toBe(false);
+  });
+
+  // A humid summer day at a high flow: the exchanger keeps out more than 1000 g/h, the widest realistic figure.
+  const KEPT_OUT: MockValues = {
+    ...VALUES,
+    temperature: { outdoor: 32, supply: 26, extract: 24, exhaust: 30 },
+    humidity: { outdoor: 70, supply: 60, extract: 55, exhaust: 60 },
+    flow: 300,
+    bypass: 0,
+  };
+
+  test('a four-digit kept-out figure stays between the slanted sides, clear of the streams and the badge', async () => {
+    for (const width of [280, 320, COMPACT_BELOW, 400, 600]) {
+      // No smoothing: the humidity history of the other tests would average this day away.
+      const { root } = await show(width, 'light', 'auto', KEPT_OUT, { exchanger_type: 'erv', smoothing: 0 });
+      const text = box(root, '.moisture-recovery .value');
+      expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/−\d,\d{3}/);
+      // The text's middle row lies in the hexagon; only the empty corners of its line box may reach past the sides.
+      const inside = inExchanger(root);
+      const middle = text.top + text.height / 2;
+      expect(inside(text.left, middle) && inside(text.right, middle), `${String(width)} px`).toBe(true);
+      const toDrawing = root.querySelector<SVGGraphicsElement>('svg .exchanger')?.getScreenCTM()?.inverse();
+      const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
+      for (let i = 0; i <= 10; i++) {
+        for (const y of [text.top, text.bottom]) {
+          const point = new DOMPoint(text.left + (text.width * i) / 10, y).matrixTransform(toDrawing);
+          expect(
+            streams.some((stream) => stream.isPointInStroke(point)),
+            `${String(width)} px`,
+          ).toBe(false);
+        }
+      }
+      expect(overlap(box(root, '.saving .badge'), text)).toBe(false);
+      document.body.innerHTML = '';
+    }
   });
 
   test('airflow-diagram-card "ERV on a phone": the compact layout shows the moisture figure', async () => {

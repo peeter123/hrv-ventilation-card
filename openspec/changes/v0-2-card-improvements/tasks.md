@@ -41,7 +41,7 @@
   and the text on it has a contrast of at least 4.5:1 in the light and dark preview themes
 - [x] 3.2 Add `moistureFigure` next to `savingBadge` and render it at the bottom of the exchanger on an ERV in both
   layouts, with `DIAGRAM.moisture` and the tooltips in `src/strings.ts`; verify unit tests for 120 g/h, -418 g/h
-  (crossed-out drop, magnitude), an unavailable input (hidden, or "n/a" with show-unavailable), HRV (none) and
+  ("−418 g/h", magnitude in the tooltip), an unavailable input (hidden, or "n/a" with show-unavailable), HRV (none) and
   missing badge inputs (none), and a browser test at 280 px with the bypass at 50 % that the bypass position, the
   badge and the figure stay inside the exchanger without overlapping
 - [x] 3.3 Add the optional roles `status.saving` and `status.moisture_recovery` (`RolePath`, `ROLE_LABELS`, editor
@@ -57,7 +57,7 @@
 - [x] 3.6 Update the diagram's options table in `README.md` (`exchanger_type`, `status.saving`,
   `status.moisture_recovery`) and the diagram section of `docs/hrv-ventilation.md` (HRV and ERV, the moisture
   figure, what the badge opens); verify the README tests pass
-- [ ] 3.7 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed
+- [x] 3.7 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed
   finding; verify `npm run check` passes, then commit the group
 
 ## 4. Sample values and card picker preview

@@ -255,7 +255,7 @@ describe('the labels', () => {
       // 200 m³/h * (6 - 4) g/m³ recovered.
       expect(erv.figure().textContent.trim()).toBe(nb('400 g/h'));
       expect(erv.figure().title).toBe(nb('Moisture recovered: 400 g/h'));
-      expect(erv.figure().querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-outline');
+      expect(erv.figure().querySelector('ha-icon')).toBeNull();
       for (const config of [CALCULATION, { ...CALCULATION, exchanger_type: 'hrv' }]) {
         const { root } = await renderCalculation(config);
         expect(root.querySelector('.moisture-recovery')).toBeNull();
@@ -290,8 +290,10 @@ describe('the labels', () => {
       const none = moreInfo(bare.card);
       press(bare.figure());
       expect(none).toEqual([]);
-      for (const attribute of ['role', 'tabindex', 'data-entity'])
-        expect(bare.figure().hasAttribute(attribute)).toBe(false);
+      for (const attribute of ['tabindex', 'data-entity']) expect(bare.figure().hasAttribute(attribute)).toBe(false);
+      // An image, so its label, which says the direction the icon shows, is still read out.
+      expect(bare.figure().getAttribute('role')).toBe('img');
+      expect(bare.figure().getAttribute('aria-label')).toBe(nb('Moisture recovered: 400 g/h'));
     });
 
     test('airflow-diagram-card "Roles configured": the same badge and figure, and no label or grid cell', async () => {
