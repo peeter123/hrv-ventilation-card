@@ -21,7 +21,7 @@ import { localeFromHass } from '../lib/format';
 import { formatState, stateOf } from '../lib/hass';
 import { optionValue } from '../lib/options';
 import { DIAGRAM, ROLE_LABELS } from '../strings';
-import { checkConfig, HrvCard } from './base-card';
+import { checkConfig, HrvCard, sampleStyles } from './base-card';
 
 export const DIAGRAM_CARD_TAG = 'hrv-ventilation-card';
 
@@ -309,6 +309,7 @@ export class HrvVentilationCard extends HrvCard {
       width: var(--mdc-icon-size);
       height: var(--mdc-icon-size);
     }
+    ${sampleStyles}
   `;
 
   /** The visual editor: the shared editor with this card's schema. */
@@ -402,7 +403,10 @@ export class HrvVentilationCard extends HrvCard {
    * keep their size while a value is unavailable; a next change with nothing planned shows a dimmed dash.
    */
   private label(label: DiagramLabel): TemplateResult {
-    const text = this.hass ? formatState(this.hass, label.entityId) : '';
+    const hass = this.shownHass;
+    const text = hass ? formatState(hass, label.entityId) : '';
+    // The sample opens no dialog: no entity, no button role (the label stays readable as an image).
+    const tap = !this.sample;
     const kind = label.role.split('.')[1] ?? '';
     const icon = label.icon ? html`<ha-icon .icon=${label.icon} aria-hidden="true"></ha-icon>` : nothing;
     // Nothing planned: a dimmed dash, while the tooltip and the more-info dialog still give the state.
@@ -411,11 +415,11 @@ export class HrvVentilationCard extends HrvCard {
     // Named by its role, since a value such as "18 °C" alone does not say which stream it is.
     return html`<span
       class="label ${kind} ${label.notPlanned ? 'not-planned' : ''}"
-      role="button"
-      tabindex="0"
+      role=${tap ? 'button' : 'img'}
+      tabindex=${ifDefined(tap ? '0' : undefined)}
       aria-label="${ROLE_LABELS[label.role]}: ${text}"
       title=${roleTitle(label.role, text)}
-      data-entity=${label.entityId}
+      data-entity=${ifDefined(tap ? label.entityId : undefined)}
       >${icon}${value}</span
     >`;
   }
@@ -453,9 +457,9 @@ export class HrvVentilationCard extends HrvCard {
       .icon=${icon.icon}
       title=${icon.title}
       aria-label=${icon.title}
-      role="button"
-      tabindex="0"
-      data-entity=${icon.entityId}
+      role=${this.sample ? 'img' : 'button'}
+      tabindex=${ifDefined(this.sample ? undefined : '0')}
+      data-entity=${ifDefined(this.sample ? undefined : icon.entityId)}
       style=${styleMap({ color: icon.color })}
     ></ha-icon>`;
   }
@@ -470,7 +474,7 @@ export class HrvVentilationCard extends HrvCard {
             '--badge-border': badge.tint,
           };
     // Tapping it opens the saved power entity (status.saving); without one it is not tappable.
-    const entity = this.settings?.saving;
+    const entity = this.sample ? undefined : this.settings?.saving;
     return html`<span
       class="badge ${badge.kind}"
       role=${ifDefined(entity && 'button')}
@@ -489,7 +493,7 @@ export class HrvVentilationCard extends HrvCard {
    */
   private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
     if (!figure) return nothing;
-    const entity = this.settings?.moistureRecovery;
+    const entity = this.sample ? undefined : this.settings?.moistureRecovery;
     return html`<div class="on-drawing moisture-recovery">
       <span
         class="label figure"
@@ -504,8 +508,9 @@ export class HrvVentilationCard extends HrvCard {
   }
 
   protected override render(): TemplateResult | typeof nothing {
-    if (!this.config || !this.hass || !this.settings) return nothing;
-    const { settings, hass } = this;
+    const hass = this.shownHass;
+    if (!this.config || !hass || !this.settings) return nothing;
+    const { settings } = this;
     const { compact } = this;
     const model = labelModel(this.config, hass.states, { showUnavailable: settings.showUnavailable, compact });
     const season = seasonIcon(this.config, hass.states, settings.colors);
@@ -548,7 +553,7 @@ export class HrvVentilationCard extends HrvCard {
             </div>`,
         )}
       </div>
-      ${model.status ? this.statusGrid(model.status) : nothing}
+      ${model.status ? this.statusGrid(model.status) : nothing} ${this.sampleNote()}
     </ha-card>`;
   }
 }

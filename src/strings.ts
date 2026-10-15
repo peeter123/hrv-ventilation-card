@@ -60,6 +60,9 @@ export const OPTIONS = {
   choice: (choices: readonly string[]): string => `one of ${choices.join(', ')}`,
 } as const;
 
+/** The note on a card that shows the sample instead of the user's sensors. */
+export const SAMPLE_NOTE = 'Sample values';
+
 /** Names and descriptions in the dashboard's card picker. */
 export const CARD_PICKER = {
   diagram: {

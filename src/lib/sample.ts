@@ -30,6 +30,22 @@ export const SAMPLE_CONFIG: CardConfig = {
   seasons: { heating: id('seasons.heating'), cooling: id('seasons.cooling') },
 };
 
+const isGroup = (value: unknown): value is CardConfig =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const merge = (base: CardConfig, over: CardConfig): CardConfig => ({
+  ...base,
+  ...Object.fromEntries(
+    Object.entries(over).map(([key, value]) => {
+      const inBase = base[key];
+      return [key, isGroup(value) && isGroup(inBase) ? merge(inBase, value) : value];
+    }),
+  ),
+});
+
+/** The user's config (its options; it sets no entity role) merged over the sample config. */
+export const withSample = (config: CardConfig): CardConfig => merge(SAMPLE_CONFIG, config);
+
 // Outdoor 2 °C / 85 %, supply 18.5 °C / 45 %, extract 21.5 °C / 50 %, exhaust 5.5 °C / 90 %. The saved power and
 // the moisture recovery are what the calculation gives for these values (a test checks them).
 const VALUES: readonly (readonly [role: string, state: string, unit?: string])[] = [

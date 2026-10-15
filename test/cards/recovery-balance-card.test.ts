@@ -163,7 +163,7 @@ describe('hrv-recovery-balance-card', () => {
   test('setConfig throws for a missing role, which Home Assistant shows as an error card', () => {
     const card = document.createElement('hrv-recovery-balance-card');
     expect(() => {
-      card.setConfig({ type: 'custom:hrv-recovery-balance-card' });
+      card.setConfig({ type: 'custom:hrv-recovery-balance-card', outdoor: { temperature: 'sensor.rb_outdoor_t' } });
     }).toThrow('Missing required entities');
   });
 });

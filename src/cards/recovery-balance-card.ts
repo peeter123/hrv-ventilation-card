@@ -10,7 +10,7 @@ import { localeFromHass } from '../lib/format';
 import { optionValue } from '../lib/options';
 import { barStyles, hatch, renderBar, swatch } from './bar';
 import { BarCard } from './bar-card';
-import { checkConfig } from './base-card';
+import { checkConfig, sampleStyles } from './base-card';
 import {
   RECOVERY_OPTION_LIST,
   RECOVERY_OPTIONS,
@@ -33,6 +33,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
   // they fit. Each item keeps its swatch, words and value on one line.
   static override styles = [
     barStyles,
+    sampleStyles,
     css`
       ha-card {
         container-type: inline-size;
@@ -97,9 +98,10 @@ export class HrvRecoveryBalanceCard extends BarCard {
   }
 
   protected override render(): TemplateResult | typeof nothing {
-    if (!this.config || !this.hass || !this.calculator || !this.colors) return nothing;
-    const { result } = this.calculator(this.hass);
-    const view = recoveryView(result, { colors: this.colors, minScale: this.minScale }, localeFromHass(this.hass));
+    const hass = this.shownHass;
+    if (!this.config || !hass || !this.calculator || !this.colors) return nothing;
+    const { result } = this.calculator(hass);
+    const view = recoveryView(result, { colors: this.colors, minScale: this.minScale }, localeFromHass(hass));
     const parts = view.legend.filter((entry) => entry.kind === 'part');
     const texts = view.legend.filter((entry) => entry.kind === 'text');
     return html`<ha-card>
@@ -123,6 +125,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
         </div>
         ${texts.map((entry) => html`<span>${entry.text}</span>`)}
       </div>
+      ${this.sampleNote()}
     </ha-card>`;
   }
 }

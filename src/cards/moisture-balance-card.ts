@@ -11,7 +11,7 @@ import { localeFromHass } from '../lib/format';
 import { optionValue } from '../lib/options';
 import { barStyles, hatch, renderBar, swatch } from './bar';
 import { BarCard } from './bar-card';
-import { checkConfig } from './base-card';
+import { checkConfig, sampleStyles } from './base-card';
 import {
   BYPASS_COLOR,
   MOISTURE_OPTION_LIST,
@@ -31,6 +31,7 @@ export function checkMoistureConfig(config: CardConfig): void {
 export class HrvMoistureBalanceCard extends BarCard {
   static override styles = [
     barStyles,
+    sampleStyles,
     css`
       .swatches .item + .item {
         margin-left: 12px;
@@ -81,8 +82,9 @@ export class HrvMoistureBalanceCard extends BarCard {
   }
 
   protected override render(): TemplateResult | typeof nothing {
-    if (!this.config || !this.hass || !this.calculator || !this.settings) return nothing;
-    const { inputs } = this.calculator(this.hass);
+    const hass = this.shownHass;
+    if (!this.config || !hass || !this.calculator || !this.settings) return nothing;
+    const { inputs } = this.calculator(hass);
     // Every input the card reads must have a value, the bypass too (the calculator gives 0 for a unit without one),
     // because the neutral band and the bypass note decide how the figures may be read.
     const humidity = inputs.absoluteHumidity;
@@ -91,7 +93,7 @@ export class HrvMoistureBalanceCard extends BarCard {
       moisture && humidity?.extract !== undefined && humidity.outdoor !== undefined
         ? { indoor: humidity.extract, outdoor: humidity.outdoor }
         : undefined;
-    const view = moistureView(moisture, indoorOutdoor, inputs.bypass, this.settings, localeFromHass(this.hass));
+    const view = moistureView(moisture, indoorOutdoor, inputs.bypass, this.settings, localeFromHass(hass));
     return html`<ha-card>
       <div class="head">
         <span class="title-block">
@@ -127,6 +129,7 @@ export class HrvMoistureBalanceCard extends BarCard {
         }
         ${view.lines.map((line) => html`<span>${line}</span>`)}
       </div>
+      ${this.sampleNote()}
     </ha-card>`;
   }
 }
