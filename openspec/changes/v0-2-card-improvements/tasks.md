@@ -8,7 +8,7 @@
 - [x] 1.2 Replace the lane border with a divider overlay in `src/cards/bar.ts` (design: "Equal lanes"); verify a
   test in `bar.browser.test.ts` that renders a two-lane bar at device pixel ratio 1 and 2 and asserts equal lane
   heights, and that the one-lane bar is unchanged at 22 px
-- [ ] 1.3 Give the moisture card the fixed title "Moisture Recovery" and a muted direction subtitle
+- [x] 1.3 Give the moisture card the fixed title "Moisture Recovery" and a muted direction subtitle
   (`MoistureView.subtitle`, `MOISTURE.subtitles`, `.title-block` and `.subtitle` in `barStyles`); verify the
   `moisture-view` unit tests for the drying, gaining, neutral and no-value scenarios, a card test that the subtitle
   renders under the title in the secondary text colour, and that the strings test still passes (title case for

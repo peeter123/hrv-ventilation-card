@@ -83,6 +83,23 @@ for (const ratio of [1, 2]) {
   });
 }
 
+test('moisture-balance-card "Drying": the muted subtitle lies under the title, smaller, in the secondary text colour', async () => {
+  const root = await show('hrv-moisture-balance-card', 437);
+  const host = root.host as HTMLElement;
+  host.style.setProperty('--primary-text-color', '#212121');
+  host.style.setProperty('--secondary-text-color', '#727272');
+  const title = root.querySelector('.title');
+  const subtitle = root.querySelector('.subtitle');
+  if (!title || !subtitle) throw new Error('no title or subtitle');
+  expect(subtitle.textContent).toBe('House drying');
+  expect(subtitle.getBoundingClientRect().top).toBeGreaterThanOrEqual(title.getBoundingClientRect().bottom);
+  expect(subtitle.getBoundingClientRect().left).toBe(title.getBoundingClientRect().left);
+  const style = getComputedStyle(subtitle);
+  expect(parseFloat(style.fontSize)).toBeLessThan(parseFloat(getComputedStyle(title).fontSize));
+  expect(style.color).toBe('rgb(114, 114, 114)');
+  expect(getComputedStyle(title).color).toBe('rgb(33, 33, 33)');
+});
+
 test('the one-lane moisture bar keeps its 22 px height and has no divider', async () => {
   const root = await show('hrv-moisture-balance-card', 437);
   expect(root.querySelector('.bar')?.getBoundingClientRect().height).toBe(22);

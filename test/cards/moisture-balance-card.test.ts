@@ -90,7 +90,8 @@ describe('checkMoistureConfig', () => {
 describe('hrv-moisture-balance-card', () => {
   test('renders the drying bar from absolute humidity sensors alone, without temperatures', async () => {
     const { root } = await render(CONFIG, STATES);
-    expect(root.querySelector('.title')?.textContent).toBe('Moisture: House Drying');
+    expect(root.querySelector('.title')?.textContent).toBe('Moisture Recovery');
+    expect(root.querySelector('.title-block .title + .subtitle')?.textContent).toBe('House drying');
     expect(root.querySelector('.net')?.textContent.trim()).toBe(nb('Recovered 138 of 230 g/h (60 %)'));
     expect(root.querySelectorAll('.seg')).toHaveLength(2);
     expect(root.textContent).toContain(nb('Indoor 8.6 g/m³ · Outdoor 7.6 g/m³'));
@@ -131,6 +132,8 @@ describe('hrv-moisture-balance-card', () => {
   test('moisture-balance-card "Configured input unavailable": a configured bypass without a value gives n/a', async () => {
     const { root } = await render(CONFIG, replace(STATES, state('sensor.mb_bypass', 'unavailable')));
     expect(root.querySelector('.net')?.textContent.trim()).toBe('n/a');
+    expect(root.querySelector('.title')?.textContent).toBe('Moisture Recovery');
+    expect(root.querySelector('.subtitle')).toBeNull();
     expect(root.querySelectorAll('.seg')).toHaveLength(0);
     expect(root.querySelector('.bypass')).toBeNull();
   });
@@ -149,7 +152,8 @@ describe('hrv-moisture-balance-card', () => {
   test('configurable colours and neutral threshold', async () => {
     const { root } = await render({ ...CONFIG, drying_color: '#123456', neutral_threshold: 2 }, STATES);
     // 8.6 vs 7.6 g/m³ is within a threshold of 2: neutral, so the header has no colour of its own.
-    expect(root.querySelector('.title')?.textContent).toBe('Moisture: Indoor ≈ Outdoor');
+    expect(root.querySelector('.title')?.textContent).toBe('Moisture Recovery');
+    expect(root.querySelector('.subtitle')?.textContent).toBe('Indoor ≈ outdoor');
     expect(root.querySelector<HTMLElement>('.fill')?.style.background).toContain('#123456');
   });
 });

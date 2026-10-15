@@ -70,7 +70,7 @@ describe('UI text lives in strings.ts', () => {
   test('there are sources to check and texts to look for', () => {
     expect(Object.keys(sources).length).toBeGreaterThan(0);
     expect(texts).toContain('Heat Recovery');
-    expect(texts).toContain('Moisture: House Drying');
+    expect(texts).toContain('Moisture Recovery');
     expect(texts).toContain('Recovered');
     expect(texts).toContain('RMOT');
   });
@@ -86,8 +86,8 @@ describe('UI text lives in strings.ts', () => {
     const found = texts.filter((text) => literals(withoutComments(source)).includes(text));
     expect(found).toContain('Heat Recovery');
     expect(found).not.toContain('Cooling Recovery');
-    const template = 'html`<span>Moisture: House Drying</span>`';
-    expect(texts.filter((text) => literals(template).includes(text))).toContain('Moisture: House Drying');
+    const template = 'html`<span>House drying</span>`';
+    expect(texts.filter((text) => literals(template).includes(text))).toContain('House drying');
     expect(literals('type Layout = string; let Recovered = 1;')).toBe('');
   });
 });
@@ -107,7 +107,7 @@ describe('texts', () => {
         .filter(([key]) => key.startsWith('title'))
         .map(([, title]) => title as string),
     );
-    expect(titles).toHaveLength(8);
+    expect(titles).toHaveLength(5);
     const legend = [
       RECOVERY.laneSensible,
       RECOVERY.laneLatent,
@@ -142,6 +142,14 @@ describe('texts', () => {
     }
   });
 
+  test('card-bundle "Moisture title": the direction subtitles are in sentence case', () => {
+    for (const subtitle of Object.values(MOISTURE.subtitles)) {
+      const [first, ...rest] = subtitle.split(/\s+/).map((word) => word.replace(/^[^\p{L}]+/u, ''));
+      expect(first?.[0], subtitle).toBe(first?.[0]?.toUpperCase());
+      for (const word of rest) expect(word, subtitle).toBe(word.toLowerCase());
+    }
+  });
+
   test('card-bundle "Numbers stay with their units": a no-break space joins every value to its unit', () => {
     const units = new RegExp(`${MARK}(\\s)(W|g/h|g/m³|%)(?!\\p{L})`, 'gu');
     const joins = filledTexts().flatMap((text) => [...text.matchAll(units)].map((match) => match[1]));
@@ -160,7 +168,8 @@ describe('texts', () => {
 
   test('moisture-balance-card "Drying header" and the bypass suffix', () => {
     const drying = { gaining: false, extracted: '250', recovered: '150', outside: '100' };
-    expect(MOISTURE.titleDrying).toBe('Moisture: House Drying');
+    expect(MOISTURE.title).toBe('Moisture Recovery');
+    expect(MOISTURE.subtitles.drying).toBe('House drying');
     expect(MOISTURE.header(drying) + MOISTURE.percent('60')).toBe(nb('Recovered 150 of 250 g/h (60 %)'));
     expect(MOISTURE.percent('60', '40')).toBe(nb(' (60 %, with bypass 40 %)'));
     expect(MOISTURE.flow(drying)).toBe(nb('Extracted 250 → Recovered 150 + Outside 100 g/h'));

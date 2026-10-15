@@ -27,14 +27,18 @@ describe('direction, neutral band and bypass', () => {
     expect(isGaining(GAINING)).toBe(true);
     expect(isGaining(DRYING)).toBe(false);
     expect(isGaining({ extracted: 0, recovered: 0, outside: 0 })).toBe(false);
-    expect(moistureView(GAINING, APART, undefined, SETTINGS, EN).headerColor).toBe('#8e24aa');
+    const view = moistureView(GAINING, APART, undefined, SETTINGS, EN);
+    expect(view.headerColor).toBe('#8e24aa');
+    expect(view.title).toBe('Moisture Recovery');
+    expect(view.subtitle).toBe('House gaining (outdoor more humid)');
   });
 
   test('moisture-balance-card "Within sensor accuracy": 8.1 vs 7.9 g/m³ is neutral, without a percentage', () => {
     expect(isNeutral({ indoor: 8.1, outdoor: 7.9 }, 0.3)).toBe(true);
     expect(isNeutral({ indoor: 8.3, outdoor: 7.9 }, 0.3)).toBe(false);
     const view = moistureView(DRYING, { indoor: 8.1, outdoor: 7.9 }, undefined, SETTINGS, EN);
-    expect(view.title).toBe('Moisture: Indoor ≈ Outdoor');
+    expect(view.title).toBe('Moisture Recovery');
+    expect(view.subtitle).toBe('Indoor ≈ outdoor');
     expect(view.header).toBe('within sensor accuracy');
     expect(view.headerColor).toBeUndefined();
   });
@@ -48,16 +52,16 @@ describe('direction, neutral band and bypass', () => {
 });
 
 describe('headers', () => {
-  test('moisture-balance-card "Drying header": "Moisture: House Drying", "Recovered 150 of 250 g/h (60 %)"', () => {
+  test('moisture-balance-card "Drying header": subtitle "House drying", "Recovered 150 of 250 g/h (60 %)"', () => {
     expect(moistureHeader(DRYING, false, 0, EN)).toEqual({
-      title: 'Moisture: House Drying',
+      subtitle: 'House drying',
       header: nb('Recovered 150 of 250 g/h (60 %)'),
     });
   });
 
-  test('gaining: magnitudes without minus signs, "Kept out"', () => {
+  test('moisture-balance-card "Gaining header": magnitudes without minus signs, "Kept out"', () => {
     expect(moistureHeader(GAINING, false, 0, EN)).toEqual({
-      title: 'Moisture: House Gaining (Outdoor More Humid)',
+      subtitle: 'House gaining (outdoor more humid)',
       header: nb('Kept out 80 of 120 g/h (67 %)'),
     });
   });
@@ -101,6 +105,12 @@ describe('flow line and legend', () => {
 });
 
 describe('moistureView', () => {
+  test('moisture-balance-card "Drying": the title "Moisture Recovery" and the subtitle "House drying"', () => {
+    const view = moistureView(DRYING, APART, undefined, SETTINGS, EN);
+    expect(view.title).toBe('Moisture Recovery');
+    expect(view.subtitle).toBe('House drying');
+  });
+
   test('moisture-balance-card "Drying": a solid 150 and a hatched 100 g/h segment right of zero on a 250 g/h scale', () => {
     const view = moistureView(DRYING, APART, undefined, SETTINGS, EN);
     expect(view.segments).toEqual([
@@ -120,9 +130,9 @@ describe('moistureView', () => {
     expect(moistureView(DRYING, APART, undefined, SETTINGS, EN).bypass).toBeUndefined();
   });
 
-  test('without moisture figures: the no-value view, no bypass strip', () => {
+  test('moisture-balance-card "No value": the same title, no subtitle, no bypass strip', () => {
     expect(moistureView(undefined, undefined, 40, SETTINGS, EN)).toEqual({
-      title: 'Moisture',
+      title: 'Moisture Recovery',
       header: 'n/a',
       segments: [],
       swatches: undefined,

@@ -32,6 +32,15 @@ export const barStyles = css`
     font-weight: 500;
     color: var(--primary-text-color);
   }
+  /* A title with a muted subtitle under it; the head aligns on the title's baseline. */
+  .title-block {
+    display: flex;
+    flex-direction: column;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--secondary-text-color);
+  }
   .net {
     font-size: 16px;
     font-weight: 500;

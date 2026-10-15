@@ -170,10 +170,13 @@ export interface MoistureFigures {
 
 /** The moisture balance bar. Values are formatted magnitudes without units or signs. */
 export const MOISTURE = {
-  title: 'Moisture',
-  titleDrying: 'Moisture: House Drying',
-  titleGaining: 'Moisture: House Gaining (Outdoor More Humid)',
-  titleNeutral: 'Moisture: Indoor ≈ Outdoor',
+  title: 'Moisture Recovery',
+  /** The direction under the title, in sentence case. */
+  subtitles: {
+    drying: 'House drying',
+    gaining: 'House gaining (outdoor more humid)',
+    neutral: 'Indoor ≈ outdoor',
+  },
   neutral: 'within sensor accuracy',
   header: ({ gaining, recovered, extracted }: MoistureFigures): string =>
     `${gaining ? 'Kept out' : 'Recovered'} ${recovered} of ${extracted}${NBSP}g/h`,

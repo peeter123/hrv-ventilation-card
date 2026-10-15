@@ -50,6 +50,8 @@ export interface IndoorOutdoor {
 
 export interface MoistureView {
   title: string;
+  /** The direction under the title; undefined without a value. */
+  subtitle?: string;
   header: string;
   /** The header's colour; undefined for the theme's secondary text colour (neutral or no value). */
   headerColor?: string;
@@ -108,23 +110,23 @@ function header(
   neutral: boolean,
   bypass: number,
   locale: LocaleLike,
-): { title: string; header: string } {
-  if (neutral) return { title: MOISTURE.titleNeutral, header: MOISTURE.neutral };
+): { subtitle: string; header: string } {
+  if (neutral) return { subtitle: MOISTURE.subtitles.neutral, header: MOISTURE.neutral };
   let text = MOISTURE.header(formatRates(rates, locale));
   if (rates.extracted > 0) {
     const percent = formatNumber((rates.recovered / rates.extracted) * 100, locale);
     text += MOISTURE.percent(percent, bypass > 0 ? formatNumber(bypass, locale) : undefined);
   }
-  return { title: rates.gaining ? MOISTURE.titleGaining : MOISTURE.titleDrying, header: text };
+  return { subtitle: rates.gaining ? MOISTURE.subtitles.gaining : MOISTURE.subtitles.drying, header: text };
 }
 
-/** The header text: "Recovered X of Y g/h (N %, with bypass B %)", or the neutral text. */
+/** The direction subtitle and the header text: "Recovered X of Y g/h (N %, with bypass B %)", or the neutral text. */
 export const moistureHeader = (
   moisture: MoistureRates,
   neutral: boolean,
   bypass: number,
   locale: LocaleLike,
-): { title: string; header: string } => header(directedRates(moisture), neutral, bypass, locale);
+): { subtitle: string; header: string } => header(directedRates(moisture), neutral, bypass, locale);
 
 /** The view for the calculation's moisture figures, or the no-value view without them. */
 export function moistureView(
@@ -148,10 +150,11 @@ export function moistureView(
   const segments = layoutSegments(values, scale).map((segment, i) => ({ ...segment, background: fills[i] ?? color }));
 
   const rates = directedRates(moisture);
-  const { title, header: headerText } = header(rates, neutral, bypass, locale);
+  const { subtitle, header: headerText } = header(rates, neutral, bypass, locale);
   const tenths = (value: number): string => formatNumber(value, locale, 1);
   const view: MoistureView = {
-    title,
+    title: MOISTURE.title,
+    subtitle,
     header: headerText,
     segments,
     swatches: { recovered: MOISTURE.swatchRecovered(gaining), outside: MOISTURE.swatchOutside(gaining), color },

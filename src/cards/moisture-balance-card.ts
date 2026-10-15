@@ -94,7 +94,10 @@ export class HrvMoistureBalanceCard extends BarCard {
     const view = moistureView(moisture, indoorOutdoor, inputs.bypass, this.settings, localeFromHass(this.hass));
     return html`<ha-card>
       <div class="head">
-        <span class="title">${view.title}</span>
+        <span class="title-block">
+          <span class="title">${view.title}</span>
+          ${view.subtitle ? html`<span class="subtitle">${view.subtitle}</span>` : nothing}
+        </span>
         <span class="net" style=${styleMap({ color: view.headerColor ?? 'var(--secondary-text-color)' })}
           >${view.header}</span
         >
