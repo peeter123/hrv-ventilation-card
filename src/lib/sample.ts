@@ -2,7 +2,8 @@
 // card): a config and the states of its entities, shared by the three cards so their figures match. A typical
 // heating day, with every role the cards show. The IDs use a made-up domain, so they hold no installation
 // identifiers and cannot collide with real entities.
-import type { CardConfig } from './config';
+import { ROLE_LABELS } from '../strings';
+import { valueAt, type CardConfig } from './config';
 import type { HassEntityState } from './hass';
 
 /** The sample's entity ID of a role path: `hrv_sample.<role>` with the dot of the path written as an underscore. */
@@ -42,6 +43,13 @@ const merge = (base: CardConfig, over: CardConfig): CardConfig => ({
     }),
   ),
 });
+
+/** True when the config gives any entity role a value, valid or not: a malformed one is still the user's choice. */
+export const setsAnyRole = (config: CardConfig): boolean =>
+  Object.keys(ROLE_LABELS).some((role) => {
+    const value = valueAt(config, role);
+    return value !== undefined && value !== null && (typeof value !== 'string' || value.trim() !== '');
+  });
 
 /** The user's config (its options; it sets no entity role) merged over the sample config. */
 export const withSample = (config: CardConfig): CardConfig => merge(SAMPLE_CONFIG, config);

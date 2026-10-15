@@ -8,7 +8,7 @@ import { missingRoles, type CardConfig, type Requirements } from '../lib/config'
 import type { HassLike } from '../lib/hass';
 import { invalidOptions, type OptionSpec } from '../lib/options';
 import { configuredEntityIds, shouldRender } from '../lib/render';
-import { SAMPLE_STATES, withSample } from '../lib/sample';
+import { SAMPLE_STATES, setsAnyRole, withSample } from '../lib/sample';
 import { configError, SAMPLE_NOTE } from '../strings';
 
 /** The `hass` the cards need: states for the inputs, the locale, and callWS for the smoothing history. */
@@ -62,7 +62,7 @@ export abstract class HrvCard extends LitElement {
   protected abstract configure(config: CardConfig): void;
 
   setConfig(config: CardConfig): void {
-    const sample = configuredEntityIds(config).length === 0;
+    const sample = !setsAnyRole(config);
     // The sample has every role, so checking it checks the user's options only (the card's own check, one path).
     const effective = sample ? withSample(config) : config;
     this.check(effective);

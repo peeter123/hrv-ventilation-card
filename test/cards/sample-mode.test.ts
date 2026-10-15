@@ -69,6 +69,16 @@ describe.each(TAGS)('%s in sample mode', (tag) => {
     }).toThrow('Missing required entities');
   });
 
+  test.each([{ status: { power: 'bad' } }, { outdoor: { temperature: 'bad' } }])(
+    'a malformed role value %j is not sample mode: a configuration error, no mixing',
+    (config) => {
+      const card = document.createElement(tag) as HrvCard;
+      expect(() => {
+        card.setConfig(config);
+      }).toThrow('Missing required entities');
+    },
+  );
+
   test('a config with entities after a sample config shows the real states, no note', async () => {
     const { card, root } = await show(tag, {});
     card.setConfig({
