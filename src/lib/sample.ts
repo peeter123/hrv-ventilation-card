@@ -54,7 +54,7 @@ const VALUES: readonly (readonly [role: string, state: string, unit?: string])[]
   ['status.filter_days', '120', 'd'],
   ['status.power', '38', 'W'],
   ['status.rmot', '4.5', '°C'],
-  ['status.saving', '1430', 'W'],
+  ['status.saving', '1452', 'W'],
   ['status.moisture_recovery', '478', 'g/h'],
   ['seasons.heating', 'on'],
   ['seasons.cooling', 'off'],

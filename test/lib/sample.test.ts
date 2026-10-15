@@ -78,8 +78,10 @@ describe('the sample', () => {
 
   test('the saved power and moisture recovery states match the calculation', () => {
     const { result } = calculate();
-    expect(Number(sampleState('status.saving'))).toBeCloseTo(result?.saving ?? NaN, -2);
-    expect(Number(sampleState('status.moisture_recovery'))).toBeCloseTo(result?.moisture?.recovered ?? NaN, -1);
+    expect(Math.abs(Number(sampleState('status.saving')) - (result?.saving ?? NaN))).toBeLessThan(1);
+    expect(
+      Math.abs(Number(sampleState('status.moisture_recovery')) - (result?.moisture?.recovered ?? NaN)),
+    ).toBeLessThan(1);
   });
 
   test('formats like real sensors through the formatState fallback, a number with its unit', () => {
