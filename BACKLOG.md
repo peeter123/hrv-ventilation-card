@@ -20,3 +20,9 @@ until after that.
   table: choose it from `hass.language` with English as the fallback, and test that every language has every key.
   Dutch first.
 - **Device auto-fill.** Pick a ComfoAir device in the editor and fill in all its entities.
+- **Pre-heater energy in the bottom status bar.** Show the electricity used by the pre-heater (the frost-protection
+  heater on the fresh-air intake) in the status bar at the bottom of the airflow card, next to the existing strip.
+  Data check: the unit exposes the pre-heater's temperatures and humidity before and after, but no pre-heater power
+  or energy sensor. Only the unit's total power (W) and the energy totals (today, YTD, since start) are available,
+  so the pre-heater part needs a source first: a smart plug or a measured sensor on the heater, or an estimate from
+  the temperature rise. Seasonal: useful only in the heating season.
