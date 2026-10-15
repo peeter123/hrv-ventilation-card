@@ -118,7 +118,7 @@
   dashboard ID (`npm run check:ids` and a `git grep` for the serial prefix)
 - [x] 6.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
-- [ ] 6.7 With the user's confirmation before each outward step, push `main` and the tag `v0.2.0` to
+- [x] 6.7 With the user's confirmation before each outward step, push `main` and the tag `v0.2.0` to
   `peeter123/hrv-ventilation-card` (never `private/history`); the user publishes the release from the tag in the
   GitHub UI; verify the remote `main` equals the local one, no pushed commit holds an installation identifier, and
   `v0.2.0` is the latest release

@@ -54,21 +54,25 @@ scale (default 250 g/h, configurable) and the sum of the absolute values of both
 - **THEN** a solid 150 g/h segment and a hatched 100 g/h segment grow right of the zero line on a 250 g/h scale
 
 ### Requirement: Header with direction words
-The header SHALL show magnitudes without minus signs. Drying: title "Moisture: House Drying", text "Recovered X of Y
-g/h (N %)". Gaining: title "Moisture: House Gaining (Outdoor More Humid)", text "Kept out X of Y g/h (N %)". The
-percentage SHALL be omitted when Y is not positive.
+The header SHALL show magnitudes without minus signs. Drying: subtitle "House drying", text "Recovered X of Y g/h
+(N %)". Gaining: subtitle "House gaining (outdoor more humid)", text "Kept out X of Y g/h (N %)". The percentage
+SHALL be omitted when Y is not positive.
 
 #### Scenario: Drying header
 - **WHEN** extracted is 250 g/h and recovered is 150 g/h
-- **THEN** the title reads "Moisture: House Drying" and the text "Recovered 150 of 250 g/h (60 %)"
+- **THEN** the subtitle reads "House drying" and the text "Recovered 150 of 250 g/h (60 %)"
+
+#### Scenario: Gaining header
+- **WHEN** extracted is -200 g/h and recovered is -120 g/h
+- **THEN** the subtitle reads "House gaining (outdoor more humid)" and the text "Kept out 120 of 200 g/h (60 %)"
 
 ### Requirement: Neutral band
-When the smoothed extract (indoor) and outdoor absolute humidity differ by less than the neutral threshold (default 0.3 g/m3, configurable), the title SHALL read "Moisture: Indoor ≈ Outdoor" and the text
+When the smoothed extract (indoor) and outdoor absolute humidity differ by less than the neutral threshold (default 0.3 g/m3, configurable), the subtitle SHALL read "Indoor ≈ outdoor" and the text
 "within sensor accuracy", without a percentage.
 
 #### Scenario: Within sensor accuracy
 - **WHEN** indoor absolute humidity is 8.1 g/m3 and outdoor 7.9 g/m3
-- **THEN** the title reads "Moisture: Indoor ≈ Outdoor" and no percentage is shown
+- **THEN** the title reads "Moisture Recovery", the subtitle "Indoor ≈ outdoor" and no percentage is shown
 
 ### Requirement: Bypass strip
 When a bypass position entity is configured and above 0, the card SHALL show a strip under the bar filled to the
@@ -103,3 +107,17 @@ sensors. The absolute humidity pickers and all fields SHALL be advanced settings
 - **WHEN** the user turns the advanced settings on
 - **THEN** each stream section also shows an absolute humidity picker, and the smoothing window, air density,
   neutral threshold, minimum scale and colours appear
+
+### Requirement: Title and direction subtitle
+The title SHALL read "Moisture Recovery" in every state, also without a value, in the same style as the recovery
+balance card's title. The direction SHALL be a subtitle directly under the title, in the theme's secondary text
+colour and smaller than the title: "House drying", "House gaining (outdoor more humid)" or, in the neutral band,
+"Indoor ≈ outdoor". Without a value there SHALL be no subtitle.
+
+#### Scenario: Drying
+- **WHEN** the card shows the house drying
+- **THEN** the title reads "Moisture Recovery" and the muted subtitle under it "House drying"
+
+#### Scenario: No value
+- **WHEN** a configured input is unavailable
+- **THEN** the title reads "Moisture Recovery", the header "n/a", and no subtitle is shown
