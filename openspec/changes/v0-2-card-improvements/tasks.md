@@ -71,7 +71,7 @@
   tests for each card with `{}` (renders, note shown, no history request, a tap opens nothing), with only
   `exchanger_type: erv` (ERV sample), with an invalid option (configuration error) and with one entity set (the
   missing-roles error, no note)
-- [ ] 4.3 Set `preview: true` in `CARD_ENTRIES`; verify the `index` tests (each entry has a preview, still
+- [x] 4.3 Set `preview: true` in `CARD_ENTRIES`; verify the `index` tests (each entry has a preview, still
   registered once when loaded twice)
 - [ ] 4.4 Add a no-entities slot to the preview page; verify a screenshot of the three cards in sample mode in
   both themes
