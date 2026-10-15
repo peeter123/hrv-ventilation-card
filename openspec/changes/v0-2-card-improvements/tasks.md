@@ -82,13 +82,13 @@
 
 ## 5. Saving roles by heating or cooling mode
 
-- [ ] 5.1 Replace `status.saving` with `status.heating_saving` and `status.cooling_saving` (`RolePath`,
+- [x] 5.1 Replace `status.saving` with `status.heating_saving` and `status.cooling_saving` (`RolePath`,
   `ROLE_LABELS` "Saved heating power" and "Saved cooling power", advanced pickers in the editor's status section,
   both in the sample) and let the badge open the role of the calculation's `mode` (design: "Badge and moisture figure
   open optional roles"); verify card tests for the airflow spec scenarios "Heating saving opened while heating",
   "Cooling saving opened while cooling", "Mode without its saving entity" (no `tabindex`) and "No saving entity",
   the editor tests for "Editing the card" and "Advanced settings on", and that `status.saving` is gone from `src/`
-- [ ] 5.2 Update the diagram's options table in `README.md` and the diagram section of `docs/hrv-ventilation.md`
+- [x] 5.2 Update the diagram's options table in `README.md` and the diagram section of `docs/hrv-ventilation.md`
   (the two saving roles and which one the badge opens); verify the README tests pass and no doc mentions
   `status.saving`
 - [ ] 5.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
