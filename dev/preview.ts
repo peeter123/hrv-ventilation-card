@@ -11,6 +11,8 @@ import { STREAMS, type Stream } from '../src/lib/config';
 import { CONFIGS, id, MockHass, type MockValues, type SeasonChoice } from './mock-hass';
 
 const WIDTHS = [280, 320, 350, 400, 600];
+/** Widths of the slots that show the cards with no entities (sample mode). */
+const SAMPLE_WIDTHS = [280, 400, 600];
 const THEMES = ['light', 'dark'] as const;
 const TAGS = ['hrv-ventilation-card', 'hrv-recovery-balance-card', 'hrv-moisture-balance-card'] as const;
 type Tag = (typeof TAGS)[number];
@@ -99,9 +101,14 @@ function element(elementId: string): HTMLElement {
 
 const mock = new MockHass();
 /** Each card, with the box that shows its config error in its place, as Home Assistant's error card does. */
-const cards: { tag: Tag; card: HrvCard; error: HTMLElement; dark: boolean }[] = [];
+const cards: { tag: Tag; card: HrvCard; error: HTMLElement; dark: boolean; sample: boolean }[] = [];
 
-function cardConfig(tag: Tag): Record<string, unknown> {
+function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
+  // No entities: the card shows its sample values (the mock states are still merged under them).
+  if (sample) {
+    const bare = { type: `custom:${tag}` };
+    return tag === 'hrv-ventilation-card' ? { ...bare, exchanger_type: options.exchanger } : bare;
+  }
   const shared = { type: `custom:${tag}`, ...CONFIGS[options.config], smoothing: options.smoothing };
   if (tag !== 'hrv-ventilation-card') return shared;
   return {
@@ -124,9 +131,9 @@ function updateStates(): void {
 }
 
 function updateConfig(): void {
-  for (const { tag, card, error } of cards) {
+  for (const { tag, card, error, sample } of cards) {
     try {
-      card.setConfig(cardConfig(tag));
+      card.setConfig(cardConfig(tag, sample));
       card.hidden = false;
       error.hidden = true;
     } catch (thrown) {
@@ -299,21 +306,26 @@ function renderCards(): void {
     const section = document.createElement('section');
     section.className = `theme ${theme}`;
     section.innerHTML = `<h2>${theme}</h2>`;
-    for (const width of WIDTHS) {
+    const addSlot = (width: number, label: string, sample: boolean): void => {
       const slot = document.createElement('div');
       slot.className = 'slot';
       slot.style.width = `${String(width)}px`;
-      slot.innerHTML = `<span>${String(width)} px</span>`;
+      slot.innerHTML = `<span>${label}</span>`;
       for (const tag of TAGS) {
         const card = document.createElement(tag) as HrvCard;
         const error = document.createElement('pre');
         error.className = 'error';
         error.hidden = true;
         slot.append(card, error);
-        cards.push({ tag, card, error, dark: theme === 'dark' });
+        cards.push({ tag, card, error, dark: theme === 'dark', sample });
       }
       section.append(slot);
-    }
+    };
+    for (const width of WIDTHS) addSlot(width, `${String(width)} px`, false);
+    const heading = document.createElement('h2');
+    heading.textContent = `${theme}, no entities (sample values)`;
+    section.append(heading);
+    for (const width of SAMPLE_WIDTHS) addSlot(width, `sample, ${String(width)} px`, true);
     main.append(section);
   }
   updateConfig();
