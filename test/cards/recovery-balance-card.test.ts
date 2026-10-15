@@ -102,7 +102,8 @@ describe('hrv-recovery-balance-card', () => {
     expect(root.querySelector('.net')?.textContent.trim()).toBe(nb('Recovered 1,723 W of 2,197 W (78 %)'));
     expect(root.querySelectorAll('.lane')).toHaveLength(2);
     expect(root.querySelectorAll('.lane .seg')).toHaveLength(4);
-    expect(root.textContent).toContain(nb('Water Recovered 575 g/h'));
+    expect(root.textContent).not.toContain('Water');
+    expect(root.textContent).not.toContain('g/h');
   });
 
   test('recovery-balance-card "Bypass open": bypass 40 % on a cooler day shows free cooling', async () => {

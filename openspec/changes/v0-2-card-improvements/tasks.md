@@ -2,7 +2,7 @@
 
 ## 1. Bar cards
 
-- [ ] 1.1 Remove the water entry from the recovery legend (`recoveryView`) and delete `RECOVERY.water` and
+- [x] 1.1 Remove the water entry from the recovery legend (`recoveryView`) and delete `RECOVERY.water` and
   `RECOVERY.waterKeptOut`; verify the `recovery-view` unit tests cover the "Water recovered" and "Water kept out"
   scenarios (two lanes and the scale, no water entry) and `npm run check` passes
 - [ ] 1.2 Replace the lane border with a divider overlay in `src/cards/bar.ts` (design: "Equal lanes"); verify a

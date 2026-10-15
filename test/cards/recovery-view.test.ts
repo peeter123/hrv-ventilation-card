@@ -60,23 +60,26 @@ describe('recoveryView', () => {
     ]);
   });
 
-  test('recovery-balance-card "Water kept out": a negative rate shows as "Water Kept Out 418 g/h"', () => {
+  test('recovery-balance-card "Water kept out": a negative rate adds no water entry, only the lanes and the scale', () => {
     const moisture = { extracted: -706, recovered: -418, outside: -288 };
     const view = recoveryView(result({ moisture }), { colors: COLORS, minScale: 500 }, EN);
-    expect(texts(view.legend)).toContain(nb('Water Kept Out 418 g/h'));
-  });
-
-  test('recovery-balance-card "Water recovered": the legend shows "Water Recovered 120 g/h"', () => {
-    const view = recoveryView(result(), { colors: COLORS, minScale: 500 }, EN);
     expect(texts(view.legend)).toEqual([
       nb('Temperature: Recovered 250 W | Lost 80 W'),
       nb('Moisture: Recovered 50 W | Lost 20 W'),
-      nb('Water Recovered 120 g/h'),
       nb('Scale ±500 W'),
     ]);
   });
 
-  test('recovery-balance-card "Unit without humidity sensors": no moisture or water entries, one lane', () => {
+  test('recovery-balance-card "Water recovered": the legend shows the two lanes and the scale, no water entry', () => {
+    const view = recoveryView(result(), { colors: COLORS, minScale: 500 }, EN);
+    expect(texts(view.legend)).toEqual([
+      nb('Temperature: Recovered 250 W | Lost 80 W'),
+      nb('Moisture: Recovered 50 W | Lost 20 W'),
+      nb('Scale ±500 W'),
+    ]);
+  });
+
+  test('recovery-balance-card "Unit without humidity sensors": no moisture entries, one lane', () => {
     const view = recoveryView(
       result({ latentKnown: false, recovered: { sensible: 300, latent: 0 }, lost: { sensible: 100, latent: 0 } }),
       { colors: COLORS, minScale: 500 },

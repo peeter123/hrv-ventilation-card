@@ -107,12 +107,6 @@ export function recoveryView(
       recovered: recoveredText(watts(recovered.latent)),
       lost: lostText(watts(lost.latent)),
     });
-    if (result.moisture) {
-      // While the outdoor air is more humid the exchanger keeps water out: its magnitude, as the moisture bar says.
-      const water = result.moisture.recovered;
-      const text = water < 0 ? RECOVERY.waterKeptOut(watts(-water)) : RECOVERY.water(watts(water));
-      legend.push({ kind: 'text', text });
-    }
   }
   legend.push({ kind: 'text', text: RECOVERY.scale(watts(scale)) });
 

@@ -115,8 +115,6 @@ describe('texts', () => {
       RECOVERY.cooling('1'),
       RECOVERY.lost('1'),
       RECOVERY.missed('1'),
-      RECOVERY.water('1'),
-      RECOVERY.waterKeptOut('1'),
       RECOVERY.scale('1'),
       MOISTURE.flow(figures),
       MOISTURE.flow({ ...figures, gaining: true }),
@@ -158,10 +156,6 @@ describe('texts', () => {
   test('recovery-balance-card "Positive potential" header', () => {
     expect(RECOVERY.header('300', '400', '75')).toBe(nb('Recovered 300 W of 400 W (75 %)'));
     expect(RECOVERY.headerNoPotential('0')).toBe(nb('Recovered 0 W'));
-  });
-
-  test('recovery-balance-card "Water recovered" legend', () => {
-    expect(RECOVERY.water('120')).toBe(nb('Water Recovered 120 g/h'));
   });
 
   test('moisture-balance-card "Drying header" and the bypass suffix', () => {

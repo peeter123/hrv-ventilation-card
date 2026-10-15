@@ -157,9 +157,6 @@ export const RECOVERY = {
   lost: (watts: string): string => `Lost ${watts}${NBSP}W`,
   /** The lost part's legend while free cooling: cooling the outdoor air could have brought but the supply did not. */
   missed: (watts: string): string => `Missed ${watts}${NBSP}W`,
-  water: (gramsPerHour: string): string => `Water Recovered ${gramsPerHour}${NBSP}g/h`,
-  /** The water legend while the rate is negative (outdoor air more humid), with the rate's magnitude. */
-  waterKeptOut: (gramsPerHour: string): string => `Water Kept Out ${gramsPerHour}${NBSP}g/h`,
   scale: (watts: string): string => `Scale ±${watts}${NBSP}W`,
 } as const;
 
