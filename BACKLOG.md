@@ -2,10 +2,9 @@
 
 Ideas for later OpenSpec changes, outside the change in progress. Pick one up with `/opsx:propose`.
 
-Order (decided 2026-10-15): first a v0.2 of the cards with improvements; the integration and packaging below wait
-until after that.
+Order (decided 2026-10-15): the integration first, then packaging. The v0.2 card improvements are released.
 
-- **Integration for history and energy statistics** (after v0.2). A custom integration that creates power, energy,
+- **Integration for history and energy statistics.** A custom integration that creates power, energy,
   effectiveness and moisture rate sensors from the raw unit sensors with the same formulas as the cards, checked
   against the same `test/vectors.json`, replacing the `comfoair_q450.jinja` macro and the template, filter and
   Riemann helpers of the author's installation, with a plan to carry over the existing energy totals. The cards do

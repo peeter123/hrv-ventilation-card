@@ -113,7 +113,7 @@
   Playwright screenshots the blue-grey exchanger and the moisture figure at desktop and phone width, that tapping
   the badge opens the saving sensor of the current mode and the figure the moisture recovery sensor, and that "Add card" lists the
   three cards with sample previews
-- [ ] 6.5 Update `private/installation.md` (resource `?v=`, the new config keys, the rollback to v0.1.0) and remove
+- [x] 6.5 Update `private/installation.md` (resource `?v=`, the new config keys, the rollback to v0.1.0) and remove
   the v0.2 line from `BACKLOG.md`; verify no tracked file holds an entity ID with the device serial, a helper or a
   dashboard ID (`npm run check:ids` and a `git grep` for the serial prefix)
 - [ ] 6.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
