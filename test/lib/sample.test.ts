@@ -47,7 +47,7 @@ describe('the sample', () => {
 
   test('the saved power and moisture recovery states match the calculation', () => {
     const { result } = calculate();
-    expect(Math.abs(Number(sampleState('status.saving')) - (result?.saving ?? NaN))).toBeLessThan(1);
+    expect(Math.abs(Number(sampleState('status.heating_saving')) - (result?.saving ?? NaN))).toBeLessThan(1);
     expect(
       Math.abs(Number(sampleState('status.moisture_recovery')) - (result?.moisture?.recovered ?? NaN)),
     ).toBeLessThan(1);

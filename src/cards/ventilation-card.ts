@@ -37,8 +37,8 @@ interface DiagramSettings {
   showUnavailable: boolean;
   /** The config has every input of the saving badge. */
   badge: boolean;
-  /** The entities the badge and the moisture figure open; without one the figure is not tappable. */
-  saving?: string;
+  /** The entities the badge (the one of the calculation's mode) and the moisture figure open; without one it is not tappable. */
+  savings: Record<'heating' | 'cooling', string | undefined>;
   moistureRecovery?: string;
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
@@ -352,7 +352,10 @@ export class HrvVentilationCard extends HrvCard {
       layout: optionValue(config, DIAGRAM_OPTIONS.layout),
       showUnavailable: optionValue(config, DIAGRAM_OPTIONS.showUnavailable),
       badge: hasBadge(config),
-      saving: entityAt(config, 'status.saving'),
+      savings: {
+        heating: entityAt(config, 'status.heating_saving'),
+        cooling: entityAt(config, 'status.cooling_saving'),
+      },
       moistureRecovery: entityAt(config, 'status.moisture_recovery'),
       temperatures: mapStreams((stream) => entityAt(config, `${stream}.temperature`)),
       bypass: entityAt(config, 'bypass.position'),
@@ -478,7 +481,7 @@ export class HrvVentilationCard extends HrvCard {
     ></ha-icon>`;
   }
 
-  private badge(badge: Badge | undefined): TemplateResult | typeof nothing {
+  private badge(badge: Badge | undefined, mode: 'heating' | 'cooling' | undefined): TemplateResult | typeof nothing {
     if (!badge) return nothing;
     const style =
       badge.tint === undefined
@@ -487,8 +490,9 @@ export class HrvVentilationCard extends HrvCard {
             '--badge-fill': `color-mix(in srgb, ${badge.tint} 25%, var(--card-background-color, #fff))`,
             '--badge-border': badge.tint,
           };
-    // Tapping it opens the saved power entity (status.saving); without one it is not tappable.
-    const tap = this.tap(this.settings?.saving);
+    // Tapping it opens the saving entity of the calculation's mode (status.heating_saving or status.cooling_saving);
+    // without one for that mode, it is not tappable.
+    const tap = this.tap(mode && this.settings?.savings[mode]);
     return html`<span
       class="badge ${badge.kind}"
       role=${ifDefined(tap.role)}
@@ -558,7 +562,7 @@ export class HrvVentilationCard extends HrvCard {
             html`<div class="corner ${stream}">${model.corners[stream].map((label) => this.label(label))}</div>`,
         )}
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
-        ${badge ? html`<div class="on-drawing saving">${this.badge(badge)}</div>` : nothing}
+        ${badge ? html`<div class="on-drawing saving">${this.badge(badge, result?.mode)}</div>` : nothing}
         ${this.moistureFigure(moisture)}
         ${model.flows.map(
           (label) =>

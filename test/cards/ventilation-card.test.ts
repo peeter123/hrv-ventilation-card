@@ -217,7 +217,11 @@ describe('the labels', () => {
       seasons: { heating: 'binary_sensor.hrv_heating', cooling: 'binary_sensor.hrv_cooling' },
       smoothing: 0,
     };
-    const ROLES = { saving: 'sensor.hrv_saving', moisture_recovery: 'sensor.hrv_moisture' };
+    const ROLES = {
+      heating_saving: 'sensor.hrv_heating_saving',
+      cooling_saving: 'sensor.hrv_cooling_saving',
+      moisture_recovery: 'sensor.hrv_moisture',
+    };
 
     async function renderCalculation(config: CardConfig) {
       const { card, root } = await render(config, '0', [
@@ -227,7 +231,8 @@ describe('the labels', () => {
         state('sensor.hrv_flow', '200', 'm³/h'),
         state('binary_sensor.hrv_heating', 'off'),
         state('binary_sensor.hrv_cooling', 'off'),
-        state(ROLES.saving, '400', 'W'),
+        state(ROLES.heating_saving, '400', 'W'),
+        state(ROLES.cooling_saving, '0', 'W'),
         state(ROLES.moisture_recovery, '400', 'g/h'),
       ]);
       const find = (selector: string): HTMLElement => {
@@ -262,13 +267,41 @@ describe('the labels', () => {
       }
     });
 
-    test('airflow-diagram-card "Saving entity configured": the badge opens the saving entity', async () => {
-      const { card, badge } = await renderCalculation({ ...CALCULATION, status: { saving: ROLES.saving } });
+    test('airflow-diagram-card "Heating saving opened while heating": the badge opens the heating saving', async () => {
+      const { card, badge } = await renderCalculation({ ...CALCULATION, status: ROLES });
       const opened = moreInfo(card);
       press(badge);
-      expect(opened).toEqual([ROLES.saving, ROLES.saving]);
+      expect(opened).toEqual([ROLES.heating_saving, ROLES.heating_saving]);
       expect(badge.getAttribute('role')).toBe('button');
       expect(badge.getAttribute('tabindex')).toBe('0');
+    });
+
+    test('airflow-diagram-card "Cooling saving opened while cooling": the badge opens the cooling saving', async () => {
+      // An open bypass: the calculation cools.
+      const { card, root } = await render({ ...CALCULATION, status: ROLES }, '50', [
+        state('sensor.hrv_ah_out', '4', 'g/m³'),
+        state('sensor.hrv_ah_sup', '6', 'g/m³'),
+        state('sensor.hrv_ah_ext', '8', 'g/m³'),
+        state('sensor.hrv_flow', '200', 'm³/h'),
+        state('binary_sensor.hrv_heating', 'off'),
+        state('binary_sensor.hrv_cooling', 'on'),
+      ]);
+      const badge = root.querySelector<HTMLElement>('.saving .badge');
+      if (!badge) throw new Error('no badge');
+      const opened = moreInfo(card);
+      press(badge);
+      expect(opened).toEqual([ROLES.cooling_saving, ROLES.cooling_saving]);
+    });
+
+    test('airflow-diagram-card "Mode without its saving entity": only the other mode configured is not tappable', async () => {
+      const { card, badge } = await renderCalculation({
+        ...CALCULATION,
+        status: { cooling_saving: ROLES.cooling_saving },
+      });
+      const opened = moreInfo(card);
+      press(badge);
+      expect(opened).toEqual([]);
+      expect(badge.hasAttribute('tabindex')).toBe(false);
     });
 
     test('airflow-diagram-card "No saving entity": the badge opens nothing, not the supply air temperature', async () => {
@@ -309,7 +342,7 @@ describe('the labels', () => {
       expect(root.querySelector('.status')).toBeNull();
       expect(
         root.querySelectorAll(
-          '.label:not(.figure)[data-entity="sensor.hrv_saving"], .label:not(.figure)[data-entity="sensor.hrv_moisture"]',
+          '.label:not(.figure)[data-entity="sensor.hrv_heating_saving"], .label:not(.figure)[data-entity="sensor.hrv_moisture"]',
         ),
       ).toHaveLength(0);
     });

@@ -156,9 +156,10 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   decide how the figures may be read.
 - **Badge.** The diagram's badge shows the recovery bar's total in W, tinted warm in heating and cold in cooling
   above 0.5 W, otherwise grey.
-- **What the badge and the figure open.** The badge opens `status.saving` and the moisture figure
-  `status.moisture_recovery`. Both roles are optional and never a label or a grid cell; without one the figure gets
-  no `role`, `tabindex` or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the
+- **What the badge and the figure open.** The badge opens the saving entity of the calculation's current mode (`status.heating_saving` while heating,
+  `status.cooling_saving` while cooling) and the moisture figure `status.moisture_recovery`. All three roles are
+  optional and never a label or a grid cell; without the badge's role for the current mode, or without a calculated
+  saving (hidden or "n/a"), the badge opens nothing, and likewise the figure: it gets no `role`, `tabindex` or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the
   supply air temperature: a dialog unrelated to the figure tapped, which is why there is no fallback. The pointer
   cursor follows `data-entity`, so only what opens a dialog shows it.
 - **Sample mode.** A card whose config sets no entity role at all (only `type`, optionally options) renders the
