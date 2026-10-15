@@ -17,7 +17,7 @@ describe('the bundle entry', { timeout: 20_000 }, () => {
     for (const entry of window.customCards.slice(1)) {
       expect(entry.name).toMatch(/^HRV /);
       expect(entry.description.length).toBeGreaterThan(20);
-      expect(entry.preview).toBe(false);
+      expect(entry.preview).toBe(true);
     }
   });
 

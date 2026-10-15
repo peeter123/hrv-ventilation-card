@@ -11,7 +11,7 @@ export interface CustomCardEntry {
   type: string;
   name: string;
   description: string;
-  /** No preview: the stub config is empty, so a preview would show the missing-entities error. */
+  /** The picker shows a live preview; a card without entities renders sample values (sample mode). */
   preview: boolean;
 }
 
@@ -22,9 +22,9 @@ declare global {
 }
 
 export const CARD_ENTRIES: readonly CustomCardEntry[] = [
-  { type: DIAGRAM_CARD_TAG, ...CARD_PICKER.diagram, preview: false },
-  { type: RECOVERY_CARD_TAG, ...CARD_PICKER.recovery, preview: false },
-  { type: MOISTURE_CARD_TAG, ...CARD_PICKER.moisture, preview: false },
+  { type: DIAGRAM_CARD_TAG, ...CARD_PICKER.diagram, preview: true },
+  { type: RECOVERY_CARD_TAG, ...CARD_PICKER.recovery, preview: true },
+  { type: MOISTURE_CARD_TAG, ...CARD_PICKER.moisture, preview: true },
 ];
 
 /** Adds the cards to the card picker, each once, whatever else the list holds. */

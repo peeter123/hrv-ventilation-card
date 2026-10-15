@@ -36,7 +36,7 @@ export const sampleStyles = css`
 `;
 
 export abstract class HrvCard extends LitElement {
-  /** The config of a card added from the card picker: empty, so the editor opens for the user to pick sensors. */
+  /** The config of a card added from the card picker: empty, so the card opens in sample mode and the editor lets the user pick sensors. */
   static getStubConfig(): CardConfig {
     return {};
   }
