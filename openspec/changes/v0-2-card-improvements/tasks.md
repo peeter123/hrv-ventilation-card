@@ -91,7 +91,7 @@
 - [x] 5.2 Update the diagram's options table in `README.md` and the diagram section of `docs/hrv-ventilation.md`
   (the two saving roles and which one the badge opens); verify the README tests pass and no doc mentions
   `status.saving`
-- [ ] 5.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 5.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 6. Release and live migration
