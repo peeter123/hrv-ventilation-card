@@ -55,8 +55,13 @@ export function drawingIds(): DrawingIds {
   return { supply: `hrv-supply-${suffix}`, exhaust: `hrv-exhaust-${suffix}` };
 }
 
+/** The `exchanger_type` option: heat recovery (HRV) or energy recovery (ERV), which also passes moisture. */
+export type ExchangerType = 'hrv' | 'erv';
+
 export interface DrawingInput {
   ids: DrawingIds;
+  /** Sets the exchanger's class, which the card's styles fill grey (HRV) or blue-grey (ERV). */
+  exchanger: ExchangerType;
   /** The colour of each stream end. */
   colors: Readonly<Record<Stream, string>>;
   /** The share of the outdoor air taking the bypass, 0 to 1. */
@@ -100,7 +105,7 @@ const symbol = (x: number, color: string, shape: string): SVGTemplateResult =>
   </g>`;
 
 /** The drawing for the current colours and bypass strength. A path at strength 0 is left out. */
-export function drawing({ ids, colors, bypass, speeds }: DrawingInput): SVGTemplateResult {
+export function drawing({ ids, exchanger, colors, bypass, speeds }: DrawingInput): SVGTemplateResult {
   // Rounded, so float noise (1 - 0.07 = 0.9299999999999999) stays out of the DOM.
   const share = (value: number): number => Math.round(value * 1000) / 1000;
   const [around, through] = [share(bypass), share(1 - bypass)];
@@ -123,7 +128,7 @@ export function drawing({ ids, colors, bypass, speeds }: DrawingInput): SVGTempl
     </defs>
     ${symbol(36, colors.outdoor, CLOUD)}
     ${symbol(364, colors.extract, HOUSE)}
-    <polygon class="exchanger" points=${EXCHANGER}></polygon>
+    <polygon class="exchanger ${exchanger}" points=${EXCHANGER}></polygon>
     <polygon class="exchanger-inner" points=${EXCHANGER_INNER}></polygon>
     ${streamPath('bypass', supplyStroke, around)}
     ${streamPath('supply', supplyStroke, through)}

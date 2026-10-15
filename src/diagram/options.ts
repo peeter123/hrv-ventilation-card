@@ -3,6 +3,7 @@
 import { CALCULATION_OPTIONS } from '../calc/inputs';
 import type { Requirements } from '../lib/config';
 import type { BooleanOption, ChoiceOption, ColorOption, NumberOption, OptionSpec } from '../lib/options';
+import type { ExchangerType } from './drawing';
 import type { LayoutChoice } from './labels';
 
 /** The card needs the four stream temperatures; every other role is optional. */
@@ -11,10 +12,13 @@ export const DIAGRAM_REQUIREMENTS: Requirements = {
 };
 
 const LAYOUTS = ['auto', 'full', 'compact'] as const satisfies readonly LayoutChoice[];
+const EXCHANGER_TYPES = ['hrv', 'erv'] as const satisfies readonly ExchangerType[];
 
 /** The card's options; smoothing and air_density are read by the calculation behind the badge. */
 export const DIAGRAM_OPTIONS = {
   ...CALCULATION_OPTIONS,
+  // Changes only the drawing: an ERV gets a blue-grey exchanger and the moisture recovery figure.
+  exchangerType: { kind: 'choice', path: 'exchanger_type', choices: EXCHANGER_TYPES, default: 'hrv' },
   cold: { kind: 'color', path: 'colors.cold', default: '#039be5' },
   warm: { kind: 'color', path: 'colors.warm', default: '#db4437' },
   animation: { kind: 'boolean', path: 'animation.enabled', default: true },

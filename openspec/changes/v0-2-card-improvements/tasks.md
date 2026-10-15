@@ -35,7 +35,7 @@
 
 ## 3. Airflow card: exchanger type, moisture figure and tap targets
 
-- [ ] 3.1 Add the `exchanger_type` choice option (`hrv` default, `erv`) to `DIAGRAM_OPTIONS` and draw the
+- [x] 3.1 Add the `exchanger_type` choice option (`hrv` default, `erv`) to `DIAGRAM_OPTIONS` and draw the
   exchanger fill by type (design: "Exchanger type"); verify unit tests for the default, `erv` and the error for
   `rotary` (it names the option and both choices), and a browser test that the ERV fill differs from the HRV fill
   and the text on it has a contrast of at least 4.5:1 in the light and dark preview themes

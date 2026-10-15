@@ -1,5 +1,5 @@
-// The visual editor of the airflow diagram card: one picker per role, grouped per air stream, fans, bypass, status
-// and seasons, and the animation switch; behind "Advanced settings" the niche status and bypass pickers, the nominal
+// The visual editor of the airflow diagram card: the exchanger type, one picker per role, grouped per air stream,
+// fans, bypass, status and seasons, and the animation switch; behind "Advanced settings" the niche status and bypass pickers, the nominal
 // flow, the calculation, the colours, the layout and whether to show unavailable values.
 import { DIAGRAM_OPTIONS } from '../diagram/options';
 import { EDITOR } from '../strings';
@@ -18,6 +18,7 @@ import type { EditorSchema } from './schema';
 const ADVANCED = { advanced: true };
 
 export const DIAGRAM_SCHEMA: EditorSchema = [
+  choiceField('exchanger_type', DIAGRAM_OPTIONS.exchangerType, EDITOR.exchangerTypes, { advanced: false }),
   streamSection('outdoor', { requiredTemperature: true, advancedAbsolute: false }),
   streamSection('supply', { requiredTemperature: true, advancedAbsolute: false }),
   streamSection('extract', { requiredTemperature: true, advancedAbsolute: false }),

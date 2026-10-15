@@ -37,12 +37,18 @@ const VALUES: MockValues = {
 
 const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-async function show(width: number, theme: keyof typeof THEMES, layout = 'auto', values = VALUES) {
+async function show(
+  width: number,
+  theme: keyof typeof THEMES,
+  layout = 'auto',
+  values = VALUES,
+  extra: Record<string, unknown> = {},
+) {
   const wrapper = document.createElement('div');
   wrapper.style.width = `${String(width)}px`;
   for (const [name, value] of Object.entries(THEMES[theme])) wrapper.style.setProperty(name, value);
   const card = document.createElement('hrv-ventilation-card');
-  card.setConfig({ type: 'custom:hrv-ventilation-card', ...CONFIGS['full'], layout });
+  card.setConfig({ type: 'custom:hrv-ventilation-card', ...CONFIGS['full'], layout, ...extra });
   card.hass = new MockHass().build(values, theme === 'dark');
   wrapper.append(card);
   document.body.append(wrapper);
@@ -223,6 +229,48 @@ describe('airflow diagram layout', () => {
     expect(root.querySelector('.status')).not.toBeNull();
     expect(root.querySelectorAll('.corner .label')).toHaveLength(12);
   });
+});
+
+/** A CSS colour as the browser computes it (rgb() or color(srgb ...)), as 0 to 255 channels, through a canvas. */
+function channels(color: string): [number, number, number] {
+  const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  if (!context) throw new Error('no canvas');
+  context.fillStyle = color;
+  context.fillRect(0, 0, 1, 1);
+  const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+  return [r, g, b];
+}
+
+/** The WCAG contrast ratio of two colours. */
+function contrast(a: string, b: string): number {
+  const luminance = (color: string): number => {
+    const [r, g, b] = channels(color).map((channel) => {
+      const c = channel / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    }) as [number, number, number];
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (light + 0.05) / (dark + 0.05);
+}
+
+describe('exchanger type', () => {
+  for (const theme of ['light', 'dark'] as const) {
+    test(`airflow-diagram-card "ERV", ${theme}: a fill other than the HRV's, with text on it at 4.5:1 or more`, async () => {
+      const fill = async (type: string): Promise<{ fill: string; text: string }> => {
+        const { root } = await show(400, theme, 'auto', VALUES, { exchanger_type: type });
+        const exchanger = root.querySelector('svg .exchanger');
+        const label = root.querySelector('.bypass-position .label');
+        if (!exchanger || !label) throw new Error('no exchanger or bypass label');
+        const result = { fill: getComputedStyle(exchanger).fill, text: getComputedStyle(label).color };
+        document.body.innerHTML = '';
+        return result;
+      };
+      const [hrv, erv] = [await fill('hrv'), await fill('erv')];
+      expect(channels(erv.fill)).not.toEqual(channels(hrv.fill));
+      expect(contrast(erv.fill, erv.text)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
 });
 
 declare module 'vitest/browser' {

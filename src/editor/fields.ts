@@ -71,14 +71,15 @@ export const booleanField = (name: string, option: BooleanOption, { advanced = f
   ...(advanced ? { advanced } : {}),
 });
 
-/** An advanced drop-down for a choice option, with a label per choice. */
+/** A drop-down for a choice option, with a label per choice; advanced unless `advanced: false`. */
 export const choiceField = (
   name: string,
   option: ChoiceOption,
   labels: Readonly<Record<string, string>>,
+  { advanced = true } = {},
 ): EditorField => ({
   name,
-  advanced: true,
+  ...(advanced ? { advanced } : {}),
   default: option.default,
   selector: {
     select: { mode: 'dropdown', options: option.choices.map((value) => ({ value, label: labels[value] ?? value })) },

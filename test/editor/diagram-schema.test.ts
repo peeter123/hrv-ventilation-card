@@ -26,9 +26,10 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(paths).toHaveLength(new Set(paths).size);
   });
 
-  test('airflow-diagram-card "Editing the card": roles per group, then the animation switch', () => {
+  test('airflow-diagram-card "Editing the card": the exchanger type, roles per group, then the animation switch', () => {
     const shown = visibleSchema(DIAGRAM_SCHEMA, false);
     expect(shown.map((item) => item.name)).toEqual([
+      'exchanger_type',
       'outdoor',
       'supply',
       'extract',
@@ -80,7 +81,24 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('colors')).toEqual(['cold', 'warm']);
     const topLevel = visibleSchema(DIAGRAM_SCHEMA, true).filter((item) => !('schema' in item));
-    expect(topLevel.map((item) => item.name)).toEqual(['layout', 'show_unavailable']);
+    expect(topLevel.map((item) => item.name)).toEqual(['exchanger_type', 'layout', 'show_unavailable']);
+  });
+
+  test('the exchanger type is a basic choice of HRV and ERV, HRV by default', () => {
+    const field = DIAGRAM_SCHEMA.find((item) => item.name === 'exchanger_type');
+    expect(field).toEqual({
+      name: 'exchanger_type',
+      default: 'hrv',
+      selector: {
+        select: {
+          mode: 'dropdown',
+          options: [
+            { value: 'hrv', label: 'Heat recovery (HRV)' },
+            { value: 'erv', label: 'Energy recovery (ERV)' },
+          ],
+        },
+      },
+    });
   });
 
   test('the layout is a choice of automatic, full and compact', () => {

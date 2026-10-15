@@ -6,7 +6,7 @@ import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import { hasBadge, savingBadge, type Badge } from '../diagram/badge';
-import { drawing, drawingIds } from '../diagram/drawing';
+import { drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
 import { flowSpeed } from '../diagram/flow';
 import { isCompact, labelModel, STATUS_CELLS, type DiagramLabel, type LayoutChoice } from '../diagram/labels';
 import { DIAGRAM_OPTION_LIST, DIAGRAM_OPTIONS, DIAGRAM_REQUIREMENTS } from '../diagram/options';
@@ -30,6 +30,7 @@ export function checkDiagramConfig(config: CardConfig): void {
 }
 
 interface DiagramSettings {
+  exchanger: ExchangerType;
   colors: { cold: string; warm: string };
   layout: LayoutChoice;
   showUnavailable: boolean;
@@ -121,6 +122,10 @@ export class HrvVentilationCard extends HrvCard {
       fill: var(--secondary-background-color);
       stroke: var(--divider-color);
       stroke-width: 2;
+    }
+    /* An energy recovery exchanger: blue-grey, mixed from the theme's colour so it stays light or dark with it. */
+    .exchanger.erv {
+      fill: color-mix(in srgb, var(--secondary-background-color) 75%, #4f86b8);
     }
     .exchanger-inner {
       fill: none;
@@ -326,6 +331,7 @@ export class HrvVentilationCard extends HrvCard {
 
   protected configure(config: CardConfig): void {
     this.settings = {
+      exchanger: optionValue(config, DIAGRAM_OPTIONS.exchangerType),
       colors: { cold: optionValue(config, DIAGRAM_OPTIONS.cold), warm: optionValue(config, DIAGRAM_OPTIONS.warm) },
       layout: optionValue(config, DIAGRAM_OPTIONS.layout),
       showUnavailable: optionValue(config, DIAGRAM_OPTIONS.showUnavailable),
@@ -471,6 +477,7 @@ export class HrvVentilationCard extends HrvCard {
     const { temperatures, flows } = settings;
     const art = drawing({
       ids: this.ids,
+      exchanger: settings.exchanger,
       colors: temperatureColors(
         mapStreams((stream) => stateOf(states, temperatures[stream])),
         settings.colors,

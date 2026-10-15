@@ -121,9 +121,25 @@ describe('the drawing', () => {
     expect(rules.length).toBeGreaterThan(2);
     for (const [, selector, body] of rules) {
       for (const [, value] of (body ?? '').matchAll(/(?:^|;)\s*(?:fill|stroke)\s*:\s*([^;]+)/g)) {
-        expect(value?.trim(), selector).toMatch(/^(var\(|none$)/);
+        // A theme variable, or a colour mixed from one (the ERV exchanger).
+        expect(value?.trim(), selector).toMatch(/^(var\(|none$|color-mix\(in srgb, var\()/);
       }
     }
+  });
+
+  test('airflow-diagram-card "Default type": without exchanger_type the exchanger is an HRV', async () => {
+    const { root } = await render(CONFIG, '0');
+    expect(root.querySelector('svg .exchanger')?.getAttribute('class')).toBe('exchanger hrv');
+  });
+
+  test('airflow-diagram-card "ERV": exchanger_type erv gives the ERV exchanger, with its own fill', async () => {
+    const { root } = await render({ ...CONFIG, exchanger_type: 'erv' }, '0');
+    expect(root.querySelector('svg .exchanger')?.getAttribute('class')).toBe('exchanger erv');
+    const css = [HrvVentilationCard.styles]
+      .flat()
+      .map((style) => ('cssText' in style ? style.cssText : ''))
+      .join('');
+    expect(css).toMatch(/\.exchanger\.erv\s*\{\s*fill: color-mix\(in srgb, var\(--secondary-background-color\)/);
   });
 
   test('a bypass position such as 7 % gives rounded opacities', async () => {
@@ -317,6 +333,14 @@ describe('checkDiagramConfig', () => {
 
   test('an unknown layout is reported with the choices', () => {
     expect(check({ ...CONFIG, layout: 'wide' })).toThrow('Invalid option layout: expected one of auto, full, compact');
+  });
+
+  test('airflow-diagram-card "Unknown type": exchanger_type rotary names the option and both choices', () => {
+    expect(check({ ...CONFIG, exchanger_type: 'rotary' })).toThrow(
+      'Invalid option exchanger_type: expected one of hrv, erv',
+    );
+    expect(check({ ...CONFIG, exchanger_type: 'hrv' })).not.toThrow();
+    expect(check({ ...CONFIG, exchanger_type: 'erv' })).not.toThrow();
   });
 
   test('card-bundle "Invalid options are reported" for every kind of option the diagram has', () => {

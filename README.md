@@ -111,6 +111,7 @@ the status grid while one of its roles is; a row does not come and go with the s
 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
+| `exchanger_type` | text | `hrv` | | `hrv` (heat recovery) or `erv` (energy recovery, which also passes moisture); see below. |
 | `outdoor` | object | | | Outdoor air, see [Stream](#stream-object). Temperature required. |
 | `supply` | object | | | Supply air (into the house), see [Stream](#stream-object). Temperature required. |
 | `extract` | object | | | Extract air (from the house), see [Stream](#stream-object). Temperature required. |
@@ -337,6 +338,7 @@ Full:
 
 ```yaml
 type: custom:hrv-ventilation-card
+exchanger_type: erv
 outdoor:
   temperature: sensor.hrv_outdoor_air_temperature
   humidity: sensor.hrv_outdoor_air_humidity

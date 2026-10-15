@@ -95,6 +95,7 @@ export const EDITOR = {
     animation: 'Animation',
   },
   fields: {
+    exchanger_type: 'Exchanger type',
     temperature: 'Temperature',
     humidity: 'Relative humidity',
     absolute_humidity: 'Absolute humidity',
@@ -127,6 +128,10 @@ export const EDITOR = {
     nominal_flow: 'Nominal flow (in the unit of the flow entities)',
     layout: 'Layout',
     show_unavailable: 'Show unavailable values',
+  },
+  exchangerTypes: {
+    hrv: 'Heat recovery (HRV)',
+    erv: 'Energy recovery (ERV)',
   },
   layouts: {
     auto: 'Automatic',
