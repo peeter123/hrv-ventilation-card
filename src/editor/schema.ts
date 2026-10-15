@@ -109,15 +109,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** A copy of the config with `value` at the dotted path (parents created when missing); `undefined` removes it. */
-function withValueAt(config: CardConfig, path: string, value: unknown): CardConfig {
+/**
+ * A copy of the config with `value` at the dotted path (parents created when missing); `undefined` removes it. A
+ * parent left empty by a removal is removed as well, unless `original` already had it.
+ */
+function withValueAt(config: CardConfig, path: string, value: unknown, original?: CardConfig, prefix = ''): CardConfig {
   const [key, ...rest] = path.split('.') as [string, ...string[]];
   const record = config as Record<string, unknown>;
   const { [key]: current, ...others } = record;
   if (rest.length === 0) return value === undefined ? others : { ...others, [key]: value };
-  const child = withValueAt(isRecord(current) ? current : {}, rest.join('.'), value);
-  // A parent left empty by a removal is removed as well, unless it was in the config already.
-  if (value === undefined && Object.keys(child).length === 0) return others;
+  const child = withValueAt(isRecord(current) ? current : {}, rest.join('.'), value, original, `${prefix}${key}.`);
+  const existed = original !== undefined && valueAt(original, `${prefix}${key}`) !== undefined;
+  if (value === undefined && Object.keys(child).length === 0 && !existed) return others;
   return { ...record, [key]: child };
 }
 
@@ -153,7 +156,7 @@ export function withoutShownDefaults(
       valueAt(current, path) === undefined &&
       valueAt(saved, path) !== undefined &&
       !differsFromDefault(valueAt(saved, path), field)
-        ? withValueAt(saved, path, undefined)
+        ? withValueAt(saved, path, undefined, current)
         : saved,
     changed,
   );

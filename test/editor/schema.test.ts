@@ -4,6 +4,7 @@ import {
   visibleSchema,
   withoutShownDefaults,
   withShownDefaults,
+  type EditorSchema,
   type FormSchema,
 } from '../../src/editor/schema';
 import { BASIC_CONFIG, CHOICE_SCHEMA, SCHEMA } from './fixtures';
@@ -116,5 +117,22 @@ describe('shown defaults', () => {
     const current = { calculation: { other: 1 } };
     const changed = { calculation: { other: 2, mode: 'auto' } };
     expect(withoutShownDefaults(CHOICE_SCHEMA, current, changed)).toEqual({ calculation: { other: 2 } });
+  });
+
+  test('withoutShownDefaults keeps a section the config already had, even when it ends up empty', () => {
+    const current = { type: 'x', calculation: {} };
+    const shown = withShownDefaults(CHOICE_SCHEMA, current);
+    expect(shown).toMatchObject({ calculation: { mode: 'auto' } });
+    expect(withoutShownDefaults(CHOICE_SCHEMA, current, { ...shown, other: 1 })).toEqual({
+      type: 'x',
+      other: 1,
+      calculation: {},
+    });
+  });
+
+  test('withoutShownDefaults removes only the levels the defaults created in a nested path', () => {
+    const nested: EditorSchema = [{ type: 'expandable', name: 'a', schema: [{ name: 'b', default: 1, selector: {} }] }];
+    expect(withoutShownDefaults(nested, { a: {} }, { a: { b: 1 } })).toEqual({ a: {} });
+    expect(withoutShownDefaults(nested, {}, { a: { b: 1 } })).toEqual({});
   });
 });

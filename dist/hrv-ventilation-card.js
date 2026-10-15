@@ -934,23 +934,23 @@ function Ot(e, t) {
 function kt(e) {
 	return typeof e == "object" && !!e && !Array.isArray(e);
 }
-function At(e, t, n) {
-	let [r, ...i] = t.split("."), a = e, { [r]: o, ...s } = a;
-	if (i.length === 0) return n === void 0 ? s : {
-		...s,
-		[r]: n
+function At(e, t, n, r, i = "") {
+	let [a, ...o] = t.split("."), s = e, { [a]: c, ...l } = s;
+	if (o.length === 0) return n === void 0 ? l : {
+		...l,
+		[a]: n
 	};
-	let c = At(kt(o) ? o : {}, i.join("."), n);
-	return n === void 0 && Object.keys(c).length === 0 ? s : {
-		...a,
-		[r]: c
+	let u = At(kt(c) ? c : {}, o.join("."), n, r, `${i}${a}.`), d = r !== void 0 && I(r, `${i}${a}`) !== void 0;
+	return n === void 0 && Object.keys(u).length === 0 && !d ? l : {
+		...s,
+		[a]: u
 	};
 }
 function jt(e, t) {
 	return wt(e).reduce((e, { field: n, path: r }) => n.default !== void 0 && I(t, r) === void 0 ? At(e, r, n.default) : e, t);
 }
 function Mt(e, t, n) {
-	return wt(e).reduce((e, { field: n, path: r }) => n.default !== void 0 && I(t, r) === void 0 && I(e, r) !== void 0 && !Et(I(e, r), n) ? At(e, r, void 0) : e, n);
+	return wt(e).reduce((e, { field: n, path: r }) => n.default !== void 0 && I(t, r) === void 0 && I(e, r) !== void 0 && !Et(I(e, r), n) ? At(e, r, void 0, t) : e, n);
 }
 //#endregion
 //#region \0@oxc-project+runtime@0.153.0/helpers/esm/decorate.js
