@@ -13,7 +13,7 @@
   `moisture-view` unit tests for the drying, gaining, neutral and no-value scenarios, a card test that the subtitle
   renders under the title in the secondary text colour, and that the strings test still passes (title case for
   the title, sentence case for the subtitle)
-- [ ] 1.4 Update the recovery and moisture sections of `README.md` (legend and title texts) and the card behaviour
+- [x] 1.4 Update the recovery and moisture sections of `README.md` (legend and title texts) and the card behaviour
   section of `docs/hrv-ventilation.md`; verify the README tests pass and no doc mentions "Water Recovered" or the
   "Moisture: House Drying" title any more
 - [ ] 1.5 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify

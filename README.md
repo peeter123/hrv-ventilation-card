@@ -205,7 +205,8 @@ and that is still lost with the ventilation air, split into temperature (sensibl
 While the bypass is open and the outdoor air has a lower enthalpy than indoors (it is cooler, or drier), the card
 shows "Free Cooling" instead: the
 cooling the supply air brings compared with the indoor air, of what fully outdoor air would bring ("Cooling X W of
-Y W"), with what it falls short of that shown as "Missed" rather than "Lost". The card calculates it from the unit's sensors; it needs no helpers. Options marked "Advanced" are
+Y W"), with what it falls short of that shown as "Missed" rather than "Lost". The legend gives each lane's recovered
+and lost power and the bar's scale; the moisture recovery rate in g/h is on the moisture balance card. The card calculates it from the unit's sensors; it needs no helpers. Options marked "Advanced" are
 shown in the visual editor when its "Advanced settings" switch is on. A sensor that is unavailable or reports a unit
 the card does not know (see the types below) makes the bar show "n/a".
 
@@ -278,7 +279,8 @@ twice.
 ### Moisture balance card
 
 `type: custom:hrv-moisture-balance-card`. The bar of moisture that ventilation takes out of the house, all relative
-to the outdoor air: **extracted = recovered + put outside**. The extract air carries moisture above the outdoor
+to the outdoor air: **extracted = recovered + put outside**. Its title is "Moisture Recovery", with the direction in
+a muted subtitle under it: "House drying", "House gaining (outdoor more humid)" or "Indoor ≈ outdoor". The extract air carries moisture above the outdoor
 level (extracted); the exchanger hands part of it back to the supply air (recovered); the rest goes outside. Positive
 means moisture leaves the house (drying, the bar grows right); negative means the outdoor air is more humid and the
 house gains moisture (the bar grows left), and the words change to "Kept Out" and "Enters". When indoor and outdoor
