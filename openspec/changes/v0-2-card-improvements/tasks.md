@@ -28,7 +28,7 @@
 - [x] 2.2 Centre each status value in its cell; verify a browser test that the fan level and filter days in the
   first column share a horizontal centre within 1 px, and that the existing no-overlap tests at 280, 320, 350, 400
   and 600 px still pass
-- [ ] 2.3 Update the diagram section of `README.md` and `docs/hrv-ventilation.md` where they describe the top row
+- [x] 2.3 Update the diagram section of `README.md` and `docs/hrv-ventilation.md` where they describe the top row
   and the status grid; verify the README tests pass
 - [ ] 2.4 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group

@@ -95,7 +95,8 @@ the tips of their arrows, the bypass position at the top of the exchanger and th
 exchanger, on its centre. A top row holds the season (left), the power (centred) and the running mean outdoor
 temperature (right), and a status grid below the drawing the fan level, the bypass mode and the unit's status.
 Every label there has an icon in front (lightning bolt for power, fan, crossing arrows for the bypass, timer, cog,
-thermometer, thermostat, air filter, thermometer with lines for RMOT), and a tooltip with its name. Every label opens
+thermometer, thermostat, air filter, thermometer with lines for RMOT), centred on its text, and a tooltip with its
+name and state. Each status value is centred in its column; one too long for it ends in an ellipsis. Every label opens
 Home Assistant's more-info dialog of its sensor, and shows the state as Home Assistant formats it (unit, display
 precision, number format). Options marked "Advanced" are shown in the visual editor when its "Advanced settings"
 switch is on.

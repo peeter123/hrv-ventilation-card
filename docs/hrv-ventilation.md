@@ -125,8 +125,13 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   exchanger and bypass paths in the same proportion. Each stream end is coloured by its temperature.
 - **Top row and status grid.** The season icon (left), power (centre) and RMOT (right) sit above the drawing; the
   fan level, bypass mode, operating mode, temperature profile, target temperature, next changes and filter days sit
-  in a three-column grid below it, each cell fixed so nothing moves when a value changes. Every label has an icon
-  and a tooltip and opens the more-info dialog of its sensor.
+  in a three-column grid below it, each cell fixed so nothing moves when a value changes, each value centred in its
+  column. Every label has an icon and a tooltip and opens the more-info dialog of its sensor. A label is an inline
+  flex box, so its icon is centred on the text whatever the font (`vertical-align` left Home Assistant's icon 2 px
+  low, and `middle` centres on the x-height); the ellipsis of a value too long for its cell is on the `.value` span,
+  because a flex box applies no `text-overflow` to its children. The preview's `ha-icon` stub has Home Assistant's
+  structure (an inline host around an inline-flex icon box aligned to the middle), so the browser test catches an
+  offset.
 - **Seasons.** With both season sensors configured and both off, the top row shows the "between seasons" icon.
 - **Layout.** `layout: auto` switches to compact below 340 px card width. A narrow desktop sections column is about
   350 px and a full-width card on a 360 px phone about 344 px, so both show the full layout.
