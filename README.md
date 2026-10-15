@@ -575,11 +575,12 @@ Planned with OpenSpec (CLI `openspec`, installed globally with npm).
 - **Done: configurable cards** (`openspec/changes/configurable-cards/`): TypeScript + Lit rewrite, every entity
   from the card config, visual editors, the drawn diagram, and the migration of the author's dashboards.
 - **Done: calculation in the card.** The cards calculate from the unit's raw sensors and need no helpers.
-- **Next: a custom integration for history and energy statistics.** The cards show the present only. Power,
+- **Next: v0.2 of the cards**, with improvements to the cards themselves.
+- **Then: a custom integration for history and energy statistics.** The cards show the present only. Power,
   energy, effectiveness and moisture rate sensors for charts and the energy dashboard come from template, filter
   and Riemann helpers in the author's installation today (a Jinja macro hard-coded to one unit); an integration
   will create them from the raw sensors with the same formulas. The cards will not depend on it.
-- **Then: packaging.** Inclusion in the HACS default list, README badges, release automation, and whether the
+- **After that: packaging.** Inclusion in the HACS default list, README badges, release automation, and whether the
   integration ships the cards. HACS installation as a custom repository and releases are available now.
 
 Still fixed in the cards: the texts are English only, and the figures are in W and g/h.
