@@ -12,6 +12,12 @@ v0.2 was released on 2026-10-15; next is the integration, then packaging.
   against the same `test/vectors.json`, replacing the `comfoair_q450.jinja` macro and the template, filter and
   Riemann helpers of the author's installation, with a plan to carry over the existing energy totals. The cards do
   not depend on it.
+- **Spec the editor's shown defaults** (in v0.3.0). Since the group 6 review of v0.2, the editors show each
+  option's default (for example the exchanger type and layout) on a card that does not set it, without writing the
+  default into the YAML, and keep a section that was in the config even when it ends up empty. No spec describes
+  this yet: add a requirement or scenarios to the cards' "Visual editor" requirements (shown default, nothing
+  written by an unrelated edit, an existing empty section kept, typing the default into an unset field leaves it
+  unset).
 - **Packaging** (after the integration). Inclusion in the HACS default list, README badges (HACS, release,
   downloads), release automation, and whether the integration ships the cards. HACS installation as a custom
   repository and manual releases exist since v0.1.0.
