@@ -76,6 +76,11 @@ export class HrvVentilationCard extends HrvCard {
       padding-bottom: 4px;
       border-bottom: 1px solid var(--divider-color);
     }
+    /* Each cell centres its content on the row: a label's baseline would leave it above the season icon. */
+    .top > * {
+      display: flex;
+      align-items: center;
+    }
     .top > :last-child {
       justify-self: end;
     }
@@ -218,7 +223,6 @@ export class HrvVentilationCard extends HrvCard {
       align-items: center;
       gap: 3px;
       max-width: 100%;
-      min-width: 0;
       cursor: pointer;
       white-space: nowrap;
     }
@@ -232,8 +236,8 @@ export class HrvVentilationCard extends HrvCard {
       --mdc-icon-size: 1.15em;
       display: flex;
       flex: none;
-      width: 1.15em;
-      height: 1.15em;
+      width: var(--mdc-icon-size);
+      height: var(--mdc-icon-size);
     }
     .hidden {
       visibility: hidden;
@@ -277,9 +281,13 @@ export class HrvVentilationCard extends HrvCard {
       background: var(--badge-fill, var(--secondary-background-color));
       clip-path: var(--hexagon);
     }
+    /* A box of the icon's size, so its focus ring and its place in the row are those of the icon. */
     ha-icon.season {
       cursor: pointer;
       --mdc-icon-size: 22px;
+      display: flex;
+      width: var(--mdc-icon-size);
+      height: var(--mdc-icon-size);
     }
   `;
 
@@ -374,12 +382,9 @@ export class HrvVentilationCard extends HrvCard {
     const text = this.hass ? formatState(this.hass, label.entityId) : '';
     const kind = label.role.split('.')[1] ?? '';
     const icon = label.icon ? html`<ha-icon .icon=${label.icon} aria-hidden="true"></ha-icon>` : nothing;
-    if (!label.visible)
-      return html`<span class="label ${kind} hidden" aria-hidden="true"
-        >${icon}<span class="value">${label.prefix}${text}</span></span
-      >`;
     // Nothing planned: a dimmed dash, while the tooltip and the more-info dialog still give the state.
     const value = html`<span class="value">${label.prefix}${label.notPlanned ? DIAGRAM.notPlanned : text}</span>`;
+    if (!label.visible) return html`<span class="label ${kind} hidden" aria-hidden="true">${icon}${value}</span>`;
     // Named by its role, since a value such as "18 °C" alone does not say which stream it is.
     return html`<span
       class="label ${kind} ${label.notPlanned ? 'not-planned' : ''}"

@@ -129,9 +129,11 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   column. Every label has an icon and a tooltip and opens the more-info dialog of its sensor. A label is an inline
   flex box, so its icon is centred on the text whatever the font (`vertical-align` left Home Assistant's icon 2 px
   low, and `middle` centres on the x-height); the ellipsis of a value too long for its cell is on the `.value` span,
-  because a flex box applies no `text-overflow` to its children. The preview's `ha-icon` stub has Home Assistant's
-  structure (an inline host around an inline-flex icon box aligned to the middle), so the browser test catches an
-  offset.
+  because a flex box applies no `text-overflow` to its children. The top row's cells are flex boxes centring their
+  content: a label's baseline (its icon's bottom edge) would otherwise leave power and RMOT 2 px above the season
+  icon. The preview's `ha-icon` stub has Home Assistant's structure (an inline host around an inline-flex icon box
+  aligned to the middle), and the browser test measures the svg each icon draws, not its host, so it catches an
+  offset of the drawn icon.
 - **Seasons.** With both season sensors configured and both off, the top row shows the "between seasons" icon.
 - **Layout.** `layout: auto` switches to compact below 340 px card width. A narrow desktop sections column is about
   350 px and a full-width card on a 360 px phone about 344 px, so both show the full layout.

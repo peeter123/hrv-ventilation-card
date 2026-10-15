@@ -30,7 +30,7 @@
   and 600 px still pass
 - [x] 2.3 Update the diagram section of `README.md` and `docs/hrv-ventilation.md` where they describe the top row
   and the status grid; verify the README tests pass
-- [ ] 2.4 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 2.4 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 3. Airflow card: exchanger type, moisture figure and tap targets

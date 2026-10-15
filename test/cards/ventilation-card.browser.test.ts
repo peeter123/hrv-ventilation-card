@@ -63,6 +63,15 @@ function shownBoxes(root: ShadowRoot): { name: string; box: DOMRect }[] {
   }));
 }
 
+const middle = (rect: DOMRect): number => rect.top + rect.height / 2;
+
+/** The box of the svg an icon draws (inside its shadow root), not of its host. */
+function drawnIcon(icon: Element | null): DOMRect {
+  const drawn = icon?.shadowRoot?.querySelector('svg')?.getBoundingClientRect();
+  if (!drawn) throw new Error('no drawn icon');
+  return drawn;
+}
+
 const overlap = (a: DOMRect, b: DOMRect): boolean =>
   a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
 
@@ -158,13 +167,19 @@ describe('airflow diagram layout', () => {
       const { root } = await show(width, 'light');
       const labels = [...root.querySelectorAll('.top .label:not(.hidden), .status .label:not(.hidden)')];
       expect(labels.length).toBeGreaterThan(8);
-      const middle = (rect: DOMRect): number => rect.top + rect.height / 2;
       for (const label of labels) {
-        const icon = label.querySelector('ha-icon')?.getBoundingClientRect();
+        const icon = drawnIcon(label.querySelector('ha-icon'));
         const value = label.querySelector('.value')?.getBoundingClientRect();
-        if (!icon || !value) throw new Error(`no icon or value in ${label.className}`);
+        if (!value) throw new Error(`no value in ${label.className}`);
         expect(icon.height).toBeGreaterThan(10);
         expect(Math.abs(middle(icon) - middle(value)), label.className).toBeLessThanOrEqual(1);
+      }
+      // Across the top row: the season icon, power and RMOT on one line.
+      const season = middle(drawnIcon(root.querySelector('.top ha-icon.season')));
+      for (const selector of ['.top .power .value', '.top .rmot .value']) {
+        const value = root.querySelector(selector)?.getBoundingClientRect();
+        if (!value) throw new Error(`no ${selector}`);
+        expect(Math.abs(middle(value) - season), selector).toBeLessThanOrEqual(1);
       }
     });
   }
