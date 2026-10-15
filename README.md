@@ -121,6 +121,8 @@ switch is on.
 |---|---|---|
 | ![Diagram card in a light theme, heating in winter](docs/images/diagram-light.png) | ![Diagram card in a dark theme](docs/images/diagram-dark.png) | ![Diagram card in the compact layout](docs/images/diagram-compact.png) |
 
+![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture recovery at its bottom](docs/images/diagram-erv.png)
+
 Only the four stream temperatures are required. Every other role is optional and leaves its label out when not
 configured. The top row is shown while power, the running mean outdoor temperature or a season sensor is configured,
 the status grid while one of its roles is; a row does not come and go with the states, so the card keeps its height.
@@ -547,14 +549,15 @@ npm run lint                     # ESLint
 npm run format                   # Prettier (code, JSON, YAML; Markdown is not formatted)
 npm run check                    # typecheck + lint + format check + both test projects + check:ids
 npm run release                  # check, build, load the build and copy it to dist/ if all cards register
-npm run capture                  # README images of the diagram card from the preview page into docs/images/
+npm run capture                  # README images of the three cards from the preview page into docs/images/
 ```
 
 **README images:** `npm run capture` (`scripts/capture.mjs`) starts its own Vite server, drives the preview page
-with Playwright and writes the diagram in light and dark theme, the compact layout and the animated GIF of the bypass
-opening and closing (encoded in Node with `gifenc`, at most 3 MB). The mock states keep installation identifiers
-out of view. The two bar cards and the editor are taken from a live dashboard by hand; check them for entity IDs
-with a device serial and for host names before committing.
+with Playwright and writes the diagram in light and dark theme, the compact layout and on an ERV, the recovery bar,
+the moisture bar and the animated GIF of the bypass opening and closing (encoded in Node with `gifenc`, at most
+3 MB). The mock states keep installation identifiers out of view. Two images are taken by hand from a live
+dashboard: `editor.png` (the visual editor) and the card picker screenshot; check them for entity IDs with a device
+serial and for host names before committing.
 
 Only `npm run release` writes `dist/`; `npm run build` writes `build/`, so a work-in-progress bundle cannot end up
 in the deployed folder. `dist/` is committed, because deploys and HACS read it from the repo. `npm run release`

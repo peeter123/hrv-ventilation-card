@@ -1,7 +1,8 @@
-// `npm run capture`: takes the README images of the diagram card from the preview page (dev/, mock states, so no
-// installation identifiers can be in view) into docs/images/. It starts its own Vite server, drives the page's
-// controls with Playwright and encodes the animated GIF in Node, so it needs no system tools. The bar cards and the
-// visual editor are taken from a live installation by hand (see README.md, "Development").
+// `npm run capture`: takes the README images of the three cards from the preview page (dev/, mock states, so no
+// installation identifiers can be in view) into docs/images/: the diagram in light, dark, compact and ERV, the bypass
+// GIF, the recovery bar and the moisture bar. It starts its own Vite server, drives the page's controls with
+// Playwright and encodes the animated GIF in Node, so it needs no system tools. The visual editor (editor.png) and the
+// card picker preview are taken from a live installation by hand (see README.md, "Development").
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +18,9 @@ const OUT = fileURLToPath(new URL('../docs/images/', import.meta.url));
 /** Card widths of the captures, as the preview page labels its slots: full layout, and compact (below 340 px). */
 const WIDTH_FULL = 400;
 const WIDTH_COMPACT = 320;
+/** Widths of the recovery bar and the moisture bar captures. */
+const WIDTH_BAR = 350;
+const WIDTH_WIDE = 600;
 /** Pixel ratio of the captures, so text stays sharp on high-density screens. */
 const SCALE = 2;
 /** The GIF: bypass positions of the sweep, and the frames held at each end. */
@@ -49,6 +53,12 @@ try {
       .locator(`.theme.${theme} .slot`)
       .filter({ has: page.locator('span', { hasText: new RegExp(`^${String(width)} px$`) }) })
       .locator('hrv-ventilation-card');
+  /** A bar card of the light theme's real-config slot (not a sample slot) of the given width. @param {string} tag @param {number} width */
+  const bar = (tag, width) =>
+    page
+      .locator('.theme.light .slot')
+      .filter({ has: page.locator('span', { hasText: new RegExp(`^${String(width)} px$`) }) })
+      .locator(tag);
   await diagram('light', WIDTH_FULL).waitFor();
   /** @param {string} name */
   const scenario = async (name) => {
@@ -65,6 +75,19 @@ try {
   await still('diagram-light.png', diagram('light', WIDTH_FULL));
   await still('diagram-dark.png', diagram('dark', WIDTH_FULL));
   await still('diagram-compact.png', diagram('light', WIDTH_COMPACT));
+
+  // The ERV drawing: the same winter day on an energy recovery unit, then back to the default for the GIF.
+  const exchanger = page.locator('label', { hasText: 'exchanger' }).locator('select');
+  await exchanger.selectOption('erv');
+  await page.waitForTimeout(300);
+  await still('diagram-erv.png', diagram('light', WIDTH_FULL));
+  await exchanger.selectOption('hrv');
+
+  // The bar cards: free cooling for the recovery bar, a drying house with the bypass open for the moisture bar.
+  await scenario('bypass 100 % (night cooling)');
+  await still('recovery-bar.png', bar('hrv-recovery-balance-card', WIDTH_BAR));
+  await scenario('bypass 50 % (off season)');
+  await still('moisture-bar.png', bar('hrv-moisture-balance-card', WIDTH_WIDE));
 
   // The hero GIF: an off-season day with the bypass opening from 0 to 100 % and closing again, the air moving and
   // the supply and exhaust air following the bypass.
