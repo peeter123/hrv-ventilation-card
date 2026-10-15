@@ -76,6 +76,6 @@ describe('HrvMoistureBalanceCard editor and sizing', () => {
     expect(HrvMoistureBalanceCard.getStubConfig()).toEqual({});
     const card = new HrvMoistureBalanceCard();
     expect(card.getGridOptions()).toEqual({ columns: 12, min_columns: 6 });
-    expect(card.getCardSize()).toBe(4);
+    expect(card.getCardSize()).toBe(5);
   });
 });

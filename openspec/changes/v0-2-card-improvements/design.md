@@ -118,13 +118,17 @@ The status cells become `display: flex; justify-content: center`, which centres 
 itself stays `justify-content: center` with the same column widths. The corner stacks keep their left or right
 alignment, and their labels have no icons.
 
-### Equal lanes: the divider is an overlay, not a border
+### Equal lanes: the divider is a row of its own, in a 29 px bar
 
-`.lane + .lane` loses its border. The bar draws a `.divider` element, absolutely positioned at `top: 50%` with
-1 px height and a −0.5 px margin, like the zero line, only while there are two lanes. Both lanes are then exactly
-half the bar's inner height (26 px gives 13 px each). The bar heights stay as they are: 28 px for two lanes and
-22 px for one. The user confirmed (2026-10-15) that the reported unequal height was the heat bar's two lanes, not
-the outer heights of the heat and moisture bars.
+`.lane + .lane` loses its border. The bar draws a 1 px `.divider` element as a flex item between the lanes
+(`flex: none`), and the two-lane bar grows from 28 to 29 px, so its 27 px inner height is 13 + 1 + 13. The
+one-lane bar stays 22 px. The user confirmed (2026-10-15) that the reported unequal height was the heat bar's two
+lanes, not the outer heights of the heat and moisture bars.
+
+- *Why not an overlay at `top: 50%` in the 28 px bar?* It was the first implementation. It makes the lane boxes
+  13 px each, but a 26 px inner height minus a 1 px line leaves 25 pixel rows, so at device pixel ratio 1 the line
+  covers a row of one lane and the painted lanes stay 13 and 12 rows (measured on a screenshot). The user chose the
+  29 px bar (2026-10-15). The browser test counts the painted rows of each lane, not only the boxes.
 
 ### Recovery legend and moisture header
 

@@ -56,21 +56,18 @@ export const barStyles = css`
     overflow: hidden;
     background: var(--secondary-background-color, #eee);
   }
+  /* Two lanes of 13 px and the 1 px line between them: an even inner height cannot split into equal lanes. */
   .bar.lanes {
-    height: 28px;
+    height: 29px;
   }
   .lane {
     position: relative;
     flex: 1 1 0;
   }
-  /* The line between two lanes lies over them, like the zero line, so it takes no height from either lane. */
+  /* The line between two lanes: a row of its own, so it takes no height from either lane. */
   .divider {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
+    flex: none;
     height: 1px;
-    margin-top: -0.5px;
     background: var(--hrv-bar-outline);
   }
   .seg {
@@ -130,29 +127,29 @@ export function fillBox({ left, width }: Segment): { left: string; width: string
 
 /**
  * The bar: one lane per row of segments, all on the same scale, and the zero line in the centre across them. Two
- * lanes make the bar taller and are divided by a line across its middle.
+ * lanes make the bar taller and are divided by a line.
  */
 export function renderBar(lanes: readonly (readonly DrawnSegment[])[]): TemplateResult {
   return html`<div class="bar ${lanes.length > 1 ? 'lanes' : ''}">
     ${lanes.map(
-      (lane) =>
-        html`<div class="lane">
-          ${lane.map((segment) => {
-            const fill = fillBox(segment);
-            return html`<div
-              class="seg"
-              style=${styleMap({ left: `${String(segment.left)}%`, width: `${String(segment.width)}%` })}
-            >
-              ${
-                fill
-                  ? html`<div class="fill" style=${styleMap({ ...fill, background: segment.background })}></div>`
-                  : nothing
-              }
-            </div>`;
-          })}
-        </div>`,
+      (lane, index) =>
+        html`${index > 0 ? html`<div class="divider"></div>` : nothing}
+          <div class="lane">
+            ${lane.map((segment) => {
+              const fill = fillBox(segment);
+              return html`<div
+                class="seg"
+                style=${styleMap({ left: `${String(segment.left)}%`, width: `${String(segment.width)}%` })}
+              >
+                ${
+                  fill
+                    ? html`<div class="fill" style=${styleMap({ ...fill, background: segment.background })}></div>`
+                    : nothing
+                }
+              </div>`;
+            })}
+          </div>`,
     )}
-    ${lanes.length === 2 ? html`<div class="divider"></div>` : nothing}
     <div class="zero"></div>
   </div>`;
 }

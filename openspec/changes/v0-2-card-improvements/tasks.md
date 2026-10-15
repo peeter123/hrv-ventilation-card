@@ -5,7 +5,7 @@
 - [x] 1.1 Remove the water entry from the recovery legend (`recoveryView`) and delete `RECOVERY.water` and
   `RECOVERY.waterKeptOut`; verify the `recovery-view` unit tests cover the "Water recovered" and "Water kept out"
   scenarios (two lanes and the scale, no water entry) and `npm run check` passes
-- [x] 1.2 Replace the lane border with a divider overlay in `src/cards/bar.ts` (design: "Equal lanes"); verify a
+- [x] 1.2 Replace the lane border with a divider row in `src/cards/bar.ts` (design: "Equal lanes"); verify a
   test in `bar.browser.test.ts` that renders a two-lane bar at device pixel ratio 1 and 2 and asserts equal lane
   heights, and that the one-lane bar is unchanged at 22 px
 - [x] 1.3 Give the moisture card the fixed title "Moisture Recovery" and a muted direction subtitle
@@ -16,7 +16,7 @@
 - [x] 1.4 Update the recovery and moisture sections of `README.md` (legend and title texts) and the card behaviour
   section of `docs/hrv-ventilation.md`; verify the README tests pass and no doc mentions "Water Recovered" or the
   "Moisture: House Drying" title any more
-- [ ] 1.5 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 1.5 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 2. Airflow card layout fixes

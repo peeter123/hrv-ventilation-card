@@ -62,9 +62,9 @@ export class HrvMoistureBalanceCard extends BarCard {
 
   private settings?: MoistureSettings;
 
-  /** Height in masonry views: header, bar, the bypass strip and a legend of up to four lines. */
+  /** Height in masonry views: title and subtitle, bar, the bypass strip and a legend of up to four lines. */
   override getCardSize(): number {
-    return 4;
+    return 5;
   }
 
   protected check(config: CardConfig): void {

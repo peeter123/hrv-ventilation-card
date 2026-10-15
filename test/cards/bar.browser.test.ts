@@ -1,7 +1,7 @@
 // The shared bar in a real browser: every segment's fill has the bar's box, so the stripes of adjacent hatched parts
 // line up as one pattern, and the two lanes of the recovery bar are equally high.
 import { afterEach, expect, test } from 'vitest';
-import { commands } from 'vitest/browser';
+import { commands, page } from 'vitest/browser';
 import '../../dev/ha-stubs';
 import { CONFIGS, MockHass, type MockValues } from '../../dev/mock-hass';
 import '../../src/cards/moisture-balance-card';
@@ -63,6 +63,28 @@ for (const tag of ['hrv-recovery-balance-card', 'hrv-moisture-balance-card'] as 
   }
 }
 
+/** The rows painted in each lane's recovered colour, down one column of a screenshot of the bar (CSS pixels). */
+async function paintedRows(bar: Element, colors: readonly (readonly [number, number, number])[]): Promise<number[]> {
+  const shot = await page.screenshot({ element: bar, base64: true, save: false });
+  const image = new Image();
+  image.src = `data:image/png;base64,${shot}`;
+  await image.decode();
+  const canvas = document.createElement('canvas');
+  [canvas.width, canvas.height] = [image.width, image.height];
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('no canvas');
+  context.drawImage(image, 0, 0);
+  // A column right of the zero line, through both lanes' recovered (solid) parts.
+  const column = context.getImageData(Math.round(image.width * 0.6), 0, 1, image.height).data;
+  return colors.map(([r, g, b]) => {
+    let rows = 0;
+    for (let y = 0; y < image.height; y++) {
+      if (column[y * 4] === r && column[y * 4 + 1] === g && column[y * 4 + 2] === b) rows++;
+    }
+    return rows;
+  });
+}
+
 for (const ratio of [1, 2]) {
   test(`recovery-balance-card "Equal lanes": both lanes equally high at device pixel ratio ${String(ratio)}`, async () => {
     await commands.emulateDevicePixelRatio(ratio);
@@ -70,13 +92,23 @@ for (const ratio of [1, 2]) {
       expect(window.devicePixelRatio).toBe(ratio);
       const root = await show('hrv-recovery-balance-card', 437);
       const bar = root.querySelector('.bar');
+      if (!bar) throw new Error('no bar');
       const lanes = [...root.querySelectorAll('.lane')].map((lane) => lane.getBoundingClientRect());
-      expect(bar?.getBoundingClientRect().height).toBe(28);
-      expect(lanes.map((lane) => lane.height)).toEqual([13, 13]);
-      // The divider lies across the middle, between the lanes, and takes no height from them.
       const divider = root.querySelector('.divider')?.getBoundingClientRect();
+      // 13 + 1 + 13 inside the 1 px outline: the divider is a row of its own between the lanes.
+      expect(bar.getBoundingClientRect().height).toBe(29);
+      expect(lanes.map((lane) => lane.height)).toEqual([13, 13]);
       expect(divider?.height).toBe(1);
-      expect((divider?.top ?? 0) + 0.5).toBe(lanes[1]?.top);
+      expect(divider?.top).toBe(lanes[0]?.bottom);
+      expect(divider?.bottom).toBe(lanes[1]?.top);
+      // What is painted: as many rows of the temperature colour as of the moisture colour. Screenshots are in CSS
+      // pixels, so this is exact at ratio 1, where a 1 px line takes a whole row of one lane if they cannot split.
+      const [temperature, moisture] = await paintedRows(bar, [
+        [0xdb, 0x44, 0x37],
+        [0xf4, 0xa0, 0x9a],
+      ]);
+      expect(temperature).toBeGreaterThanOrEqual(12);
+      expect(moisture).toBe(temperature);
     } finally {
       await commands.emulateDevicePixelRatio(null);
     }

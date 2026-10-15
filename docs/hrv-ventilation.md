@@ -111,9 +111,10 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   "Missed". Otherwise "Heat Recovery" or "Cooling Recovery" with "Recovered" and "Lost".
 - **Bars.** The recovery bar has one lane per kind: temperature, and moisture when every stream has a humidity.
   Each lane has its solid recovered part and its hatched lost part, positive to the right of the centre line and
-  negative to the left, both lanes on the scale of the fuller one. The two lanes are equally high: the line between
-  them is an overlay across the bar's middle, like the zero line, because a border on the second lane sits outside
-  the flex basis and made the lanes 12.5 and 13.5 px. The recovery legend shows the lanes and the scale only; the
+  negative to the left, both lanes on the scale of the fuller one. The two lanes are equally high, 13 px each in a
+  29 px bar, with the 1 px line between them as a row of its own. A border on the second lane sits outside the flex
+  basis (lanes of 12.5 and 13.5 px), and a line laid over the middle of a 28 px bar covers a pixel row of one lane
+  (25 rows cannot split evenly), so the browser test counts the painted rows of each lane. The recovery legend shows the lanes and the scale only; the
   moisture rate in g/h belongs to the moisture bar. The moisture bar is one lane, solid recovered (or kept out) and
   hatched put outside (or entering), with the neutral band and a yellow strip for the bypass position. Its title is
   always "Moisture Recovery"; the direction ("House drying", "House gaining (outdoor more humid)", "Indoor ≈
