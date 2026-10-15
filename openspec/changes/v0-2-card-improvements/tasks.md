@@ -106,7 +106,7 @@
     6.3 deploys the v0.2 bundle.
 - [x] 6.2 Set the version to `0.2.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
-- [ ] 6.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
+- [x] 6.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
   Playwright (service workers blocked) on both dashboards that the existing cards render with the fixes (centred
   icons and status cells, equal lanes, no water entry, moisture subtitle) and the same values as before
 - [ ] 6.4 Add `exchanger_type: erv`, `status.heating_saving`, `status.cooling_saving` and
