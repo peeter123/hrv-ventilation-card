@@ -14,6 +14,8 @@ import {
   mdiThermometerLines,
   mdiThermostat,
   mdiTimerOutline,
+  mdiWaterOffOutline,
+  mdiWaterOutline,
 } from '@mdi/js';
 import { css, html, LitElement, svg } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
@@ -31,6 +33,8 @@ const ICONS: Readonly<Record<string, string>> = {
   'mdi:thermometer': mdiThermometer,
   'mdi:thermostat': mdiThermostat,
   'mdi:air-filter': mdiAirFilter,
+  'mdi:water-outline': mdiWaterOutline,
+  'mdi:water-off-outline': mdiWaterOffOutline,
 };
 
 @customElement('ha-card')

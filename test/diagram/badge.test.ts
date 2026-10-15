@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { RecoveryResult } from '../../src/calc/recovery';
-import { hasBadge, savingBadge } from '../../src/diagram/badge';
+import { hasBadge, moistureFigure, savingBadge } from '../../src/diagram/badge';
 import type { CardConfig } from '../../src/lib/config';
 import { nb } from '../nbsp';
 
@@ -66,6 +66,62 @@ describe('savingBadge', () => {
   test('airflow-diagram-card "Custom warm colour": the badge is tinted with it', () => {
     const colors = { ...COLORS, warm: 'orange' };
     expect(savingBadge(result('heating', 300), { colors, showUnavailable: false }, LOCALE)?.tint).toBe('orange');
+  });
+});
+
+describe('moistureFigure', () => {
+  const ERV = { exchanger: 'erv', badge: true, showUnavailable: false } as const;
+  const withMoisture = (recovered: number): RecoveryResult => ({
+    ...result('heating', 300),
+    moisture: { extracted: 500, recovered, outside: 500 - recovered },
+  });
+
+  test('airflow-diagram-card "Moisture recovered": a drop and "120 g/h"', () => {
+    expect(moistureFigure(withMoisture(120.3), ERV, LOCALE)).toEqual({
+      icon: 'mdi:water-outline',
+      text: nb('120 g/h'),
+      title: nb('Moisture recovered: 120 g/h'),
+    });
+  });
+
+  test('airflow-diagram-card "Moisture kept out": a crossed-out drop and the magnitude "418 g/h"', () => {
+    expect(moistureFigure(withMoisture(-418), ERV, LOCALE)).toEqual({
+      icon: 'mdi:water-off-outline',
+      text: nb('418 g/h'),
+      title: nb('Moisture kept out: 418 g/h'),
+    });
+  });
+
+  test('a rate that shows as 0 g/h keeps the plain drop, whatever its sign', () => {
+    expect(moistureFigure(withMoisture(-0.4), ERV, LOCALE)).toEqual({
+      icon: 'mdi:water-outline',
+      text: nb('0 g/h'),
+      title: nb('Moisture recovered: 0 g/h'),
+    });
+  });
+
+  test('the magnitude is formatted with the locale', () => {
+    expect(moistureFigure(withMoisture(-1234), ERV, { language: 'de' })?.text).toBe(nb('1.234 g/h'));
+  });
+
+  test('airflow-diagram-card "Input unavailable": hidden, or "n/a" with show_unavailable, like the badge', () => {
+    expect(moistureFigure(undefined, ERV, LOCALE)).toBeUndefined();
+    expect(moistureFigure(undefined, { ...ERV, showUnavailable: true }, LOCALE)).toEqual({
+      icon: 'mdi:water-outline',
+      text: 'n/a',
+      title: 'Moisture recovery: n/a',
+    });
+    // A result without moisture rates counts as no value.
+    expect(moistureFigure(result('heating', 300), ERV, LOCALE)).toBeUndefined();
+  });
+
+  test('airflow-diagram-card "HRV": no figure, also with humidity', () => {
+    expect(moistureFigure(withMoisture(120), { ...ERV, exchanger: 'hrv' }, LOCALE)).toBeUndefined();
+    expect(moistureFigure(undefined, { ...ERV, exchanger: 'hrv', showUnavailable: true }, LOCALE)).toBeUndefined();
+  });
+
+  test('no figure without the badge inputs, also with show_unavailable', () => {
+    expect(moistureFigure(undefined, { ...ERV, badge: false, showUnavailable: true }, LOCALE)).toBeUndefined();
   });
 });
 

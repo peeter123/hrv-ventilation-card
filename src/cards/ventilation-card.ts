@@ -1,11 +1,12 @@
 // custom:hrv-ventilation-card: the airflow diagram. Three rows in normal flow: a top row (season, power, RMOT), the
-// drawing band with the stream labels and the saving badge over the drawing, and a status grid of fixed cells. What
+// drawing band with the stream labels, the saving badge and on an ERV the moisture figure over the drawing, and a
+// status grid of fixed cells. What
 // to show comes from the pure functions in src/diagram/; this element only renders it.
 import { css, html, nothing, type TemplateResult } from 'lit';
 import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
-import { hasBadge, savingBadge, type Badge } from '../diagram/badge';
+import { hasBadge, moistureFigure, savingBadge, type Badge, type MoistureFigure } from '../diagram/badge';
 import { drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
 import { flowSpeed } from '../diagram/flow';
 import { isCompact, labelModel, STATUS_CELLS, type DiagramLabel, type LayoutChoice } from '../diagram/labels';
@@ -177,11 +178,18 @@ export class HrvVentilationCard extends HrvCard {
       flex-direction: column;
       line-height: 1.3;
     }
+    .bypass-position,
+    .moisture-recovery {
+      left: 50%;
+      transform: translateX(-50%);
+    }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {
       top: 20.5%;
-      left: 50%;
-      transform: translateX(-50%);
+    }
+    /* Just above the exchanger's inner outline (y 162), mirroring the bypass position. */
+    .moisture-recovery {
+      bottom: 20.5%;
     }
     /* On the exchanger's centre. */
     .saving {
@@ -223,7 +231,8 @@ export class HrvVentilationCard extends HrvCard {
      * A label: its icon centred vertically on its value. A flex box applies no text-overflow to its children, so the
      * value carries the ellipsis of a value too long for its cell.
      */
-    .label {
+    .label,
+    .figure {
       display: inline-flex;
       align-items: center;
       gap: 3px;
@@ -231,13 +240,15 @@ export class HrvVentilationCard extends HrvCard {
       cursor: pointer;
       white-space: nowrap;
     }
-    .label .value {
+    .label .value,
+    .figure .value {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     /* A label's icon: a box as high as its text. Home Assistant's icon sizes its own svg from --mdc-icon-size. */
-    .label ha-icon {
+    .label ha-icon,
+    .figure ha-icon {
       --mdc-icon-size: 1.15em;
       display: flex;
       flex: none;
@@ -463,16 +474,27 @@ export class HrvVentilationCard extends HrvCard {
     >`;
   }
 
+  /** The ERV's moisture recovery figure: an icon with the magnitude, like a label, with the direction in its tooltip. */
+  private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
+    if (!figure) return nothing;
+    return html`<div class="on-drawing moisture-recovery">
+      <span class="figure" title=${figure.title} aria-label=${figure.title}
+        ><ha-icon .icon=${figure.icon} aria-hidden="true"></ha-icon><span class="value">${figure.text}</span></span
+      >
+    </div>`;
+  }
+
   protected override render(): TemplateResult | typeof nothing {
     if (!this.config || !this.hass || !this.settings) return nothing;
     const { settings, hass } = this;
     const { compact } = this;
     const model = labelModel(this.config, hass.states, { showUnavailable: settings.showUnavailable, compact });
     const season = seasonIcon(this.config, hass.states, settings.colors);
-    const badge =
-      settings.badge && this.calculator
-        ? savingBadge(this.calculator(hass).result, settings, localeFromHass(hass))
-        : undefined;
+    // One calculation for the badge and the moisture figure, which need the same inputs.
+    const result = settings.badge && this.calculator ? this.calculator(hass).result : undefined;
+    const locale = localeFromHass(hass);
+    const badge = settings.badge ? savingBadge(result, settings, locale) : undefined;
+    const moisture = moistureFigure(result, settings, locale);
     const { states } = hass;
     const { temperatures, flows } = settings;
     const art = drawing({
@@ -499,6 +521,7 @@ export class HrvVentilationCard extends HrvCard {
         )}
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
         ${badge ? html`<div class="on-drawing saving">${this.badge(badge)}</div>` : nothing}
+        ${this.moistureFigure(moisture)}
         ${model.flows.map(
           (label) =>
             html`<div class="on-drawing ${label.role === 'fans.supply_flow' ? 'supply-flow' : 'exhaust-flow'}">

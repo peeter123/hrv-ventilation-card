@@ -63,10 +63,12 @@ async function show(
 
 /** The boxes of everything shown as text or icon, and of the arrowheads, which labels must not cover either. */
 function shownBoxes(root: ShadowRoot): { name: string; box: DOMRect }[] {
-  return [...root.querySelectorAll('.label:not(.hidden), .badge, ha-icon.season, svg .head')].map((element) => ({
-    name: element.textContent.trim() || element.tagName,
-    box: element.getBoundingClientRect(),
-  }));
+  return [...root.querySelectorAll('.label:not(.hidden), .badge, .figure, ha-icon.season, svg .head')].map(
+    (element) => ({
+      name: element.textContent.trim() || element.tagName,
+      box: element.getBoundingClientRect(),
+    }),
+  );
 }
 
 const middle = (rect: DOMRect): number => rect.top + rect.height / 2;
@@ -90,10 +92,16 @@ afterEach(() => {
 });
 
 describe('airflow diagram layout', () => {
-  for (const theme of ['light', 'dark'] as const) {
+  for (const [theme, type] of [
+    ['light', 'hrv'],
+    ['dark', 'hrv'],
+    ['light', 'erv'],
+    ['dark', 'erv'],
+  ] as const) {
     for (const width of [280, 320, COMPACT_BELOW, 360, 400, 600]) {
-      test(`${theme}, ${String(width)} px: no labels overlap or leave the card, text at least 11 px`, async () => {
-        const { root } = await show(width, theme);
+      test(`${theme}, ${type}, ${String(width)} px: no labels overlap or leave the card, text at least 11 px`, async () => {
+        const { root } = await show(width, theme, 'auto', VALUES, { exchanger_type: type });
+        if (type === 'erv') expect(root.querySelector('.moisture-recovery .figure')).not.toBeNull();
         const boxes = shownBoxes(root);
         expect(boxes.length).toBeGreaterThan(width < COMPACT_BELOW ? 4 : 20);
         const card = root.querySelector('ha-card')?.getBoundingClientRect();
@@ -108,7 +116,7 @@ describe('airflow diagram layout', () => {
           boxes.slice(i + 1).flatMap((b) => (overlap(a.box, b.box) ? [`${a.name} / ${b.name}`] : [])),
         );
         expect(overlapping).toEqual([]);
-        for (const label of root.querySelectorAll('.label, .badge')) {
+        for (const label of root.querySelectorAll('.label, .badge, .figure')) {
           expect(parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(11);
         }
       });
@@ -255,6 +263,31 @@ function contrast(a: string, b: string): number {
 }
 
 describe('exchanger type', () => {
+  test('airflow-diagram-card "ERV at the narrowest width": bypass position, badge and figure inside the exchanger', async () => {
+    const { root } = await show(280, 'light', 'auto', { ...VALUES, bypass: 50 }, { exchanger_type: 'erv' });
+    const exchanger = root.querySelector('svg .exchanger')?.getBoundingClientRect();
+    if (!exchanger) throw new Error('no exchanger');
+    const boxes = ['.bypass-position .label', '.saving .badge', '.moisture-recovery .figure'].map((selector) => {
+      const box = root.querySelector(selector)?.getBoundingClientRect();
+      if (!box) throw new Error(`no ${selector}`);
+      expect(box.left, selector).toBeGreaterThanOrEqual(exchanger.left);
+      expect(box.right, selector).toBeLessThanOrEqual(exchanger.right);
+      expect(box.top, selector).toBeGreaterThanOrEqual(exchanger.top);
+      expect(box.bottom, selector).toBeLessThanOrEqual(exchanger.bottom);
+      return box;
+    });
+    const [bypass, badge, figure] = boxes as [DOMRect, DOMRect, DOMRect];
+    expect(overlap(bypass, badge)).toBe(false);
+    expect(overlap(badge, figure)).toBe(false);
+    expect(overlap(bypass, figure)).toBe(false);
+  });
+
+  test('airflow-diagram-card "ERV on a phone": the compact layout shows the moisture figure', async () => {
+    const { root } = await show(320, 'light', 'auto', VALUES, { exchanger_type: 'erv' });
+    expect(root.querySelector('.status')).toBeNull();
+    expect(root.querySelector('.moisture-recovery .figure')).not.toBeNull();
+  });
+
   for (const theme of ['light', 'dark'] as const) {
     test(`airflow-diagram-card "ERV", ${theme}: a fill other than the HRV's, with text on it at 4.5:1 or more`, async () => {
       const fill = async (type: string): Promise<{ fill: string; text: string }> => {

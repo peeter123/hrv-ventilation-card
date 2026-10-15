@@ -213,4 +213,10 @@ export const DIAGRAM = {
     between: 'Between seasons',
   },
   saving: (watts: string): string => `${watts}${NBSP}W`,
+  /** The ERV's moisture recovery figure: a magnitude, the icon says the direction. */
+  moisture: (gramsPerHour: string): string => `${gramsPerHour}${NBSP}g/h`,
+  /** The moisture figure's tooltips; `figure` is the text shown, e.g. "120 g/h". */
+  moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
+  moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,
+  moistureNoValue: `Moisture recovery: ${NO_VALUE}`,
 } as const;

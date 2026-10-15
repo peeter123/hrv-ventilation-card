@@ -3,6 +3,7 @@ import { checkDiagramConfig, HrvVentilationCard } from '../../src/cards/ventilat
 import type { CardHass } from '../../src/cards/base-card';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState } from '../../src/lib/hass';
+import { nb } from '../nbsp';
 
 const state = (entity_id: string, value: string, unit?: string): HassEntityState => ({
   entity_id,
@@ -228,6 +229,40 @@ describe('the labels', () => {
     card.shadowRoot?.querySelector<HTMLElement>('ha-icon.season')?.click();
     card.shadowRoot?.querySelector<HTMLElement>('.badge')?.click();
     expect(opened).toEqual(['binary_sensor.hrv_heating', 'sensor.hrv_supply_t']);
+  });
+
+  test('airflow-diagram-card "Moisture recovery figure on ERV": at the bottom of an ERV, not on an HRV', async () => {
+    const config = {
+      ...CONFIG,
+      outdoor: { temperature: 'sensor.hrv_outdoor_t', absolute_humidity: 'sensor.hrv_ah_out' },
+      supply: { temperature: 'sensor.hrv_supply_t', absolute_humidity: 'sensor.hrv_ah_sup' },
+      extract: { temperature: 'sensor.hrv_extract_t', absolute_humidity: 'sensor.hrv_ah_ext' },
+      fans: { supply_flow: 'sensor.hrv_flow' },
+      smoothing: 0,
+    };
+    const base = hassWith('0');
+    const extra = [
+      state('sensor.hrv_ah_out', '4', 'g/m³'),
+      state('sensor.hrv_ah_sup', '6', 'g/m³'),
+      state('sensor.hrv_ah_ext', '8', 'g/m³'),
+      state('sensor.hrv_flow', '200', 'm³/h'),
+    ];
+    const hass = { ...base, states: { ...base.states, ...Object.fromEntries(extra.map((s) => [s.entity_id, s])) } };
+    const figure = async (type?: string) => {
+      const card = document.createElement('hrv-ventilation-card');
+      card.setConfig(type === undefined ? config : { ...config, exchanger_type: type });
+      card.hass = hass;
+      document.body.append(card);
+      await card.updateComplete;
+      return card.shadowRoot?.querySelector<HTMLElement>('.moisture-recovery .figure');
+    };
+    const erv = await figure('erv');
+    // 200 m³/h * (6 - 4) g/m³ recovered.
+    expect(erv?.textContent.trim()).toBe(nb('400 g/h'));
+    expect(erv?.title).toBe(nb('Moisture recovered: 400 g/h'));
+    expect(erv?.querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-outline');
+    expect(await figure()).toBeNull();
+    expect(await figure('hrv')).toBeNull();
   });
 
   test('airflow-diagram-card "Entity precision": labels show hass.formatEntityState', async () => {

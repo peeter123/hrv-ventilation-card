@@ -39,7 +39,7 @@
   exchanger fill by type (design: "Exchanger type"); verify unit tests for the default, `erv` and the error for
   `rotary` (it names the option and both choices), and a browser test that the ERV fill differs from the HRV fill
   and the text on it has a contrast of at least 4.5:1 in the light and dark preview themes
-- [ ] 3.2 Add `moistureFigure` next to `savingBadge` and render it at the bottom of the exchanger on an ERV in both
+- [x] 3.2 Add `moistureFigure` next to `savingBadge` and render it at the bottom of the exchanger on an ERV in both
   layouts, with `DIAGRAM.moisture` and the tooltips in `src/strings.ts`; verify unit tests for 120 g/h, -418 g/h
   (crossed-out drop, magnitude), an unavailable input (hidden, or "n/a" with show-unavailable), HRV (none) and
   missing badge inputs (none), and a browser test at 280 px with the bypass at 50 % that the bypass position, the
