@@ -83,8 +83,8 @@ try {
   await still('diagram-erv.png', diagram('light', WIDTH_FULL));
   await exchanger.selectOption('hrv');
 
-  // The bar cards: free cooling for the recovery bar, a drying house with the bypass open for the moisture bar.
-  await scenario('bypass 100 % (night cooling)');
+  // The bar cards: heating (the most used mode) for the recovery bar, a drying house with the bypass open for the moisture bar.
+  await scenario('heating (winter)');
   await still('recovery-bar.png', bar('hrv-recovery-balance-card', WIDTH_BAR));
   await scenario('bypass 50 % (off season)');
   await still('moisture-bar.png', bar('hrv-moisture-balance-card', WIDTH_WIDE));

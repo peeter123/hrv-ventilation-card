@@ -244,7 +244,7 @@ and lost power and the bar's scale; the moisture recovery rate in g/h is on the 
 shown in the visual editor when its "Advanced settings" switch is on. A sensor that is unavailable or reports a unit
 the card does not know (see the types below) makes the bar show "n/a".
 
-![Recovery balance card during free cooling](docs/images/recovery-bar.png)
+![Recovery balance card while heating in winter](docs/images/recovery-bar.png)
 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|

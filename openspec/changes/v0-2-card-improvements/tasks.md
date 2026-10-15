@@ -101,8 +101,8 @@
   and add a card picker screenshot taken by hand on the live installation; verify every image the README links
   exists and shows the v0.2 behaviour
   - Progress: `scripts/capture.mjs` takes the diagram (HRV light, dark, compact, GIF, ERV) and both bar images from
-    the preview page (92fb481). Still to do: switch the recovery bar capture from the "bypass 100 % (night cooling)"
-    scenario to a heating one, and retake `editor.png` and the card picker screenshot on the live installation after
+    the preview page (92fb481). The recovery bar is now captured in heating mode (the "heating (winter)" scenario).
+    Still to do: retake `editor.png` and the card picker screenshot on the live installation after
     6.3 deploys the v0.2 bundle.
 - [ ] 6.2 Set the version to `0.2.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
