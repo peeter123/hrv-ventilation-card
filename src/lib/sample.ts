@@ -2,7 +2,7 @@
 // card): a config and the states of its entities, shared by the three cards so their figures match. A typical
 // heating day, with every role the cards show. The IDs use a made-up domain, so they hold no installation
 // identifiers and cannot collide with real entities.
-import { ROLE_LABELS } from '../strings';
+import { NO_VALUE, ROLE_LABELS } from '../strings';
 import { valueAt, type CardConfig } from './config';
 import type { HassEntityState } from './hass';
 
@@ -77,11 +77,11 @@ const VALUES: readonly (readonly [role: string, state: string, unit?: string])[]
   ['fans.exhaust_flow', '200', 'm³/h'],
   ['bypass.position', '0', '%'],
   ['bypass.mode', 'Auto'],
-  ['bypass.next_change', 'n/a'],
+  ['bypass.next_change', NO_VALUE],
   ['status.operating_mode', 'Auto'],
   ['status.target_temperature', '21', '°C'],
   ['status.temperature_profile', 'Normal'],
-  ['status.next_fan_change', 'n/a'],
+  ['status.next_fan_change', NO_VALUE],
   ['status.filter_days', '120', 'd'],
   ['status.power', '38', 'W'],
   ['status.rmot', '4.5', '°C'],
