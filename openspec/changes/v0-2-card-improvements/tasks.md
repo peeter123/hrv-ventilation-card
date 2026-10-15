@@ -75,7 +75,7 @@
   registered once when loaded twice)
 - [x] 4.4 Add a no-entities slot to the preview page; verify a screenshot of the three cards in sample mode in
   both themes
-- [ ] 4.5 Document sample mode and the picker preview in `README.md` (how to leave the sample: pick any entity)
+- [x] 4.5 Document sample mode and the picker preview in `README.md` (how to leave the sample: pick any entity)
   and `docs/hrv-ventilation.md`; verify the README tests pass
 - [ ] 4.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
