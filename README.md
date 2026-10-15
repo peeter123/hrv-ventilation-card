@@ -140,6 +140,8 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 | `filter_days` | entity | | | Days until the filter change (status grid, air filter icon). |
 | `power` | entity | | | Power use of the unit (top row, lightning bolt). |
 | `rmot` | entity | | | Running mean outdoor temperature (top row, "RMOT "). |
+| `saving` | entity | | yes | Saved power sensor, opened by tapping the saving badge. Not shown as a label. |
+| `moisture_recovery` | entity | | yes | Moisture recovery rate sensor, opened by tapping the ERV's moisture figure. Not shown as a label. |
 
 #### Seasons object
 
@@ -371,6 +373,8 @@ status:
   filter_days: sensor.hrv_filter_remaining_days
   power: sensor.hrv_power
   rmot: sensor.hrv_running_mean_outdoor_temperature
+  saving: sensor.hrv_saved_power
+  moisture_recovery: sensor.hrv_moisture_recovery
 seasons:
   heating: binary_sensor.hrv_heating_season
   cooling: binary_sensor.hrv_cooling_season

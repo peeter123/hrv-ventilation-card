@@ -44,12 +44,12 @@
   (crossed-out drop, magnitude), an unavailable input (hidden, or "n/a" with show-unavailable), HRV (none) and
   missing badge inputs (none), and a browser test at 280 px with the bypass at 50 % that the bypass position, the
   badge and the figure stay inside the exchanger without overlapping
-- [ ] 3.3 Add the optional roles `status.saving` and `status.moisture_recovery` (`RolePath`, `ROLE_LABELS`, editor
+- [x] 3.3 Add the optional roles `status.saving` and `status.moisture_recovery` (`RolePath`, `ROLE_LABELS`, editor
   field names) and let the badge and the moisture figure open them, focusable only while configured; verify card
   tests that a tap on the badge opens the saving entity, that without the role it opens nothing (not the supply
   air temperature) and has no `tabindex`, the same for the moisture figure, and that neither role adds a status
   grid cell or a top row label
-- [ ] 3.4 Add the exchanger type choice first in `DIAGRAM_SCHEMA`, with the labels "Heat recovery (HRV)" and
+- [x] 3.4 Add the exchanger type choice first in `DIAGRAM_SCHEMA`, with the labels "Heat recovery (HRV)" and
   "Energy recovery (ERV)", and the two new pickers as advanced fields in the status section; verify the editor
   tests for "Editing the card" and "Advanced settings on" from the airflow spec
 - [ ] 3.5 Add an exchanger type control to the preview page (`dev/`) and check HRV and ERV at 280 to 600 px in

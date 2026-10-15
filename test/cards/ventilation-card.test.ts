@@ -204,65 +204,117 @@ describe('the labels', () => {
     expect(opened).toEqual([]);
   });
 
-  test('airflow-diagram-card "Tapping between seasons" and tapping the badge', async () => {
-    const config = {
-      ...CONFIG,
-      outdoor: { temperature: 'sensor.hrv_outdoor_t', absolute_humidity: 'sensor.hrv_ah' },
-      supply: { temperature: 'sensor.hrv_supply_t', absolute_humidity: 'sensor.hrv_ah' },
-      extract: { temperature: 'sensor.hrv_extract_t', absolute_humidity: 'sensor.hrv_ah' },
-      fans: { supply_flow: 'sensor.hrv_flow' },
-      seasons: { heating: 'binary_sensor.hrv_heating', cooling: 'binary_sensor.hrv_cooling' },
-    };
-    const card = document.createElement('hrv-ventilation-card');
-    card.setConfig(config);
-    const base = hassWith('0');
-    const extra = [
-      state('sensor.hrv_ah', '7', 'g/m³'),
-      state('sensor.hrv_flow', '200', 'm³/h'),
-      state('binary_sensor.hrv_heating', 'off'),
-      state('binary_sensor.hrv_cooling', 'off'),
-    ];
-    card.hass = { ...base, states: { ...base.states, ...Object.fromEntries(extra.map((s) => [s.entity_id, s])) } };
-    document.body.append(card);
-    await card.updateComplete;
-    const opened = moreInfo(card);
-    card.shadowRoot?.querySelector<HTMLElement>('ha-icon.season')?.click();
-    card.shadowRoot?.querySelector<HTMLElement>('.badge')?.click();
-    expect(opened).toEqual(['binary_sensor.hrv_heating', 'sensor.hrv_supply_t']);
-  });
-
-  test('airflow-diagram-card "Moisture recovery figure on ERV": at the bottom of an ERV, not on an HRV', async () => {
-    const config = {
+  describe('the badge and the moisture figure', () => {
+    // Every input of the calculation, so the badge and an ERV's figure show.
+    const CALCULATION: CardConfig = {
       ...CONFIG,
       outdoor: { temperature: 'sensor.hrv_outdoor_t', absolute_humidity: 'sensor.hrv_ah_out' },
       supply: { temperature: 'sensor.hrv_supply_t', absolute_humidity: 'sensor.hrv_ah_sup' },
       extract: { temperature: 'sensor.hrv_extract_t', absolute_humidity: 'sensor.hrv_ah_ext' },
       fans: { supply_flow: 'sensor.hrv_flow' },
+      seasons: { heating: 'binary_sensor.hrv_heating', cooling: 'binary_sensor.hrv_cooling' },
       smoothing: 0,
     };
-    const base = hassWith('0');
-    const extra = [
-      state('sensor.hrv_ah_out', '4', 'g/m³'),
-      state('sensor.hrv_ah_sup', '6', 'g/m³'),
-      state('sensor.hrv_ah_ext', '8', 'g/m³'),
-      state('sensor.hrv_flow', '200', 'm³/h'),
-    ];
-    const hass = { ...base, states: { ...base.states, ...Object.fromEntries(extra.map((s) => [s.entity_id, s])) } };
-    const figure = async (type?: string) => {
+    const ROLES = { saving: 'sensor.hrv_saving', moisture_recovery: 'sensor.hrv_moisture' };
+
+    async function renderCalculation(config: CardConfig) {
       const card = document.createElement('hrv-ventilation-card');
-      card.setConfig(type === undefined ? config : { ...config, exchanger_type: type });
-      card.hass = hass;
+      card.setConfig(config);
+      const base = hassWith('0');
+      const extra = [
+        state('sensor.hrv_ah_out', '4', 'g/m³'),
+        state('sensor.hrv_ah_sup', '6', 'g/m³'),
+        state('sensor.hrv_ah_ext', '8', 'g/m³'),
+        state('sensor.hrv_flow', '200', 'm³/h'),
+        state('binary_sensor.hrv_heating', 'off'),
+        state('binary_sensor.hrv_cooling', 'off'),
+        state(ROLES.saving, '400', 'W'),
+        state(ROLES.moisture_recovery, '400', 'g/h'),
+      ];
+      card.hass = { ...base, states: { ...base.states, ...Object.fromEntries(extra.map((s) => [s.entity_id, s])) } };
       document.body.append(card);
       await card.updateComplete;
-      return card.shadowRoot?.querySelector<HTMLElement>('.moisture-recovery .figure');
+      const root = card.shadowRoot;
+      if (!root) throw new Error('no shadow root');
+      const find = (selector: string): HTMLElement => {
+        const found = root.querySelector<HTMLElement>(selector);
+        if (!found) throw new Error(`no ${selector}`);
+        return found;
+      };
+      return { card, root, badge: find('.saving .badge'), figure: () => find('.moisture-recovery .figure') };
+    }
+
+    const press = (element: HTMLElement): void => {
+      element.click();
+      element.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }));
     };
-    const erv = await figure('erv');
-    // 200 m³/h * (6 - 4) g/m³ recovered.
-    expect(erv?.textContent.trim()).toBe(nb('400 g/h'));
-    expect(erv?.title).toBe(nb('Moisture recovered: 400 g/h'));
-    expect(erv?.querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-outline');
-    expect(await figure()).toBeNull();
-    expect(await figure('hrv')).toBeNull();
+
+    test('airflow-diagram-card "Tapping between seasons" opens the heating season sensor', async () => {
+      const { card, root } = await renderCalculation(CALCULATION);
+      const opened = moreInfo(card);
+      root.querySelector<HTMLElement>('ha-icon.season')?.click();
+      expect(opened).toEqual(['binary_sensor.hrv_heating']);
+    });
+
+    test('airflow-diagram-card "Moisture recovery figure on ERV": at the bottom of an ERV, not on an HRV', async () => {
+      const erv = await renderCalculation({ ...CALCULATION, exchanger_type: 'erv' });
+      // 200 m³/h * (6 - 4) g/m³ recovered.
+      expect(erv.figure().textContent.trim()).toBe(nb('400 g/h'));
+      expect(erv.figure().title).toBe(nb('Moisture recovered: 400 g/h'));
+      expect(erv.figure().querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-outline');
+      for (const config of [CALCULATION, { ...CALCULATION, exchanger_type: 'hrv' }]) {
+        const { root } = await renderCalculation(config);
+        expect(root.querySelector('.moisture-recovery')).toBeNull();
+      }
+    });
+
+    test('airflow-diagram-card "Saving entity configured": the badge opens the saving entity', async () => {
+      const { card, badge } = await renderCalculation({ ...CALCULATION, status: { saving: ROLES.saving } });
+      const opened = moreInfo(card);
+      press(badge);
+      expect(opened).toEqual([ROLES.saving, ROLES.saving]);
+      expect(badge.getAttribute('role')).toBe('button');
+      expect(badge.getAttribute('tabindex')).toBe('0');
+    });
+
+    test('airflow-diagram-card "No saving entity": the badge opens nothing, not the supply air temperature', async () => {
+      const { card, badge } = await renderCalculation(CALCULATION);
+      const opened = moreInfo(card);
+      press(badge);
+      expect(opened).toEqual([]);
+      for (const attribute of ['role', 'tabindex', 'data-entity']) expect(badge.hasAttribute(attribute)).toBe(false);
+    });
+
+    test('the ERV moisture figure opens the moisture recovery entity, and nothing without it', async () => {
+      const erv = { ...CALCULATION, exchanger_type: 'erv' };
+      const configured = await renderCalculation({ ...erv, status: { moisture_recovery: ROLES.moisture_recovery } });
+      const opened = moreInfo(configured.card);
+      press(configured.figure());
+      expect(opened).toEqual([ROLES.moisture_recovery, ROLES.moisture_recovery]);
+      expect(configured.figure().getAttribute('tabindex')).toBe('0');
+      const bare = await renderCalculation(erv);
+      const none = moreInfo(bare.card);
+      press(bare.figure());
+      expect(none).toEqual([]);
+      for (const attribute of ['role', 'tabindex', 'data-entity'])
+        expect(bare.figure().hasAttribute(attribute)).toBe(false);
+    });
+
+    test('airflow-diagram-card "Roles configured": the same badge and figure, and no label or grid cell', async () => {
+      const erv = { ...CALCULATION, exchanger_type: 'erv' };
+      const plain = await renderCalculation(erv);
+      const [badgeText, figureText] = [plain.badge.textContent, plain.figure().textContent];
+      document.body.innerHTML = '';
+      const { root, badge, figure } = await renderCalculation({ ...erv, status: ROLES });
+      expect(badge.textContent).toBe(badgeText);
+      expect(figure().textContent).toBe(figureText);
+      // Only the season sensors make the top row; the two roles add no label there or in the grid.
+      expect(root.querySelectorAll('.top .label')).toHaveLength(0);
+      expect(root.querySelector('.status')).toBeNull();
+      expect(
+        root.querySelectorAll('.label[data-entity^="sensor.hrv_saving"], .label[data-entity^="sensor.hrv_moisture"]'),
+      ).toHaveLength(0);
+    });
   });
 
   test('airflow-diagram-card "Entity precision": labels show hass.formatEntityState', async () => {

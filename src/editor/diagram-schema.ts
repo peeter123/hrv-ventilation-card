@@ -1,6 +1,7 @@
 // The visual editor of the airflow diagram card: the exchanger type, one picker per role, grouped per air stream,
-// fans, bypass, status and seasons, and the animation switch; behind "Advanced settings" the niche status and bypass pickers, the nominal
-// flow, the calculation, the colours, the layout and whether to show unavailable values.
+// fans, bypass, status and seasons, and the animation switch; behind "Advanced settings" the niche status and bypass
+// pickers (with the entities the badge and the moisture figure open), the nominal flow, the calculation, the colours,
+// the layout and whether to show unavailable values.
 import { DIAGRAM_OPTIONS } from '../diagram/options';
 import { EDITOR } from '../strings';
 import {
@@ -44,6 +45,8 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
       sensorField('filter_days'),
       sensorField('power'),
       sensorField('rmot'),
+      sensorField('saving', ADVANCED),
+      sensorField('moisture_recovery', ADVANCED),
     ],
   },
   { type: 'expandable', name: 'seasons', schema: [binarySensorField('heating'), binarySensorField('cooling')] },

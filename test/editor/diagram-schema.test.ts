@@ -75,6 +75,8 @@ describe('DIAGRAM_SCHEMA', () => {
       'filter_days',
       'power',
       'rmot',
+      'saving',
+      'moisture_recovery',
     ]);
     expect(named.get('bypass')).toEqual(['position', 'mode', 'next_change']);
     expect(named.get('animation')).toEqual(['enabled', 'nominal_flow']);
@@ -129,6 +131,8 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(hasAdvancedValue(DIAGRAM_SCHEMA, { layout: 'compact' })).toBe(true);
     expect(hasAdvancedValue(DIAGRAM_SCHEMA, { animation: { nominal_flow: 400 } })).toBe(true);
     expect(hasAdvancedValue(DIAGRAM_SCHEMA, { status: { next_fan_change: 'sensor.hrv_next' } })).toBe(true);
+    expect(hasAdvancedValue(DIAGRAM_SCHEMA, { status: { saving: 'sensor.hrv_saving' } })).toBe(true);
+    expect(hasAdvancedValue(DIAGRAM_SCHEMA, { exchanger_type: 'erv' })).toBe(false);
   });
 });
 

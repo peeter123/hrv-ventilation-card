@@ -40,6 +40,8 @@ export const ROLE_LABELS: Readonly<Record<RolePath, string>> = {
   'status.filter_days': 'filter days remaining',
   'status.power': 'power',
   'status.rmot': 'running mean outdoor temperature',
+  'status.saving': 'saved power',
+  'status.moisture_recovery': 'moisture recovery rate',
   'seasons.heating': 'heating season',
   'seasons.cooling': 'cooling season',
 };
@@ -112,6 +114,8 @@ export const EDITOR = {
     filter_days: 'Filter days remaining',
     power: 'Power',
     rmot: 'Running mean outdoor temperature',
+    saving: 'Saved power',
+    moisture_recovery: 'Moisture recovery rate',
     heating: 'Heating season',
     cooling: 'Cooling season',
     smoothing: 'Humidity smoothing (minutes, 0 = off)',

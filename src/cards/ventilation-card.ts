@@ -37,6 +37,9 @@ interface DiagramSettings {
   showUnavailable: boolean;
   /** The config has every input of the saving badge. */
   badge: boolean;
+  /** The entities the badge and the moisture figure open; without one the figure is not tappable. */
+  saving?: string;
+  moistureRecovery?: string;
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
   flows: { supply?: string; exhaust?: string };
@@ -237,7 +240,6 @@ export class HrvVentilationCard extends HrvCard {
       align-items: center;
       gap: 3px;
       max-width: 100%;
-      cursor: pointer;
       white-space: nowrap;
     }
     .label .value,
@@ -254,6 +256,10 @@ export class HrvVentilationCard extends HrvCard {
       flex: none;
       width: var(--mdc-icon-size);
       height: var(--mdc-icon-size);
+    }
+    /* Whatever opens a more-info dialog, and only that. */
+    [data-entity] {
+      cursor: pointer;
     }
     .hidden {
       visibility: hidden;
@@ -278,7 +284,6 @@ export class HrvVentilationCard extends HrvCard {
       position: relative;
       isolation: isolate;
       display: block;
-      cursor: pointer;
       padding: 3px calc(var(--slant) + 4px);
       white-space: nowrap;
       background: var(--badge-border, var(--divider-color));
@@ -299,7 +304,6 @@ export class HrvVentilationCard extends HrvCard {
     }
     /* A box of the icon's size, so its focus ring and its place in the row are those of the icon. */
     ha-icon.season {
-      cursor: pointer;
       --mdc-icon-size: 22px;
       display: flex;
       width: var(--mdc-icon-size);
@@ -347,6 +351,8 @@ export class HrvVentilationCard extends HrvCard {
       layout: optionValue(config, DIAGRAM_OPTIONS.layout),
       showUnavailable: optionValue(config, DIAGRAM_OPTIONS.showUnavailable),
       badge: hasBadge(config),
+      saving: entityAt(config, 'status.saving'),
+      moistureRecovery: entityAt(config, 'status.moisture_recovery'),
       temperatures: mapStreams((stream) => entityAt(config, `${stream}.temperature`)),
       bypass: entityAt(config, 'bypass.position'),
       flows: { supply: entityAt(config, 'fans.supply_flow'), exhaust: entityAt(config, 'fans.exhaust_flow') },
@@ -463,22 +469,33 @@ export class HrvVentilationCard extends HrvCard {
             '--badge-fill': `color-mix(in srgb, ${badge.tint} 25%, var(--card-background-color, #fff))`,
             '--badge-border': badge.tint,
           };
-    // Tapping it opens the supply air temperature, a required role (setConfig checks it).
+    // Tapping it opens the saved power entity (status.saving); without one it is not tappable.
+    const entity = this.settings?.saving;
     return html`<span
       class="badge ${badge.kind}"
-      role="button"
-      tabindex="0"
-      data-entity=${ifDefined(this.settings?.temperatures.supply)}
+      role=${ifDefined(entity && 'button')}
+      tabindex=${ifDefined(entity && '0')}
+      data-entity=${ifDefined(entity)}
       style=${styleMap(style)}
       >${badge.text}</span
     >`;
   }
 
-  /** The ERV's moisture recovery figure: an icon with the magnitude, like a label, with the direction in its tooltip. */
+  /**
+   * The ERV's moisture recovery figure: an icon with the magnitude, like a label, with the direction in its tooltip.
+   * Tapping it opens the moisture recovery entity (status.moisture_recovery); without one it is not tappable.
+   */
   private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
     if (!figure) return nothing;
+    const entity = this.settings?.moistureRecovery;
     return html`<div class="on-drawing moisture-recovery">
-      <span class="figure" title=${figure.title} aria-label=${figure.title}
+      <span
+        class="figure"
+        title=${figure.title}
+        aria-label=${figure.title}
+        role=${ifDefined(entity && 'button')}
+        tabindex=${ifDefined(entity && '0')}
+        data-entity=${ifDefined(entity)}
         ><ha-icon .icon=${figure.icon} aria-hidden="true"></ha-icon><span class="value">${figure.text}</span></span
       >
     </div>`;
