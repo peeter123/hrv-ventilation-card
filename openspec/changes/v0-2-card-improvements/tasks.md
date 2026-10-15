@@ -77,7 +77,7 @@
   both themes
 - [x] 4.5 Document sample mode and the picker preview in `README.md` (how to leave the sample: pick any entity)
   and `docs/hrv-ventilation.md`; verify the README tests pass
-- [ ] 4.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 4.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 5. Release and live migration
