@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { RecoveryResult } from '../../src/calc/recovery';
-import { hasBadge, moistureFigure, savingBadge } from '../../src/diagram/badge';
+import { hasBadge, moistureFigure, savingBadge, savingTarget } from '../../src/diagram/badge';
 import type { CardConfig } from '../../src/lib/config';
 import { nb } from '../nbsp';
 
@@ -130,5 +130,57 @@ describe('hasBadge', () => {
     expect(hasBadge(CALCULATION)).toBe(true);
     expect(hasBadge({ ...CALCULATION, fans: {} })).toBe(false);
     expect(hasBadge({ ...CALCULATION, supply: { temperature: 'sensor.hrv_supply_t' } })).toBe(false);
+  });
+});
+
+describe('savingTarget', () => {
+  const BOTH = { heating: 'sensor.heat', cooling: 'sensor.cool' };
+  const reading = (state: string, unit = 'W') => ({ state, attributes: { unit_of_measurement: unit } });
+  const states = (heat: ReturnType<typeof reading>, cool: ReturnType<typeof reading>) => ({
+    'sensor.heat': heat,
+    'sensor.cool': cool,
+  });
+
+  test('airflow-diagram-card "Higher saving opened": the higher reading, kW against W, also against the mode', () => {
+    const readings = states(reading('1.2', 'kW'), reading('0', 'kW'));
+    expect(savingTarget(result('heating', 1200), BOTH, readings)).toBe('sensor.heat');
+    expect(savingTarget(result('cooling', 50), BOTH, readings)).toBe('sensor.heat');
+    expect(savingTarget(result('heating', 50), BOTH, states(reading('900'), reading('1.2', 'kW')))).toBe('sensor.cool');
+  });
+
+  test('airflow-diagram-card "Cooling saving opened while cooling"', () => {
+    expect(savingTarget(result('cooling', 300), BOTH, states(reading('0'), reading('300')))).toBe('sensor.cool');
+  });
+
+  test('airflow-diagram-card "Saving state not a number": falls back to the mode', () => {
+    const readings = states(reading('unavailable'), reading('300'));
+    expect(savingTarget(result('cooling', 300), BOTH, readings)).toBe('sensor.cool');
+    expect(savingTarget(result('heating', 300), BOTH, readings)).toBe('sensor.heat');
+    expect(savingTarget(result('heating', 300), BOTH, states(reading('5', 'furlongs'), reading('300')))).toBe(
+      'sensor.heat',
+    );
+    expect(savingTarget(result('heating', 300), BOTH, {})).toBe('sensor.heat');
+  });
+
+  test('equal readings, also in different units, fall back to the mode', () => {
+    const readings = states(reading('1000'), reading('1', 'kW'));
+    expect(savingTarget(result('heating', 1000), BOTH, readings)).toBe('sensor.heat');
+    expect(savingTarget(result('cooling', 1000), BOTH, readings)).toBe('sensor.cool');
+  });
+
+  test('airflow-diagram-card "Mode without its saving entity": one role opens only in its mode', () => {
+    const readings = states(reading('500'), reading('0'));
+    const heatingOnly = { heating: 'sensor.heat', cooling: undefined };
+    expect(savingTarget(result('heating', 500), heatingOnly, readings)).toBe('sensor.heat');
+    expect(savingTarget(result('cooling', 500), heatingOnly, readings)).toBeUndefined();
+    expect(
+      savingTarget(result('heating', 500), { heating: undefined, cooling: 'sensor.cool' }, readings),
+    ).toBeUndefined();
+  });
+
+  test('airflow-diagram-card "No saving entity", or no calculated saving: nothing', () => {
+    const none = { heating: undefined, cooling: undefined };
+    expect(savingTarget(result('heating', 500), none, states(reading('1'), reading('2')))).toBeUndefined();
+    expect(savingTarget(undefined, BOTH, states(reading('1'), reading('2')))).toBeUndefined();
   });
 });

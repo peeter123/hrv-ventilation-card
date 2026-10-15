@@ -223,8 +223,9 @@ describe('the labels', () => {
       moisture_recovery: 'sensor.hrv_moisture',
     };
 
-    async function renderCalculation(config: CardConfig) {
-      const { card, root } = await render(config, '0', [
+    // `extra` states replace the defaults of the same entity; a bypass above 0 puts the calculation in cooling mode.
+    async function renderCalculation(config: CardConfig, bypass = '0', extra: readonly HassEntityState[] = []) {
+      const { card, root } = await render(config, bypass, [
         state('sensor.hrv_ah_out', '4', 'g/m³'),
         state('sensor.hrv_ah_sup', '6', 'g/m³'),
         state('sensor.hrv_ah_ext', '8', 'g/m³'),
@@ -234,6 +235,7 @@ describe('the labels', () => {
         state(ROLES.heating_saving, '400', 'W'),
         state(ROLES.cooling_saving, '0', 'W'),
         state(ROLES.moisture_recovery, '400', 'g/h'),
+        ...extra,
       ]);
       const find = (selector: string): HTMLElement => {
         const found = root.querySelector<HTMLElement>(selector);
@@ -277,31 +279,49 @@ describe('the labels', () => {
     });
 
     test('airflow-diagram-card "Cooling saving opened while cooling": the badge opens the cooling saving', async () => {
-      // An open bypass: the calculation cools.
-      const { card, root } = await render({ ...CALCULATION, status: ROLES }, '50', [
-        state('sensor.hrv_ah_out', '4', 'g/m³'),
-        state('sensor.hrv_ah_sup', '6', 'g/m³'),
-        state('sensor.hrv_ah_ext', '8', 'g/m³'),
-        state('sensor.hrv_flow', '200', 'm³/h'),
-        state('binary_sensor.hrv_heating', 'off'),
-        state('binary_sensor.hrv_cooling', 'on'),
+      const { card, badge } = await renderCalculation({ ...CALCULATION, status: ROLES }, '50', [
+        state(ROLES.heating_saving, '0', 'W'),
+        state(ROLES.cooling_saving, '400', 'W'),
       ]);
-      const badge = root.querySelector<HTMLElement>('.saving .badge');
-      if (!badge) throw new Error('no badge');
+      const opened = moreInfo(card);
+      press(badge);
+      expect(opened).toEqual([ROLES.cooling_saving, ROLES.cooling_saving]);
+      expect(badge.getAttribute('role')).toBe('button');
+      expect(badge.getAttribute('tabindex')).toBe('0');
+    });
+
+    test('airflow-diagram-card "Higher saving opened": also against the calculation mode, in kW', async () => {
+      const { card, badge } = await renderCalculation({ ...CALCULATION, status: ROLES }, '50', [
+        state(ROLES.heating_saving, '1.2', 'kW'),
+        state(ROLES.cooling_saving, '0', 'kW'),
+      ]);
+      const opened = moreInfo(card);
+      press(badge);
+      expect(opened).toEqual([ROLES.heating_saving, ROLES.heating_saving]);
+    });
+
+    test('airflow-diagram-card "Saving state not a number": the badge opens the saving of the mode', async () => {
+      const { card, badge } = await renderCalculation({ ...CALCULATION, status: ROLES }, '50', [
+        state(ROLES.heating_saving, 'unavailable'),
+      ]);
       const opened = moreInfo(card);
       press(badge);
       expect(opened).toEqual([ROLES.cooling_saving, ROLES.cooling_saving]);
     });
 
-    test('airflow-diagram-card "Mode without its saving entity": only the other mode configured is not tappable', async () => {
-      const { card, badge } = await renderCalculation({
-        ...CALCULATION,
-        status: { cooling_saving: ROLES.cooling_saving },
-      });
-      const opened = moreInfo(card);
-      press(badge);
-      expect(opened).toEqual([]);
-      expect(badge.hasAttribute('tabindex')).toBe(false);
+    test('airflow-diagram-card "Mode without its saving entity": not tappable, in either mode', async () => {
+      const cases: [string, CardConfig][] = [
+        ['0', { cooling_saving: ROLES.cooling_saving }],
+        ['50', { heating_saving: ROLES.heating_saving }],
+      ];
+      for (const [bypass, status] of cases) {
+        const { card, badge } = await renderCalculation({ ...CALCULATION, status }, bypass);
+        const opened = moreInfo(card);
+        press(badge);
+        expect(opened).toEqual([]);
+        for (const attribute of ['role', 'tabindex', 'data-entity']) expect(badge.hasAttribute(attribute)).toBe(false);
+        document.body.innerHTML = '';
+      }
     });
 
     test('airflow-diagram-card "No saving entity": the badge opens nothing, not the supply air temperature', async () => {

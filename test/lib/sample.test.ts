@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { createCalculator } from '../../src/calc/inputs';
 import { SmoothingStore } from '../../src/calc/smoothing';
-import { SAVING_THRESHOLD } from '../../src/diagram/badge';
+import { SAVING_THRESHOLD, savingTarget } from '../../src/diagram/badge';
 import { asEntityId, entityAt, type RolePath } from '../../src/lib/config';
 import { formatState } from '../../src/lib/hass';
 import { SAMPLE_CONFIG, SAMPLE_STATES } from '../../src/lib/sample';
@@ -43,6 +43,19 @@ describe('the sample', () => {
     expect(result?.saving).toBeGreaterThan(SAVING_THRESHOLD);
     expect(result?.moisture?.extracted).toBeGreaterThan(0);
     expect(result?.moisture?.recovered).toBeGreaterThan(0);
+  });
+
+  test('the cooling saving reads 0 W in the sample heating mode, so the badge opens the heating saving', () => {
+    const { result } = calculate();
+    expect(result?.mode).toBe('heating');
+    expect(Number(sampleState('status.cooling_saving'))).toBe(0);
+    expect(
+      savingTarget(
+        result,
+        { heating: entityId('status.heating_saving'), cooling: entityId('status.cooling_saving') },
+        SAMPLE_STATES,
+      ),
+    ).toBe(entityId('status.heating_saving'));
   });
 
   test('the saved power and moisture recovery states match the calculation', () => {

@@ -156,12 +156,17 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   decide how the figures may be read.
 - **Badge.** The diagram's badge shows the recovery bar's total in W, tinted warm in heating and cold in cooling
   above 0.5 W, otherwise grey.
-- **What the badge and the figure open.** The badge opens the saving entity of the calculation's current mode (`status.heating_saving` while heating,
-  `status.cooling_saving` while cooling) and the moisture figure `status.moisture_recovery`. All three roles are
-  optional and never a label or a grid cell; without the badge's role for the current mode, or without a calculated
-  saving (hidden or "n/a"), the badge opens nothing, and likewise the figure: it gets no `role`, `tabindex` or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the
-  supply air temperature: a dialog unrelated to the figure tapped, which is why there is no fallback. The pointer
-  cursor follows `data-entity`, so only what opens a dialog shows it.
+- **What the badge and the figure open.** The badge opens the saving entity that reads the higher power
+  (`status.heating_saving` or `status.cooling_saving`, both converted to W, so kW and W compare). The saving sensors
+  decide heating or cooling on their own inputs, while the card's mode follows its smoothed inputs; near the switch
+  point they disagree for minutes, and the mode alone would open a sensor reading 0. With one role configured, a
+  state that is not a number, or equal readings, the badge opens the role of the calculation's current mode instead.
+  When that role is not configured, or the badge shows no calculated saving (hidden or "n/a"), it opens nothing. The
+  choice is `savingTarget` in `src/diagram/badge.ts`. The moisture figure opens `status.moisture_recovery`. All three
+  roles are optional and never a label or a grid cell; what cannot open anything gets no `role="button"`, `tabindex`
+  or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the supply air
+  temperature: a dialog unrelated to the figure tapped, which is why there is no fallback. The pointer cursor follows
+  `data-entity`, so only what opens a dialog shows it.
 - **Sample mode.** A card whose config sets no entity role at all (only `type`, optionally options) renders the
   built-in sample values of `src/lib/sample.ts`: a heating day (outdoor 2 °C, supply 18.5 °C, extract 21.5 °C,
   exhaust 5.5 °C, 200 m³/h, bypass closed, house drying) on made-up IDs in the non-HA domain `hrv_sample.*`, so

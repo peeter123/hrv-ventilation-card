@@ -158,8 +158,8 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 | `filter_days` | entity | | | Days until the filter change (status grid, air filter icon). |
 | `power` | entity | | | Power use of the unit (top row, lightning bolt). |
 | `rmot` | entity | | | Running mean outdoor temperature (top row, "RMOT "). |
-| `heating_saving` | entity | | yes | Saved heating power sensor, opened by tapping the saving badge while the calculation is in heating mode. Not shown as a label. |
-| `cooling_saving` | entity | | yes | Saved cooling power sensor, opened by tapping the saving badge while the calculation is in cooling mode. Not shown as a label. |
+| `heating_saving` | entity | | yes | Saved heating power sensor, opened by tapping the saving badge when it reads more than the cooling saving, or by default in heating mode. Not shown as a label. |
+| `cooling_saving` | entity | | yes | Saved cooling power sensor, opened by tapping the saving badge when it reads more than the heating saving, or by default in cooling mode. Not shown as a label. |
 | `moisture_recovery` | entity | | yes | Moisture recovery rate sensor, opened by tapping the ERV's moisture figure. Not shown as a label. |
 
 #### Seasons object
@@ -207,8 +207,9 @@ the warm colour in heating mode and with the cold colour in cooling mode while t
 grey. It needs the calculation's sensors: the outdoor, supply and extract temperatures, a humidity for each of those
 three streams (see [Stream](#stream-object)) and `fans.supply_flow`; without them there is no badge. While one of
 them has no value the badge is hidden, or shows "n/a" with `show_unavailable: true`. Tapping it opens the
-`status.heating_saving` sensor in heating mode or the `status.cooling_saving` sensor in cooling mode; without the
-sensor of the current mode, or without a calculated saving, the badge is not tappable.
+`status.heating_saving` or `status.cooling_saving` sensor, whichever reads the higher power (both converted to W).
+With only one of them set, a reading that is not a number or equal readings, it opens the sensor of the current mode
+(heating or cooling); without that sensor, or without a calculated saving, the badge is not tappable.
 
 **Exchanger type.** `hrv` (heat recovery, the default) draws the exchanger grey. `erv` (energy recovery, an enthalpy
 exchanger that also passes moisture) draws it blue-grey, derived from the theme so it stays legible in light and

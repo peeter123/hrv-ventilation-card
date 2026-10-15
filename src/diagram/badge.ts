@@ -3,6 +3,8 @@
 import type { RecoveryResult } from '../calc/recovery';
 import { missingRoles, type CardConfig, type Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
+import type { EntityStateLike } from '../lib/hass';
+import { convertedState } from '../lib/units';
 import { DIAGRAM, NO_VALUE } from '../strings';
 import type { ExchangerType } from './drawing';
 
@@ -41,6 +43,27 @@ export function savingBadge(
   return result.mode === 'heating'
     ? { kind: 'warm', text, tint: options.colors.warm }
     : { kind: 'cold', text, tint: options.colors.cold };
+}
+
+/**
+ * The saving entity a tap on the badge opens. Of the two configured saving entities, the one that reads the higher
+ * power (both in W), because the sensors decide heating or cooling on their own inputs and may disagree with the
+ * calculation near the switch point. With one entity, a reading that is not a number or equal readings: the entity of
+ * the calculation's mode. Undefined, so not tappable, without a calculated saving or without that entity.
+ */
+export function savingTarget(
+  result: RecoveryResult | undefined,
+  entities: Record<RecoveryResult['mode'], string | undefined>,
+  states: Readonly<Record<string, EntityStateLike | undefined>>,
+): string | undefined {
+  if (result === undefined) return undefined;
+  const { heating, cooling } = entities;
+  if (heating !== undefined && cooling !== undefined) {
+    const watts = [heating, cooling].map((id) => convertedState(states[id], 'power'));
+    const [hw, cw] = watts;
+    if (hw !== undefined && cw !== undefined && hw !== cw) return hw > cw ? heating : cooling;
+  }
+  return entities[result.mode];
 }
 
 export interface MoistureFigure {

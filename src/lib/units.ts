@@ -9,7 +9,8 @@ export type Quantity =
   | 'flow' // m³/h
   | 'absolute_humidity' // g/m³
   | 'relative_humidity' // %
-  | 'percentage'; // %, the bypass position
+  | 'percentage' // %, the bypass position
+  | 'power'; // W, the saving sensors
 
 /** calculation value = (value + offset) * scale */
 interface Conversion {
@@ -19,6 +20,7 @@ interface Conversion {
 
 const SAME: Conversion = { scale: 1 };
 const FAHRENHEIT: Conversion = { scale: 5 / 9, offset: -32 };
+const KILOWATTS: Conversion = { scale: 1000 };
 const LITRES_PER_SECOND: Conversion = { scale: 3.6 };
 // 1 ft³ = 0.028316846592 m³, times 60 minutes.
 const CUBIC_FEET_PER_MINUTE: Conversion = { scale: 0.028316846592 * 60 };
@@ -37,6 +39,10 @@ const CONVERSIONS: Record<Quantity, ReadonlyMap<string, Conversion>> = {
   absolute_humidity: new Map([['g/m3', SAME]]),
   relative_humidity: new Map([['%', SAME]]),
   percentage: new Map([['%', SAME]]),
+  power: new Map([
+    ['w', SAME],
+    ['kw', KILOWATTS],
+  ]),
 };
 
 /**
