@@ -82,16 +82,16 @@ try {
   await page.waitForTimeout(300);
   await still('diagram-erv.png', diagram('light', WIDTH_FULL));
   await exchanger.selectOption('hrv');
+  await page.waitForTimeout(300); // let the cards redraw before the next shots
 
-  // The bar cards: heating (the most used mode) for the recovery bar, a drying house with the bypass open for the moisture bar.
-  await scenario('heating (winter)');
+  // The bar cards: the heating scenario (the most used mode) is still on for the recovery bar; a drying house with
+  // the bypass open for the moisture bar.
   await still('recovery-bar.png', bar('hrv-recovery-balance-card', WIDTH_BAR));
   await scenario('bypass 50 % (off season)');
   await still('moisture-bar.png', bar('hrv-moisture-balance-card', WIDTH_WIDE));
 
-  // The hero GIF: an off-season day with the bypass opening from 0 to 100 % and closing again, the air moving and
-  // the supply and exhaust air following the bypass.
-  await scenario('bypass 50 % (off season)');
+  // The hero GIF: an off-season day (the scenario above) with the bypass opening from 0 to 100 % and closing again,
+  // the air moving and the supply and exhaust air following the bypass.
   const bypass = page.locator('label', { hasText: 'bypass %' }).locator('input');
   /** @param {'supply' | 'exhaust'} stream @param {'T' | 'RH'} field */
   const input = (stream, field) =>

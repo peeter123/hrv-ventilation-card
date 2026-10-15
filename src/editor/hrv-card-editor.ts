@@ -12,6 +12,8 @@ import {
   hasAdvancedValue,
   isSection,
   visibleSchema,
+  withoutShownDefaults,
+  withShownDefaults,
   type EditorSchema,
   type FormField,
   type FormSchema,
@@ -63,6 +65,10 @@ export class HrvCardEditor extends LitElement {
   // ha-form rebuild its fields, which would collapse the sections the user has opened.
   private _formSchema: FormSchema = [];
 
+  // The config with the defaults of unset fields filled in, which is what ha-form displays (see withShownDefaults).
+  // Rebuilt only when the config or the schema changes, so ha-form is not handed new data on every render.
+  private _shown: CardConfig = {};
+
   constructor() {
     super();
     if (!this._formDefined) {
@@ -88,6 +94,9 @@ export class HrvCardEditor extends LitElement {
     if (changed.has('schema') || changed.has('_switch')) {
       this._formSchema = visibleSchema(this.schema, this._switch.advanced);
     }
+    if (this._config && (changed.has('schema') || changed.has('_config') || changed.has('_switch'))) {
+      this._shown = withShownDefaults(this._formSchema, this._config);
+    }
   }
 
   private _toggleAdvanced = (event: CustomEvent<{ value: { advanced?: boolean } }>): void => {
@@ -97,7 +106,10 @@ export class HrvCardEditor extends LitElement {
 
   private _configChanged = (event: CustomEvent<{ value: CardConfig }>): void => {
     event.stopPropagation();
-    const config = event.detail.value;
+    // ha-form reports the whole data it displays, defaults included: keep out those the config did not have.
+    const config = this._config
+      ? withoutShownDefaults(this.schema, this._config, event.detail.value)
+      : event.detail.value;
     this._config = config;
     this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
   };
@@ -116,7 +128,7 @@ export class HrvCardEditor extends LitElement {
       ></ha-form>
       <ha-form
         .hass=${this.hass}
-        .data=${this._config}
+        .data=${this._shown}
         .schema=${this._formSchema}
         .computeLabel=${label}
         @value-changed=${this._configChanged}

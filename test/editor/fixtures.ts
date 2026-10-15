@@ -31,3 +31,14 @@ export const BASIC_CONFIG = {
   type: 'custom:hrv-recovery-balance-card',
   outdoor: { temperature: 'sensor.outdoor_temperature', humidity: 'sensor.outdoor_humidity' },
 };
+
+/** A choice field with a default, in a section and at the top level, to check the defaults the form displays. */
+export const CHOICE_SCHEMA: EditorSchema = [
+  { name: 'exchanger_type', default: 'erv', selector: { select: { options: ['hrv', 'erv'] } } },
+  {
+    type: 'expandable',
+    name: 'calculation',
+    flatten: false,
+    schema: [{ name: 'mode', advanced: true, default: 'auto', selector: { select: { options: ['auto', 'fixed'] } } }],
+  },
+];

@@ -104,3 +104,57 @@ export function hasAdvancedValue(schema: EditorSchema, config: CardConfig): bool
     ({ field, path }) => field.advanced === true && differsFromDefault(valueAt(config, path), field),
   );
 }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** A copy of the config with `value` at the dotted path (parents created when missing); `undefined` removes it. */
+function withValueAt(config: CardConfig, path: string, value: unknown): CardConfig {
+  const [key, ...rest] = path.split('.') as [string, ...string[]];
+  const record = config as Record<string, unknown>;
+  const { [key]: current, ...others } = record;
+  if (rest.length === 0) return value === undefined ? others : { ...others, [key]: value };
+  const child = withValueAt(isRecord(current) ? current : {}, rest.join('.'), value);
+  // A parent left empty by a removal is removed as well, unless it was in the config already.
+  if (value === undefined && Object.keys(child).length === 0) return others;
+  return { ...record, [key]: child };
+}
+
+/**
+ * The config as `ha-form` displays it: every field of the schema that the config leaves unset shows its default.
+ * `ha-form` does not draw the `default` of a selector for missing data, so a new card would show blank drop-downs.
+ * This is display data only; `withoutShownDefaults` takes the defaults out again before a change is saved.
+ * Returns the config itself when there is nothing to add.
+ */
+export function withShownDefaults(schema: EditorSchema | FormSchema, config: CardConfig): CardConfig {
+  return fieldsWithPaths(schema as EditorSchema).reduce(
+    (shown, { field, path }) =>
+      field.default !== undefined && valueAt(config, path) === undefined
+        ? withValueAt(shown, path, field.default)
+        : shown,
+    config,
+  );
+}
+
+/**
+ * The config to save after `ha-form` reports `changed`: a field the current config left unset is dropped again when
+ * its value is still the default that `withShownDefaults` displayed, so editing one field never writes the defaults
+ * of the others into the card's YAML.
+ */
+export function withoutShownDefaults(
+  schema: EditorSchema | FormSchema,
+  current: CardConfig,
+  changed: CardConfig,
+): CardConfig {
+  return fieldsWithPaths(schema as EditorSchema).reduce(
+    (saved, { field, path }) =>
+      field.default !== undefined &&
+      valueAt(current, path) === undefined &&
+      valueAt(saved, path) !== undefined &&
+      !differsFromDefault(valueAt(saved, path), field)
+        ? withValueAt(saved, path, undefined)
+        : saved,
+    changed,
+  );
+}

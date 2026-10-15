@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { hasAdvancedValue, visibleSchema, type FormSchema } from '../../src/editor/schema';
-import { BASIC_CONFIG, SCHEMA } from './fixtures';
+import {
+  hasAdvancedValue,
+  visibleSchema,
+  withoutShownDefaults,
+  withShownDefaults,
+  type FormSchema,
+} from '../../src/editor/schema';
+import { BASIC_CONFIG, CHOICE_SCHEMA, SCHEMA } from './fixtures';
 
 const names = (schema: FormSchema): unknown[] =>
   schema.map((item) => ('schema' in item ? { [item.name]: item.schema.map((field) => field.name) } : item.name));
@@ -66,5 +72,49 @@ describe('hasAdvancedValue', () => {
 
   test('basic values never count', () => {
     expect(hasAdvancedValue(SCHEMA, { ...BASIC_CONFIG, bypass_position: 'sensor.bypass' })).toBe(false);
+  });
+});
+
+describe('shown defaults', () => {
+  test('withShownDefaults fills in unset fields, also inside a section, and keeps the config it was given', () => {
+    const config = { type: 'custom:x' };
+    expect(withShownDefaults(CHOICE_SCHEMA, config)).toEqual({
+      type: 'custom:x',
+      exchanger_type: 'erv',
+      calculation: { mode: 'auto' },
+    });
+    expect(config).toEqual({ type: 'custom:x' });
+    expect(withShownDefaults(CHOICE_SCHEMA, { exchanger_type: 'hrv', calculation: { mode: 'fixed' } })).toEqual({
+      exchanger_type: 'hrv',
+      calculation: { mode: 'fixed' },
+    });
+  });
+
+  test('withShownDefaults returns the config itself when no field has a default to add', () => {
+    expect(withShownDefaults(visibleSchema(SCHEMA, false), BASIC_CONFIG)).toBe(BASIC_CONFIG);
+  });
+
+  test('withoutShownDefaults drops a default the config did not have, and an emptied section with it', () => {
+    const current = { type: 'custom:x' };
+    const shown = withShownDefaults(CHOICE_SCHEMA, current);
+    expect(withoutShownDefaults(CHOICE_SCHEMA, current, { ...shown, other: 1 })).toEqual({
+      type: 'custom:x',
+      other: 1,
+    });
+  });
+
+  test('withoutShownDefaults keeps a changed value, and a default the config already had', () => {
+    expect(withoutShownDefaults(CHOICE_SCHEMA, { type: 'x' }, { type: 'x', exchanger_type: 'hrv' })).toEqual({
+      type: 'x',
+      exchanger_type: 'hrv',
+    });
+    const set = { exchanger_type: 'erv', calculation: { mode: 'auto' } };
+    expect(withoutShownDefaults(CHOICE_SCHEMA, set, { ...set })).toEqual(set);
+  });
+
+  test('withoutShownDefaults keeps the other keys of a section that was in the config', () => {
+    const current = { calculation: { other: 1 } };
+    const changed = { calculation: { other: 2, mode: 'auto' } };
+    expect(withoutShownDefaults(CHOICE_SCHEMA, current, changed)).toEqual({ calculation: { other: 2 } });
   });
 });

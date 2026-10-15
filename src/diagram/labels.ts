@@ -6,6 +6,7 @@
 // nothing to show), so the card keeps its height when a value becomes unavailable or a season flips.
 import { isUnavailable, numericValue, type StateLike } from '../lib/availability';
 import { entityAt, mapStreams, type CardConfig, type RolePath, type Stream } from '../lib/config';
+import { NOT_PLANNED_STATE } from '../lib/unit-state';
 import { DIAGRAM } from '../strings';
 
 /** The `layout` option: automatic by card width, or one layout forced. */
@@ -111,10 +112,10 @@ const ICONS: Partial<Record<RolePath, string>> = {
 /** Labels of a planned change: with nothing planned ("n/a" or unknown) they show a dimmed dash, not the state. */
 const NEXT_CHANGE: ReadonlySet<RolePath> = new Set(['bypass.next_change', 'status.next_fan_change']);
 // The state a unit reports while no change is planned (a value, not text of the card), in any case.
-const NOT_APPLICABLE = /^\s*n\/a\s*$/i;
+const isNotPlannedState = (state: string): boolean => state.trim().toLowerCase() === NOT_PLANNED_STATE;
 
 function isNotPlanned(role: RolePath, state: StateLike | undefined): boolean {
-  return NEXT_CHANGE.has(role) && (NOT_APPLICABLE.test(state?.state ?? '') || state?.state === 'unknown');
+  return NEXT_CHANGE.has(role) && (isNotPlannedState(state?.state ?? '') || state?.state === 'unknown');
 }
 
 function isVisible(role: RolePath, state: StateLike | undefined, showUnavailable: boolean): boolean {

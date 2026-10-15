@@ -2,9 +2,10 @@
 // card): a config and the states of its entities, shared by the three cards so their figures match. A typical
 // heating day, with every role the cards show. The IDs use a made-up domain, so they hold no installation
 // identifiers and cannot collide with real entities.
-import { NO_VALUE, ROLE_LABELS } from '../strings';
+import { ROLE_LABELS } from '../strings';
 import { valueAt, type CardConfig } from './config';
 import type { HassEntityState } from './hass';
+import { NOT_PLANNED_STATE } from './unit-state';
 
 /** The sample's entity ID of a role path: `hrv_sample.<role>` with the dot of the path written as an underscore. */
 const id = (role: string): string => `hrv_sample.${role.replace('.', '_')}`;
@@ -77,11 +78,11 @@ const VALUES: readonly (readonly [role: string, state: string, unit?: string])[]
   ['fans.exhaust_flow', '200', 'm³/h'],
   ['bypass.position', '0', '%'],
   ['bypass.mode', 'Auto'],
-  ['bypass.next_change', NO_VALUE],
+  ['bypass.next_change', NOT_PLANNED_STATE],
   ['status.operating_mode', 'Auto'],
   ['status.target_temperature', '21', '°C'],
   ['status.temperature_profile', 'Normal'],
-  ['status.next_fan_change', NO_VALUE],
+  ['status.next_fan_change', NOT_PLANNED_STATE],
   ['status.filter_days', '120', 'd'],
   ['status.power', '38', 'W'],
   ['status.rmot', '4.5', '°C'],

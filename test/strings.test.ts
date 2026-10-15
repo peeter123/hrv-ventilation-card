@@ -4,8 +4,9 @@ import * as strings from '../src/strings';
 import { configError, MOISTURE, NO_VALUE, RECOVERY, ROLE_LABELS } from '../src/strings';
 import { nb } from './nbsp';
 
-// Every source file except strings.ts, as text.
-const sources = import.meta.glob<string>(['../src/**/*.ts', '!../src/strings.ts'], {
+// Every source file except strings.ts, as text. unit-state.ts holds the one state the unit reports ('n/a' for no
+// change planned), which is a sensor value that happens to equal the card's NO_VALUE text, not UI text.
+const sources = import.meta.glob<string>(['../src/**/*.ts', '!../src/strings.ts', '!../src/lib/unit-state.ts'], {
   query: '?raw',
   import: 'default',
   eager: true,

@@ -84,7 +84,8 @@ helps a browser that still shows it.
 4. Turn on **Advanced settings** for the less common options, marked "Advanced" in [Options](#options): for
    example the absolute humidity sensors on the bars, smoothing, air density, scale, colours and the diagram's
    layout. The switch only changes what the editor shows; it is not saved, and it starts on for a card that has an
-   advanced option set.
+   advanced option set. Options you have not set show their default (for example "Heat recovery (HRV)" as the
+   exchanger type); the default is not written to the YAML until you pick another value.
 5. Save. **Show code editor** shows the same config as YAML; see [Options](#options) and [Examples](#examples).
 
 ![The visual editor of the airflow diagram card, with the exchanger type first, its groups collapsed and the live sample preview](docs/images/editor.png)
@@ -563,8 +564,8 @@ npm run capture                  # README images of the three cards from the pre
 with Playwright and writes the diagram in light and dark theme, the compact layout and on an ERV, the recovery bar,
 the moisture bar and the animated GIF of the bypass opening and closing (encoded in Node with `gifenc`, at most
 3 MB). The mock states keep installation identifiers out of view. Two images are taken by hand from a live
-dashboard: `editor.png` (the diagram card's visual editor, opened from the card picker so no sensor is chosen) and `card-picker.png`; check them for entity IDs with a device
-serial and for host names before committing.
+dashboard: `editor.png` (the diagram card's visual editor, opened from the card picker so no sensor is chosen) and
+`card-picker.png`; check them for entity IDs with a device serial and for host names before committing.
 
 Only `npm run release` writes `dist/`; `npm run build` writes `build/`, so a work-in-progress bundle cannot end up
 in the deployed folder. `dist/` is committed, because deploys and HACS read it from the repo. `npm run release`
@@ -619,12 +620,12 @@ Planned with OpenSpec (CLI `openspec`, installed globally with npm).
 - **Done: configurable cards** (v0.1.0; `openspec/changes/archive/2026-10-15-configurable-cards/`, specs in `openspec/specs/`): TypeScript + Lit rewrite, every entity
   from the card config, visual editors, the drawn diagram, and the migration of the author's dashboards.
 - **Done: calculation in the card.** The cards calculate from the unit's raw sensors and need no helpers.
-- **Next: v0.2 of the cards**, with improvements to the cards themselves.
-- **Then: a custom integration for history and energy statistics.** The cards show the present only. Power,
+- **Done: v0.2 of the cards** (released), with improvements to the cards themselves.
+- **Next: a custom integration for history and energy statistics.** The cards show the present only. Power,
   energy, effectiveness and moisture rate sensors for charts and the energy dashboard come from template, filter
   and Riemann helpers in the author's installation today (a Jinja macro hard-coded to one unit); an integration
   will create them from the raw sensors with the same formulas. The cards will not depend on it.
-- **After that: packaging.** Inclusion in the HACS default list, README badges, release automation, and whether the
+- **Then: packaging.** Inclusion in the HACS default list, README badges, release automation, and whether the
   integration ships the cards. HACS installation as a custom repository and releases are available now.
 
 Still fixed in the cards: the texts are English only, and the figures are in W and g/h.

@@ -1,9 +1,9 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import type { CardConfig } from '../../src/lib/config';
-import { fieldsWithPaths, type FormSchema } from '../../src/editor/schema';
+import { fieldsWithPaths, type EditorSchema, type FormSchema } from '../../src/editor/schema';
 import type { HrvCardEditor } from '../../src/editor/hrv-card-editor';
 import { EDITOR } from '../../src/strings';
-import { BASIC_CONFIG, SCHEMA } from './fixtures';
+import { BASIC_CONFIG, CHOICE_SCHEMA, SCHEMA } from './fixtures';
 
 /** Stands in for Home Assistant's ha-form: keeps what the editor passes and can emit value-changed. */
 class StubForm extends HTMLElement {
@@ -25,9 +25,12 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-async function openEditor(config: CardConfig): Promise<{ editor: HrvCardEditor; toggle: StubForm; form: StubForm }> {
+async function openEditor(
+  config: CardConfig,
+  schema: EditorSchema = SCHEMA,
+): Promise<{ editor: HrvCardEditor; toggle: StubForm; form: StubForm }> {
   const editor = document.createElement('hrv-card-editor');
-  editor.schema = SCHEMA;
+  editor.schema = schema;
   editor.setConfig(config);
   document.body.append(editor);
   await editor.updateComplete;
@@ -52,7 +55,8 @@ describe('hrv-card-editor', () => {
     const { toggle, form } = await openEditor(config);
     expect(toggle.data).toEqual({ advanced: true });
     expect(fieldNames(form.schema)).toContain('calculation.smoothing');
-    expect(form.data).toEqual(config);
+    // The form shows 5 and the defaults of the advanced fields that are unset.
+    expect(form.data).toEqual({ ...config, calculation: { smoothing: 5, air_density: 1.2 }, min_scale: 500 });
   });
 
   test('a nested advanced field is hidden while the switch is off and shown inside its section when on', async () => {
@@ -158,5 +162,42 @@ describe('hrv-card-editor', () => {
     await editor.updateComplete;
     expect(toggle.data).toBe(data);
     expect(toggle.computeLabel).toBe(computeLabel);
+  });
+
+  test('a field the config leaves unset shows its default, which is not saved when another field changes', async () => {
+    const { editor, toggle, form } = await openEditor({ type: 'custom:x', other: 1 }, CHOICE_SCHEMA);
+    expect(form.data).toEqual({ type: 'custom:x', other: 1, exchanger_type: 'erv' });
+    const saved: CardConfig[] = [];
+    editor.addEventListener('config-changed', (event) => {
+      saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
+    });
+
+    form.change({ ...form.data, other: 2 });
+    expect(saved).toEqual([{ type: 'custom:x', other: 2 }]);
+    await editor.updateComplete;
+
+    // Another default value is a choice of the user and is kept.
+    form.change({ ...form.data, exchanger_type: 'hrv' });
+    expect(saved[1]).toEqual({ type: 'custom:x', other: 2, exchanger_type: 'hrv' });
+    await editor.updateComplete;
+    expect(form.data).toEqual({ type: 'custom:x', other: 2, exchanger_type: 'hrv' });
+
+    // A default shown inside a section appears when the switch shows the field, and is dropped again unsaved.
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ calculation: { mode: 'auto' } });
+    form.change({ ...form.data, other: 3 });
+    expect(saved[2]).toEqual({ type: 'custom:x', other: 3, exchanger_type: 'hrv' });
+  });
+
+  test('a default the config already sets stays in the saved config', async () => {
+    const config = { type: 'custom:x', exchanger_type: 'erv', calculation: { mode: 'auto' } };
+    const { editor, form } = await openEditor(config, CHOICE_SCHEMA);
+    const saved: CardConfig[] = [];
+    editor.addEventListener('config-changed', (event) => {
+      saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
+    });
+    form.change({ ...config, other: 1 });
+    expect(saved).toEqual([{ ...config, other: 1 }]);
   });
 });
