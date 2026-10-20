@@ -45,7 +45,7 @@
   bypass position keep a contrast of at least 4.5:1 and are not covered by a ring at 280 to 600 px (scenario "Text
   on the exchanger"), and the rings are drawn in the compact layout at 320 px ("Both layouts"); verify the tests
   pass, moving the bypass position down if the measurement calls for it (design: risks)
-- [ ] 3.4 Add the effectiveness switch after the animation section in `DIAGRAM_SCHEMA` (basic), and on the preview
+- [x] 3.4 Add the effectiveness switch after the animation section in `DIAGRAM_SCHEMA` (basic), and on the preview
   page a `show_effectiveness` switch and the "small gradient" scenario (design: "Preview page"); verify the editor
   test for "Editing the card" and a screenshot of the preview page with HRV and ERV, bypass 0 % and 50 % and the
   small gradient, inspected by an agent
