@@ -92,9 +92,19 @@ export interface RecoveryResult {
  * The recovered total and the potential in W (sensible plus latent, each part first rounded to whole W as the legend shows it): the figures of the
  * recovery card's header and the effectiveness tooltip. Signed as the parts are.
  */
-export function recoveryTotals(result: RecoveryResult): { recovered: number; potential: number } {
-  const recovered = Math.round(result.recovered.sensible) + Math.round(result.recovered.latent);
-  return { recovered, potential: recovered + Math.round(result.lost.sensible) + Math.round(result.lost.latent) };
+export function recoveryTotals(result: RecoveryResult): {
+  recovered: number;
+  potential: number;
+  /** The four parts rounded to whole W, the one rounding the legend and the totals share. */
+  parts: { recovered: PowerSplit; lost: PowerSplit };
+} {
+  const rounded = ({ sensible, latent }: PowerSplit): PowerSplit => ({
+    sensible: Math.round(sensible),
+    latent: Math.round(latent),
+  });
+  const parts = { recovered: rounded(result.recovered), lost: rounded(result.lost) };
+  const recovered = parts.recovered.sensible + parts.recovered.latent;
+  return { recovered, potential: recovered + parts.lost.sensible + parts.lost.latent, parts };
 }
 
 /**
@@ -102,7 +112,8 @@ export function recoveryTotals(result: RecoveryResult): { recovered: number; pot
  */
 const effectivenessRatio = ({ outdoor, supply, extract }: Streams<number>, minGradient: number): number | undefined => {
   const gradient = extract - outdoor;
-  if (Math.abs(gradient) < minGradient) return undefined;
+  // A relative epsilon keeps a gradient of exactly the gate inside it despite float rounding (9.6 - 8.1 is 1.4999999999999991).
+  if (Math.abs(gradient) < minGradient * (1 - 1e-9)) return undefined;
   return Math.min(Math.max(((supply - outdoor) / gradient) * 100, 0), 100);
 };
 
@@ -169,15 +180,20 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
   // The total: recovered / (recovered + lost) = recovered / |extract - outdoor| per m³, before any rounding, capped to
   // 0-100 and left out below the enthalpy gradient of MIN_TEMPERATURE_GRADIENT K of dry air.
   const gradient = Math.abs(extract.h - outdoor.h);
+  // Not measurable without a potential: at a supply flow of 0 (or a potential that rounds to 0 W) there is nothing to
+  // recover or lose, as the recovery card's header shows no percentage at a potential of 0.
+  const hasPotential = Math.round(gradient * toWatts) > 0;
   // A relative epsilon keeps a gradient of exactly 3 K inside the gate despite float rounding.
-  if (gradient >= rho * CP_AIR * MIN_TEMPERATURE_GRADIENT * (1 - 1e-9)) {
+  if (hasPotential && gradient >= rho * CP_AIR * MIN_TEMPERATURE_GRADIENT * (1 - 1e-9)) {
     result.effectiveness.total = Math.min(Math.max((recovered.total / gradient) * 100, 0), 100);
   }
-  const moistureRatio = moistureEffectiveness(absoluteHumidity as Streams<number> | undefined);
-  if (moistureRatio !== undefined) result.effectiveness.moisture = moistureRatio;
   if (absoluteHumidity !== undefined) {
     const moisture = calculateMoisture(absoluteHumidity, supplyFlow);
     if (moisture !== undefined) result.moisture = moisture;
+    const ratio = moistureEffectiveness(absoluteHumidity as Streams<number>);
+    // Likewise not measurable while the extracted moisture rounds to 0 g/h.
+    if (ratio !== undefined && Math.round(Math.abs(moisture?.extracted ?? 0)) > 0)
+      result.effectiveness.moisture = ratio;
   }
   return result;
 }

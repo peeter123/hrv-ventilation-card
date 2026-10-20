@@ -428,6 +428,9 @@ describe('exchanger type', () => {
           const value = root.querySelector('.moisture-recovery .value');
           if (!value) throw new Error('no figure value');
           expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
+          // Never clipped or ellipsized: the label's rule for long values (overflow hidden) must not reach the figure.
+          expect(getComputedStyle(value).overflow, where).toBe('visible');
+          expect(value.scrollWidth, where).toBeLessThanOrEqual(value.clientWidth);
           // The unit under the number at a container width of 400 px or less, on the number's line above it.
           const gap = root.querySelector('.moisture-recovery .gap');
           if (!gap) throw new Error('no gap');

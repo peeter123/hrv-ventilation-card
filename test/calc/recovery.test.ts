@@ -103,10 +103,14 @@ describe('golden vectors (recovery-calculation "Golden vectors")', () => {
   test.each(vectors.map((vector) => [vector.name, vector] as const))('%s: effectiveness', (_name, vector) => {
     const { effectiveness } = calculate(toInputs(vector));
     const { eff_moisture: moisture } = vector.expected;
-    // Without flow the macro's powers are all 0, so there is no share to compare.
+    // Without flow the macro's powers are all 0 and there is no potential: neither figure is measurable
+    // (recovery-calculation "Unit in standby").
+    if (vector.inputs.supply_flow === 0) {
+      expect(effectiveness).toEqual({});
+      return;
+    }
     if (!aboveGate(vector)) expect(effectiveness.total).toBeUndefined();
-    else if (vector.inputs.supply_flow > 0) near(effectiveness.total, macroTotal(vector), TOLERANCE_PCT);
-    else expect(effectiveness.total).toBeDefined();
+    else near(effectiveness.total, macroTotal(vector), TOLERANCE_PCT);
     if (inRange(moisture)) near(effectiveness.moisture, moisture, TOLERANCE_PCT);
     // With the bypass closed the macro's null comes from the gradient gate alone.
     if (vector.inputs.bypass === 0 && moisture === null) expect(effectiveness.moisture).toBeUndefined();
@@ -355,6 +359,16 @@ describe('recovery-calculation scenarios', () => {
       expect(totalEffectiveness(20, 20, 20)).toBeUndefined(); // zero gradient, no NaN
       expect(moistureEffectiveness(6.0, 6.75, 7.5)).toBeCloseTo(50, 9); // exactly 1.5 g/m³
       expect(moistureEffectiveness(6.0, 6.7, 7.4)).toBeUndefined();
+      // The same boundary where float subtraction lands under it: 9.6 - 8.1 is 1.4999999999999991.
+      expect(moistureEffectiveness(8.1, 8.85, 9.6)).toBeCloseTo(50, 9);
+    });
+
+    test('"Unit in standby": a supply flow of 0 gives neither figure, while the gradients are large', () => {
+      const result = calculate({ ...winter, supplyFlow: 0 });
+      expect(result.effectiveness).toEqual({});
+      expect(calculate({ ...temperaturesOnly, supplyFlow: 0 }).effectiveness.total).toBeUndefined();
+      // With a flow they are given again.
+      expect(calculate({ ...winter, supplyFlow: 100 }).effectiveness.total).toBeDefined();
     });
 
     test('"One figure gated": 8 K and 0.7 g/m³ apart give the total effectiveness only', () => {

@@ -57,10 +57,9 @@ export function recoveryView(
   if (result === undefined) return { title: RECOVERY.titleNoValue, header: NO_VALUE, lanes: [], legend: [] };
 
   const { color, latent: latentColor } = options.colors[result.mode];
-  const round = Math.round;
   const watts = (value: number): string => formatNumber(value, locale);
-  const recovered = { sensible: round(result.recovered.sensible), latent: round(result.recovered.latent) };
-  const lost = { sensible: round(result.lost.sensible), latent: round(result.lost.latent) };
+  const { recovered: recoveredTotal, potential, parts } = recoveryTotals(result);
+  const { recovered, lost } = parts;
 
   // One lane per kind (temperature, and moisture with humidity), each its solid recovered and its hatched lost part,
   // on the scale of the fuller lane.
@@ -75,7 +74,6 @@ export function recoveryView(
     layoutSegments(values, scale).map((segment, i) => ({ ...segment, background: backgrounds[i] ?? color })),
   );
 
-  const { recovered: recoveredTotal, potential } = recoveryTotals(result);
   // Free cooling words the same figures as cooling delivered rather than recovered.
   const [withPotential, withoutPotential] = result.freeCooling
     ? [RECOVERY.headerFreeCooling, RECOVERY.headerFreeCoolingNoPotential]

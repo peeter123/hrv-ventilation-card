@@ -117,7 +117,8 @@ export function moistureFigure(
 /**
  * The tooltip and accessible name of the effectiveness rings: the total figure named by the mode (heat, cooling, free
  * cooling) and the moisture figure, each in whole percent with its absolute values as magnitudes (the recovered total
- * and the potential in W, as the recovery card's header; the recovered and the extracted moisture in g/h), "not
+ * and the potential in W, as the recovery card's header; the recovered and the extracted moisture in g/h), the
+ * recovered one with a minus while it works against the potential (the ratio is clamped to 0 %), "not
  * measurable" for one without a value (or both without a calculation), and the bypass position while it is above 0 %,
  * as the calculation turns to cooling then (whole percent from 1 %, one decimal below). `moisture` is false where no
  * moisture ring is drawn (an HRV, or an ERV without humidity), so the text leaves the moisture figure out.
@@ -130,7 +131,9 @@ export function effectivenessLabel(
 ): string {
   const figure = (value: number | undefined): string =>
     value === undefined ? DIAGRAM.effectivenessNoValue : DIAGRAM.effectivenessPercent(formatNumber(value, locale));
-  const magnitude = (value: number): string => formatNumber(Math.abs(value), locale);
+  // A magnitude, with a minus when `against`: the recovered part works against the potential (the ratio is clamped to 0 %).
+  const absolute = (value: number, against = false): string =>
+    formatNumber(against && Math.round(value) !== 0 ? -Math.abs(value) : Math.abs(value), locale);
   const total = result?.effectiveness.total;
   const totals = result && total !== undefined ? recoveryTotals(result) : undefined;
   const rates = result?.effectiveness.moisture === undefined ? undefined : result.moisture;
@@ -148,12 +151,17 @@ export function effectivenessLabel(
     DIAGRAM.effectivenessTotal(
       mode,
       figure(total),
-      totals && DIAGRAM.effectivenessWatts(magnitude(totals.recovered), magnitude(totals.potential)),
+      totals &&
+        DIAGRAM.effectivenessWatts(absolute(totals.recovered, totals.recovered < 0), absolute(totals.potential)),
     ),
     moisture
       ? DIAGRAM.effectivenessMoisture(
           figure(result?.effectiveness.moisture),
-          rates && DIAGRAM.effectivenessRate(magnitude(rates.recovered), magnitude(rates.extracted)),
+          rates &&
+            DIAGRAM.effectivenessRate(
+              absolute(rates.recovered, rates.recovered * rates.extracted < 0),
+              absolute(rates.extracted),
+            ),
         )
       : undefined,
     open ? (bypass >= 1 ? formatNumber(bypass, locale) : formatNumber(Math.max(bypass, 0.1), locale, 1)) : undefined,

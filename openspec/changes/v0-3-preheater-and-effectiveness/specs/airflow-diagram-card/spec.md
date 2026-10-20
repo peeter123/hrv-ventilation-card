@@ -257,7 +257,8 @@ position. The rings SHALL NOT be tappable.
 ### Requirement: Ring tooltip gives absolute values
 In the rings' tooltip and accessible name, a figure with a value SHALL be followed by its absolute values as
 magnitudes: for the total figure the recovered total and the potential in W, sensible plus latent as on the recovery
-balance card; for the moisture figure the recovered and the extracted moisture in g/h.
+balance card; for the moisture figure the recovered and the extracted moisture in g/h. The recovered value SHALL get
+a minus sign (U+2212) while it works against the potential.
 
 #### Scenario: Bypass closed
 - **WHEN** the unit is heating with the bypass at 0 %, recovers 1,200 W of a 1,304 W potential (92 %) and 390 of
@@ -274,6 +275,12 @@ balance card; for the moisture figure the recovered and the extracted moisture i
 - **WHEN** the unit is cooling with the bypass at 0 %, recovers 760 W of a 1,000 W potential, and at 200 m³/h the
   outdoor air holds 14.0 g/m³, the supply 13.0 g/m³ and the extract 12.0 g/m³
 - **THEN** the tooltip reads "Effectiveness: cooling 76 % (760 / 1,000 W), moisture 50 % (200 / 400 g/h)"
+
+#### Scenario: Recovery against the mode
+The ratio is then clamped to 0 %; where it is clamped to 100 %, both values stay magnitudes.
+- **WHEN** the unit is free cooling and the supply air is warmer than the extract air, so it delivers -120 W of a
+  1,000 W potential, and the moisture recovered is 100 g/h against 800 g/h extracted in the other direction
+- **THEN** the tooltip reads "Effectiveness: free cooling 0 % (−120 / 1,000 W), moisture 0 % (−100 / 800 g/h)"
 
 ### Requirement: Pre-heater coil on the drawing
 With `pre_heater.power` configured, the card SHALL draw a heating coil across the outdoor-to-supply stream, between

@@ -20,7 +20,14 @@ import {
 } from '../diagram/badge';
 import { drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
 import { flowSpeed } from '../diagram/flow';
-import { isCompact, labelModel, STATUS_CELLS, type DiagramLabel, type LayoutChoice } from '../diagram/labels';
+import {
+  COMPACT_BELOW,
+  isCompact,
+  labelModel,
+  STATUS_CELLS,
+  type DiagramLabel,
+  type LayoutChoice,
+} from '../diagram/labels';
 import { DIAGRAM_OPTION_LIST, DIAGRAM_OPTIONS, DIAGRAM_REQUIREMENTS } from '../diagram/options';
 import { seasonIcon, type SeasonIcon } from '../diagram/season';
 import { bypassStrength, temperatureColors } from '../diagram/streams';
@@ -248,7 +255,8 @@ export class HrvVentilationCard extends HrvCard {
       /* Two lines of 11 px have to fit the wedge at 280 px (about 40 units high at its left end). */
       line-height: 1.1;
     }
-    .moisture-recovery .value {
+    /* More specific than the label value rule below, whose ellipsis would clip a long figure. */
+    .moisture-recovery .figure .value {
       overflow: visible;
       text-align: center;
     }
@@ -284,7 +292,7 @@ export class HrvVentilationCard extends HrvCard {
       right: 15%;
     }
     /* Narrow cards: lower, so the label clears the bypass path as it rises to the supply arrow (forced full layout). */
-    @container (max-width: 339px) {
+    @container (max-width: ${COMPACT_BELOW - 1}px) {
       .supply-flow {
         top: 82%;
       }

@@ -66,8 +66,17 @@ absent, as not measurable, independently of the other.
 - **WHEN** no humidity entities are configured and the temperatures differ by 10 K
 - **THEN** the total effectiveness is given and the moisture effectiveness is absent
 
+### Requirement: Effectiveness needs a potential
+Neither effectiveness figure SHALL be given while there is no potential to recover: a supply flow of 0, or a potential
+that rounds to 0 W (the total) or the extracted moisture to 0 g/h (the moisture), as the recovery balance card's header
+shows no percentage at a potential of 0.
+
+#### Scenario: Unit in standby
+- **WHEN** the supply flow is 0 and the extract and outdoor air differ by 17 K and 3.5 g/m³
+- **THEN** neither the total nor the moisture effectiveness is given
+
 ### Requirement: Effectiveness matches the macro
-For every input set in the vector table with a gradient above the gate, the calculation's total effectiveness SHALL
+For every input set in the vector table with a gradient above the gate and a supply flow above 0, the calculation's total effectiveness SHALL
 match the macro's recovered total divided by its recovered and lost totals, capped to 0-100 %, and, where the bypass is at 0 % and the
 macro's `eff_moisture` is between 0 and 100 %, its moisture effectiveness SHALL match `eff_moisture`, both within 1 %.
 

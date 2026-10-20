@@ -74,6 +74,8 @@ ESPHome. The measured examples below come from that unit.
   - **Enthalpy gate (total):** the figure is left out while `|h_ext - h_out| < ρ · 1006 · 3` J/m³ (3.6 kJ/m³ at
     1.2 kg/m³), the enthalpy of 3 K of dry air, in either direction, because with a small gradient the ratio is
     noise. A humid summer day with 1 K between the temperatures but a clear enthalpy difference still gets a figure.
+  - **Potential gate:** neither figure is given while the potential rounds to 0 (a supply flow of 0, or the extracted
+    moisture rounding to 0 g/h), as the recovery card's header shows no percentage then; the rings are empty.
   - **Moisture gate:** `|AH_ext - AH_out| < 1.5 g/m³` (on 2026-09-30 the moisture gradient went from 0.72 to
     0.03 g/m³ within an hour). The two figures are gated separately.
   - **No bypass gate:** the figures are calculated at any bypass position. With the bypass closed they describe the
@@ -187,7 +189,9 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     `src/diagram/badge.ts` (texts in `src/strings.ts`). The total is named by the mode (heat, cooling, free
     cooling) and followed by its absolute values as magnitudes, the recovered total and the potential in W (the
     recovery card's header figures); the moisture by the recovered and the extracted moisture in g/h, as magnitudes
-    like the moisture figure. Example: "Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 % (390 / 600 g/h)".
+    like the moisture figure, except that the recovered value gets a minus sign (U+2212) while it works against the
+    potential (the ratio is clamped to 0 %), e.g. "free cooling 0 % (−120 / 1,000 W), moisture 0 % (−100 / 800 g/h)";
+    an overshoot (clamped to 100 %) stays magnitudes. Example: "Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 % (390 / 600 g/h)".
     "not measurable" stands for a ring without a value, for example "free cooling 61 % (610 / 1,000 W), moisture not
     measurable (bypass 40 %)". The bypass position follows while above 0 % (from the calculation's own bypass
     input; whole percent from 1 %, one decimal below, so a bypass that already turns the ring cold is named); the

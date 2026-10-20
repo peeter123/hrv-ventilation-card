@@ -273,6 +273,29 @@ describe('effectivenessLabel', () => {
     );
   });
 
+  test('airflow-diagram-card "Recovery against the mode": the recovered figure gets a minus, the potential does not', () => {
+    const against: RecoveryResult = {
+      ...withFigures(0, 0, { mode: 'cooling', freeCooling: true }),
+      recovered: { sensible: -100, latent: -20 },
+      lost: { sensible: 900, latent: 220 },
+      moisture: { recovered: 100, extracted: -800, outside: 0 },
+    };
+    expect(effectivenessLabel(against, 0, true, LOCALE)).toBe(
+      nb('Effectiveness: free cooling 0 % (−120 / 1,000 W), moisture 0 % (−100 / 800 g/h)'),
+    );
+  });
+
+  test('a ratio clamped to 100 % keeps magnitudes, however far the recovered part overshoots', () => {
+    const over: RecoveryResult = {
+      ...withFigures(100, 100, { rates: [-500, -400] }),
+      recovered: { sensible: 1100, latent: 200 },
+      lost: { sensible: -200, latent: -100 },
+    };
+    expect(effectivenessLabel(over, 0, true, LOCALE)).toBe(
+      nb('Effectiveness: heat 100 % (1,300 / 1,000 W), moisture 100 % (500 / 400 g/h)'),
+    );
+  });
+
   test('airflow-diagram-card "Figure not measurable": the mode alone, no absolute values', () => {
     expect(effectivenessLabel(withFigures(), 0, false, LOCALE)).toBe('Effectiveness: heat not measurable');
   });

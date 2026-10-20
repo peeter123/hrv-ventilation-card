@@ -106,10 +106,12 @@ Colours:
   1.31:1 against the empty rim; it now measures about 1.53:1 in light and 1.36:1 in dark. The browser test requires
   1.5:1 in light and 1.3:1 in dark. The ring cannot get much darker because the total ring must keep 3:1 against it.
 - Total: the mode's colour (the warm colour in heating, the cold colour in cooling, as the badge) mixed with
-  `--primary-text-color`: darker on a light theme, lighter on a dark one. The mode colour's share is 45 % (50 % before the darker moisture ring; the text colour's share is the smallest that gives the
-  default warm and cold colours 3:1 (the WCAG contrast for graphics) against the core fill and against the moisture
-  ring, on the HRV and the ERV fill, in the light and the dark preview theme, measured by the browser test. The
-  unmixed cold colour on the ERV fill was about 1.9:1, which the user found too weak.)
+  `--primary-text-color`: darker on a light theme, lighter on a dark one. The mode colour's share is
+  `TOTAL_RING_SHARE`, 45 %: the largest share that still keeps 3:1 (the WCAG contrast for graphics) against both the
+  core fill and the moisture ring, for the default warm and cold colours, on the HRV and the ERV fill, in the light and
+  the dark preview theme. The browser test measures those contrasts. A larger share (it was 50 % before the moisture
+  ring got darker) would fall under 3:1 against the darker moisture ring. The unmixed cold colour on the ERV fill was
+  about 1.9:1, which the user found too weak.
 
 - *Why not a fill level in the core?* The user chose rings (option C, 2026-10-19). A fill would sit under the badge
   and lower its contrast.
@@ -123,7 +125,11 @@ from a pure `effectivenessLabel(result, bypass, moisture, locale)` with the text
 and the units). The total figure is named by the mode ("heat", "cooling", "free cooling") and followed by its
 absolute values as magnitudes, the recovered total and the potential in W (sensible plus latent, the recovery card's
 header figures); the moisture figure by the recovered and the extracted moisture in g/h (`result.moisture`), so a
-humid day's "kept out" reads as positive numbers, as the figure does. Example: "Effectiveness: heat 92 % (1,200 /
+humid day's "kept out" reads as positive numbers, as the figure does. The recovered value gets a minus sign (U+2212)
+when it works against the potential, which is where the ratio is clamped to 0 % (user's decision, 2026-10-20), e.g.
+"free cooling 0 % (−120 / 1,000 W)", "moisture 0 % (−100 / 800 g/h)"; an overshoot (clamped to 100 %) stays magnitudes.
+Neither figure is given at a potential of 0 (a supply flow of 0, or a potential or extracted moisture that rounds to
+0), so a unit in standby shows empty rings and "not measurable". Example: "Effectiveness: heat 92 % (1,200 /
 1,304 W), moisture 65 % (390 / 600 g/h)". `moisture` is the moisture ring's condition (an ERV with humidity for every
 stream), so an HRV's label names only the total. The box comes before the other boxes in the DOM, so the bypass
 position and the badge stay on top and keep their own tooltips and taps.
@@ -140,7 +146,9 @@ from the exhaust stream (bottom edge about y 76 at x 275) to the supply stream (
   `mdi:water-remove` while it is kept out, so it needs no minus sign. The icon is drawn like the top row's icons, as
   high as the text and centred on it. The tooltip keeps its words ("Moisture recovered: 120 g/h", "Moisture kept out:
   418 g/h") and the tap keeps opening `status.moisture_recovery`.
-- Icon choice (user's decision, 2026-10-20): the first draft used a water drop with a plus and a minus, which is not  clear on a figure that shows no sign. `mdi:water-sync` (moisture is exchanged back into the house) and  `mdi:water-remove` (moisture is kept out) say what happens.
+- Icon choice (user's decision, 2026-10-20): the first draft used a water drop with a plus and a minus, which is not
+  clear on a figure that shows no sign. `mdi:water-sync` (moisture is exchanged back into the house) and
+  `mdi:water-remove` (moisture is kept out) say what happens.
 - At 280 px the gap is about 55 px; a four-digit figure with its icon needs about 65 px at the 11 px minimum. Where it
   does not fit, the unit goes to a second line under the number (the wedge is about 31 px high at 280 px, room for
   two 11 px lines). The browser test measures it at 280 to 600 px in both layouts with three and four digits.

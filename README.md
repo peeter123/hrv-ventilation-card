@@ -248,9 +248,11 @@ humidities. The air streams are drawn over the rings, so a stream covers part of
 bottom edges stay visible. The tooltip of the exchanger and its accessible name give the figures with the mode and the
 absolute values behind them, for example "Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 % (390 / 600
 g/h)" (modes: heat, cooling, free cooling), with "not measurable" for a ring without a value and, while the bypass
-is above 0 %, its position.
+is above 0 %, its position. The recovered value gets a minus sign (−) while it works against the potential (the
+ratio is then 0 %), for example "free cooling 0 % (−120 / 1,000 W)".
 
-A ring shows no progress while its figure is left out: the total below a gate (the extract and outdoor air differ in
+A ring shows no progress while its figure is left out: with a supply flow of 0 (nothing to recover, as the recovery
+card's header), the total below a gate (the extract and outdoor air differ in
 enthalpy by less than that of 3 K of dry air), the moisture below 1.5 g/m³ of absolute humidity difference, because
 the ratio is noise there, or while an input has no value. There is no gate on the bypass for the total, so with the bypass open it describes the unit as a whole:
 it falls as the bypass opens, because the supply air is then partly outdoor air. Read it together with the bypass
