@@ -762,12 +762,10 @@ describe('flow labels', () => {
     if (!found) throw new Error(`no ${selector}`);
     return found;
   };
-  // From 320 px: the full layout shows the flow labels from 340 px by itself; forced at 280 px the supply label touches the
-  // bypass path by 1.5 px (measured in task 4.5, left to the placement decision in task 4.7).
-  const WIDTHS = [320, COMPACT_BELOW, 360, 400, 500, 600];
+  const WIDTHS = [280, 300, 320, COMPACT_BELOW, 360, 400, 500, 600];
 
   for (const type of ['hrv', 'erv']) {
-    test(`airflow-diagram-card "Flow labels", ${type}: below the arrowheads, clear of the bypass path at 100 % and of the corner stacks, 320 to 600 px`, async () => {
+    test(`airflow-diagram-card "Flow labels", ${type}: below the arrowheads, clear of the bypass path at 100 % and of the corner stacks, 280 to 600 px`, async () => {
       // The compact layout has no flow labels, so the full layout is forced at the narrow widths.
       const shown = await show(280, 'light', 'full', FULL_BYPASS, { exchanger_type: type });
       const { root } = shown;

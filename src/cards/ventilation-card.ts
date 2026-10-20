@@ -283,6 +283,12 @@ export class HrvVentilationCard extends HrvCard {
     .supply-flow {
       right: 15%;
     }
+    /* Narrow cards: lower, so the label clears the bypass path as it rises to the supply arrow (forced full layout). */
+    @container (max-width: 339px) {
+      .supply-flow {
+        top: 82%;
+      }
+    }
     .corner.outdoor {
       top: 0;
       left: 0;
