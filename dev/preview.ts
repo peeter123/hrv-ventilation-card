@@ -22,11 +22,14 @@ const values: MockValues = {
   humidity: { outdoor: 85, supply: 45, extract: 50, exhaust: 80 },
   flow: 180,
   bypass: 0,
+  preHeater: 0,
+  preHeaterEnergy: 8,
   season: 'heating',
   unavailable: new Set(),
 };
 
-type Scenario = Pick<MockValues, 'temperature' | 'humidity' | 'flow' | 'bypass' | 'season'>;
+type Scenario = Pick<MockValues, 'temperature' | 'humidity' | 'flow' | 'bypass' | 'season'> &
+  Partial<Pick<MockValues, 'preHeater'>>;
 
 /**
  * Typical states of a unit with an enthalpy exchanger (about 85 % sensible efficiency): the button fills in all
@@ -54,6 +57,15 @@ const SCENARIOS: Readonly<Record<string, Scenario>> = {
     bypass: 50,
     season: 'between',
   },
+  // Frost: the pre-heater warms the outdoor air before the exchanger. Pick a kind and a maximum power to see the coil.
+  'frost (pre-heater on)': {
+    temperature: { outdoor: -8, supply: 17.4, extract: 21.5, exhaust: -2.5 },
+    humidity: { outdoor: 90, supply: 40, extract: 50, exhaust: 95 },
+    flow: 180,
+    bypass: 0,
+    preHeater: 600,
+    season: 'heating',
+  },
   // Outdoor and extract 2 K and 0.3 g/m³ apart: below the effectiveness gradients, so the rings are empty tracks.
   'small gradient': {
     temperature: { outdoor: 16, supply: 17.4, extract: 18, exhaust: 16.6 },
@@ -77,9 +89,21 @@ function applyScenario(scenario: Scenario): void {
   values.flow = scenario.flow;
   values.bypass = scenario.bypass;
   values.season = scenario.season;
+  // Only the frost scenario sets the pre-heater; the others leave the control alone.
+  if (scenario.preHeater !== undefined) {
+    values.preHeater = scenario.preHeater;
+    // The coil needs the role: switch a "none" kind to the power sensor, and keep any other kind as chosen.
+    if (options.preHeaterKind === 'none') {
+      options.preHeaterKind = 'power sensor';
+      updateConfig();
+    }
+  }
   updateStates();
   renderControls();
 }
+
+type PreHeaterKind = 'none' | 'power sensor' | 'on/off entity';
+const PRE_HEATER_KINDS: readonly PreHeaterKind[] = ['none', 'power sensor', 'on/off entity'];
 
 const options = {
   config: 'full',
@@ -89,6 +113,9 @@ const options = {
   showUnavailable: false,
   animation: true,
   nominalFlow: 0,
+  preHeaterKind: 'none' as PreHeaterKind,
+  /** The rated power in W; 0 = none (the option is left out). */
+  preHeaterMax: 0,
   // No smoothing by default, so the bars follow the controls at once.
   smoothing: 0,
 };
@@ -100,6 +127,9 @@ const SWITCHABLE: Readonly<Record<string, string>> = {
   'supply flow': id.supplyFlow,
   power: id.power,
   'bypass mode': id.bypassMode,
+  'pre-heater power': id.preHeater,
+  'pre-heater on/off': id.preHeaterOn,
+  'pre-heater energy': id.preHeaterEnergy,
 };
 
 function element(elementId: string): HTMLElement {
@@ -111,6 +141,18 @@ function element(elementId: string): HTMLElement {
 const mock = new MockHass();
 /** Each card, with the box that shows its config error in its place, as Home Assistant's error card does. */
 const cards: { tag: Tag; card: HrvCard; error: HTMLElement; dark: boolean; sample: boolean }[] = [];
+
+/** The `pre_heater` group of the diagram's config: none, or the power sensor or the on/off entity with the energy. */
+function preHeaterConfig(): Record<string, unknown> {
+  if (options.preHeaterKind === 'none') return {};
+  return {
+    pre_heater: {
+      power: options.preHeaterKind === 'power sensor' ? id.preHeater : id.preHeaterOn,
+      energy: id.preHeaterEnergy,
+      ...(options.preHeaterMax > 0 ? { max_power: options.preHeaterMax } : {}),
+    },
+  };
+}
 
 function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
   // No entities: the card shows its sample values (the mock states are still merged under them).
@@ -126,6 +168,7 @@ function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
     ...shared,
     exchanger_type: options.exchanger,
     show_effectiveness: options.showEffectiveness,
+    ...preHeaterConfig(),
     layout: options.layout,
     show_unavailable: options.showUnavailable,
     animation: {
@@ -202,7 +245,7 @@ function select<T extends string>(
         set((event.target as HTMLSelectElement).value as T);
       }}
     >
-      ${choices.map((choice) => html`<option ?selected=${choice === value}>${choice}</option>`)}
+      ${choices.map((choice) => html`<option .selected=${choice === value}>${choice}</option>`)}
     </select></label
   >`;
 }
@@ -297,6 +340,23 @@ function renderControls(): void {
         ${number('smoothing min', options.smoothing, (value) => {
           options.smoothing = value;
           updateConfig();
+        })}
+      </fieldset>
+      <fieldset>
+        <legend>pre-heater</legend>
+        ${select<PreHeaterKind>('kind', PRE_HEATER_KINDS, options.preHeaterKind, (value) => {
+          options.preHeaterKind = value;
+          updateConfig();
+        })}
+        ${slider('power W', values.preHeater ?? 0, 1500, (value) => {
+          values.preHeater = value;
+        })}
+        ${number('max W (0 = none)', options.preHeaterMax, (value) => {
+          options.preHeaterMax = value;
+          updateConfig();
+        })}
+        ${number('energy kWh', values.preHeaterEnergy ?? 8, (value) => {
+          values.preHeaterEnergy = value;
         })}
       </fieldset>
       <fieldset>

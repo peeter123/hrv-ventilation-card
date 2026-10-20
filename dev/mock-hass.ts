@@ -18,6 +18,8 @@ export interface MockValues {
   bypass: number;
   /** The pre-heater's power in W, for the `pre_heater.power` entity; 0 (off) when left out. */
   preHeater?: number;
+  /** The pre-heater's energy in kWh, for the `pre_heater.energy` entity; 8 when left out. */
+  preHeaterEnergy?: number;
   season: SeasonChoice;
   /** Entity IDs reported as unavailable. */
   unavailable: ReadonlySet<string>;
@@ -41,6 +43,9 @@ export const id = {
   power: 'sensor.hrv_power',
   rmot: 'sensor.hrv_rmot',
   preHeater: 'sensor.hrv_pre_heater_power',
+  /** The pre-heater as an on/off entity: on while its power is above 0. */
+  preHeaterOn: 'binary_sensor.hrv_pre_heater',
+  preHeaterEnergy: 'sensor.hrv_pre_heater_energy',
   heating: 'binary_sensor.hrv_heating_season',
   cooling: 'binary_sensor.hrv_cooling_season',
 } as const;
@@ -120,6 +125,9 @@ function readings(values: MockValues): Record<string, Reading> {
     [id.filter]: { state: '64', unit: 'd', decimals: 0 },
     [id.power]: { state: '32', unit: 'W', decimals: 0 },
     [id.rmot]: { state: '14.2', unit: '°C', decimals: 1 },
+    [id.preHeater]: { state: (values.preHeater ?? 0).toFixed(0), unit: 'W', decimals: 0 },
+    [id.preHeaterOn]: { state: (values.preHeater ?? 0) > 0 ? 'on' : 'off' },
+    [id.preHeaterEnergy]: { state: (values.preHeaterEnergy ?? 8).toFixed(0), unit: 'kWh', decimals: 0 },
     [id.heating]: { state: values.season === 'heating' ? 'on' : 'off' },
     [id.cooling]: { state: values.season === 'cooling' ? 'on' : 'off' },
   } satisfies Record<string, Reading>);

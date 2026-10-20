@@ -114,7 +114,7 @@
 - [x] 5.4 Browser tests: the coil's box clear of the outdoor labels, the flow labels and the bypass position at 280
   to 600 px in both layouts ("Narrow card with all outdoor labels"), and the off coil distinguishable from the
   stream in the light and dark preview themes ("Off"); verify the tests pass
-- [ ] 5.5 Add the "pre-heater" fieldset to the preview page (kind, power slider, maximum power, energy, the
+- [x] 5.5 Add the "pre-heater" fieldset to the preview page (kind, power slider, maximum power, energy, the
   availability entries) and the "frost (pre-heater on)" scenario (design: "Preview page"); verify a screenshot of
   the coil off, at 250 of 1000 W, without a maximum and as an on/off entity in both themes, inspected by an agent
 - [ ] 5.6 Document the coil in `README.md` (the two roles, `pre_heater.max_power`, how the glow reads) and the
