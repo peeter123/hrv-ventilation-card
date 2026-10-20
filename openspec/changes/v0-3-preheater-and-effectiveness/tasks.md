@@ -132,7 +132,7 @@
   available, and let `pre_heater.power` count for showing the top row (design: "Pre-heater in the top row and the
   status grid"); verify label model tests for "Pre-heater on", "On/off entity on", "Pre-heater off" and "Only
   pre-heater power, pre-heater off", and a card test that a tap on it opens `pre_heater.power`
-- [x] 6.2 Add `pre_heater.energy` to `STATUS_ROLES` at column 2, row 3, with `mdi:heating-coil`; verify tests for
+- [x] 6.2 Add `pre_heater.energy` to `STATUS_ROLES` at column 2, row 3, with `mdi:heat-wave`; verify tests for
   "Pre-heater energy cell" and that the existing "Status grid", "Unconfigured value" and "Centred cells" tests
   still pass
 - [x] 6.3 Browser tests: the top row at 280 px with power 1032 W, the pre-heater at 1000 W and RMOT -3.5 °C has no
@@ -147,7 +147,7 @@
 - [x] 6.6 Document the top row figure, the energy cell and the editor section in `README.md` and the top row and
   status grid points in `docs/hrv-ventilation.md` (why the figure is left out rather than kept invisible, why no
   sum or share); verify the README tests pass
-- [ ] 6.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the top row with
+- [x] 6.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the top row with
   the pre-heater on and off, the pre-heater energy cell, the editor's pre-heater section with advanced settings off
   and on; 280, 400 and 600 px; light and dark) inspected by an agent, and apply the user's feedback; verify the user
   approves before the review
