@@ -91,6 +91,9 @@ describe('golden vectors (recovery-calculation "Golden vectors")', () => {
     const { eff_sensible: sensible, eff_moisture: moisture } = vector.expected;
     if (inRange(sensible)) near(effectiveness.temperature, sensible, TOLERANCE_PCT);
     if (inRange(moisture)) near(effectiveness.moisture, moisture, TOLERANCE_PCT);
+    // With the bypass closed the macro's null comes from the gradient gate alone.
+    if (vector.inputs.bypass === 0 && sensible === null) expect(effectiveness.temperature).toBeUndefined();
+    if (vector.inputs.bypass === 0 && moisture === null) expect(effectiveness.moisture).toBeUndefined();
   });
 
   test('the macro gives a value from 0 to 100 on several sets', () => {

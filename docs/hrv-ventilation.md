@@ -54,10 +54,10 @@ ESPHome. The measured examples below come from that unit.
     the house does not need more cooling. It means "cooling available but not used", not exchanger inefficiency.
     In **heating** with the bypass closed, "lost" is the real exchanger shortfall, and "N % recovered" approximates
     the total (enthalpy) effectiveness.
-- **Effectiveness** (supply side, the usual datasheet definition; part of the recovery result, so the cards and the
-  planned integration share it): temperature `(T_sup - T_out) / (T_ext - T_out)`, moisture `(AH_sup - AH_out) /
-  (AH_ext - AH_out)`, in %. The temperature figure uses the raw temperatures, the moisture figure the smoothed
-  absolute humidity, and the moisture figure needs humidity for all three streams.
+- **Effectiveness** (supply side, the usual datasheet definition; part of the recovery result, for the airflow card's
+  effectiveness rings and the planned integration): temperature `(T_sup - T_out) / (T_ext - T_out)`, moisture
+  `(AH_sup - AH_out) / (AH_ext - AH_out)`, in %. The temperature figure uses the raw temperatures, the moisture
+  figure the smoothed absolute humidity, and the moisture figure needs humidity for all three streams.
   - **Cap:** the figure is limited to 0-100 %. A sensor offset or fan heat (about +0.5 to 1 K on the supply side,
     which inflates the sensible figure) can push the raw ratio past 100 %, and a supply colder than the outdoor air
     (or drier, for moisture) past 0 %; neither is a real effectiveness.
@@ -72,8 +72,8 @@ ESPHome. The measured examples below come from that unit.
     the author's installation) is uncapped, rounded to an integer, and unknown unless the bypass is fully
     closed and the gradient passes the gate. It keeps the exchanger meaning for charts. The calculated figure can
     therefore differ from it: it shows a value while the bypass is open, where the sensor has none, and it stays
-    within 0-100 %, where the sensor can leave it. Where both have a value they agree within the sensor's rounding
-    (the golden vectors compare them).
+    within 0-100 %, where the sensor can leave it. Where the sensor is within 0-100 % they agree within its
+    rounding (the golden vectors compare them).
 
 ## Moisture
 
