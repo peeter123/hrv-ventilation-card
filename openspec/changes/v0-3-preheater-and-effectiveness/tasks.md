@@ -128,7 +128,7 @@
 
 ## 6. Pre-heater in the top row, the status grid and the editor
 
-- [ ] 6.1 Add the pre-heater label to the top row's centre cell, given only while the pre-heater is on and
+- [x] 6.1 Add the pre-heater label to the top row's centre cell, given only while the pre-heater is on and
   available, and let `pre_heater.power` count for showing the top row (design: "Pre-heater in the top row and the
   status grid"); verify label model tests for "Pre-heater on", "On/off entity on", "Pre-heater off" and "Only
   pre-heater power, pre-heater off", and a card test that a tap on it opens `pre_heater.power`
