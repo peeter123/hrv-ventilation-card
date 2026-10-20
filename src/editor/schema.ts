@@ -127,17 +127,44 @@ function withValueAt(config: CardConfig, path: string, value: unknown, original?
 /**
  * The config as `ha-form` displays it: every field of the schema that the config leaves unset shows its default.
  * `ha-form` does not draw the `default` of a selector for missing data, so a new card would show blank drop-downs.
- * This is display data only; `withoutShownDefaults` takes the defaults out again before a change is saved.
+ * This is display data only; `withoutShownDefaults` takes the defaults out again before a change is saved. The
+ * paths in `emptied` are fields the user just cleared: they stay empty instead of showing their default again.
  * Returns the config itself when there is nothing to add.
  */
-export function withShownDefaults(schema: EditorSchema | FormSchema, config: CardConfig): CardConfig {
+export function withShownDefaults(
+  schema: EditorSchema | FormSchema,
+  config: CardConfig,
+  emptied: ReadonlySet<string> = new Set(),
+): CardConfig {
   return fieldsWithPaths(schema as EditorSchema).reduce(
     (shown, { field, path }) =>
-      field.default !== undefined && valueAt(config, path) === undefined
+      field.default !== undefined && valueAt(config, path) === undefined && !emptied.has(path)
         ? withValueAt(shown, path, field.default)
         : shown,
     config,
   );
+}
+
+/**
+ * The paths of the fields the user cleared: set in what `ha-form` displayed (`shown`) and unset in what it reports
+ * (`changed`, where a cleared field is missing or `undefined`).
+ */
+export function clearedPaths(schema: EditorSchema | FormSchema, shown: CardConfig, changed: CardConfig): string[] {
+  return fieldsWithPaths(schema as EditorSchema)
+    .map(({ path }) => path)
+    .filter((path) => valueAt(shown, path) !== undefined && valueAt(changed, path) === undefined);
+}
+
+/**
+ * A copy without the keys whose value is `undefined`, in sections too: `ha-form` reports a cleared field as
+ * `{ name: undefined }`, which must not reach the saved config. Returns the value itself when it has none.
+ */
+export function withoutUndefined<T>(value: T): T {
+  if (!isRecord(value)) return value;
+  const entries = Object.entries(value).filter(([, item]) => item !== undefined);
+  const cleaned = entries.map(([key, item]) => [key, withoutUndefined(item)] as const);
+  const changed = cleaned.length !== Object.keys(value).length || cleaned.some(([key, item]) => item !== value[key]);
+  return changed ? (Object.fromEntries(cleaned) as T) : value;
 }
 
 /**

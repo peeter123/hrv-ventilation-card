@@ -1,6 +1,8 @@
 import { afterEach, beforeAll, describe, expect, test } from 'vitest';
 import type { CardConfig } from '../../src/lib/config';
 import { DIAGRAM_SCHEMA } from '../../src/editor/diagram-schema';
+import { MOISTURE_SCHEMA } from '../../src/editor/moisture-schema';
+import { RECOVERY_SCHEMA } from '../../src/editor/recovery-schema';
 import { fieldsWithPaths, type EditorSchema, type FormSchema } from '../../src/editor/schema';
 import type { HrvCardEditor } from '../../src/editor/hrv-card-editor';
 import { EDITOR } from '../../src/strings';
@@ -38,6 +40,22 @@ async function openEditor(
   const [toggle, form] = [...(editor.shadowRoot?.querySelectorAll<StubForm>('ha-form') ?? [])];
   if (!toggle || !form) throw new Error('editor did not render two forms');
   return { editor, toggle, form };
+}
+
+/** The configs the editor reports through config-changed. */
+function collectSaved(editor: HrvCardEditor): CardConfig[] {
+  const saved: CardConfig[] = [];
+  editor.addEventListener('config-changed', (event) => {
+    saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
+  });
+  return saved;
+}
+
+/** What ha-form reports when the user clears a field: the data with `undefined` at the dotted path. */
+function cleared(data: Record<string, unknown>, path: string): Record<string, unknown> {
+  const [key, ...rest] = path.split('.') as [string, ...string[]];
+  if (rest.length === 0) return { ...data, [key]: undefined };
+  return { ...data, [key]: cleared(data[key] as Record<string, unknown>, rest.join('.')) };
 }
 
 const fieldNames = (schema: FormSchema): string[] => fieldsWithPaths(schema).map(({ path }) => path);
@@ -78,10 +96,7 @@ describe('hrv-card-editor', () => {
 
   test('card-bundle "Switch not saved": turning the switch on and saving leaves no switch key', async () => {
     const { editor, toggle, form } = await openEditor(BASIC_CONFIG);
-    const saved: CardConfig[] = [];
-    editor.addEventListener('config-changed', (event) => {
-      saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
-    });
+    const saved = collectSaved(editor);
 
     toggle.change({ advanced: true });
     await editor.updateComplete;
@@ -90,7 +105,6 @@ describe('hrv-card-editor', () => {
     const edited = { ...BASIC_CONFIG, calculation: { smoothing: 5 } };
     form.change(edited);
     expect(saved).toEqual([edited]);
-    expect(saved[0]).not.toHaveProperty('advanced');
   });
 
   test('value-changed from the forms does not escape the editor', async () => {
@@ -168,10 +182,7 @@ describe('hrv-card-editor', () => {
   test('a field the config leaves unset shows its default, which is not saved when another field changes', async () => {
     const { editor, toggle, form } = await openEditor({ type: 'custom:x', other: 1 }, CHOICE_SCHEMA);
     expect(form.data).toEqual({ type: 'custom:x', other: 1, exchanger_type: 'erv' });
-    const saved: CardConfig[] = [];
-    editor.addEventListener('config-changed', (event) => {
-      saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
-    });
+    const saved = collectSaved(editor);
 
     form.change({ ...form.data, other: 2 });
     expect(saved).toEqual([{ type: 'custom:x', other: 2 }]);
@@ -194,26 +205,15 @@ describe('hrv-card-editor', () => {
   test('a default the config already sets stays in the saved config, in a section too', async () => {
     const config = { type: 'custom:x', exchanger_type: 'erv', calculation: { mode: 'auto' } };
     const { editor, form } = await openEditor(config, CHOICE_SCHEMA);
-    const saved: CardConfig[] = [];
-    editor.addEventListener('config-changed', (event) => {
-      saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
-    });
+    const saved = collectSaved(editor);
     form.change({ ...config, other: 1 });
     expect(saved).toEqual([{ ...config, other: 1 }]);
   });
 });
 
-/** The configs the editor reports through config-changed. */
-function collectSaved(editor: HrvCardEditor): CardConfig[] {
-  const saved: CardConfig[] = [];
-  editor.addEventListener('config-changed', (event) => {
-    saved.push((event as CustomEvent<{ config: CardConfig }>).detail.config);
-  });
-  return saved;
-}
-
 describe('hrv-card-editor shown defaults (airflow diagram schema)', () => {
   const card = { type: 'custom:hrv-ventilation-card' };
+  const supplyFlow = { fans: { supply_flow: 'sensor.supply_flow' } };
 
   test('card-bundle "Shown default": an unset exchanger type shows HRV and an unset layout shows automatic', async () => {
     const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
@@ -234,20 +234,30 @@ describe('hrv-card-editor shown defaults (airflow diagram schema)', () => {
     toggle.change({ advanced: true });
     await editor.updateComplete;
     expect(form.data).toMatchObject({ exchanger_type: 'hrv', layout: 'auto', smoothing: 10, air_density: 1.2 });
-    form.change({ ...form.data, fans: { supply_flow: 'sensor.supply_flow' } });
-    expect(saved).toEqual([{ ...card, fans: { supply_flow: 'sensor.supply_flow' } }]);
-    for (const key of ['exchanger_type', 'layout', 'smoothing', 'air_density', 'animation', 'colors']) {
-      expect(saved[0]).not.toHaveProperty(key);
-    }
+    form.change({ ...form.data, ...supplyFlow });
+    expect(saved).toStrictEqual([{ ...card, ...supplyFlow }]);
+  });
+
+  test.each([
+    ['recovery', RECOVERY_SCHEMA, 'custom:hrv-recovery-balance-card'],
+    ['moisture', MOISTURE_SCHEMA, 'custom:hrv-moisture-balance-card'],
+  ])('an unrelated edit in the %s card editor saves no default', async (_name, schema, type) => {
+    const { editor, toggle, form } = await openEditor({ type }, schema);
+    const saved = collectSaved(editor);
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ smoothing: 10 });
+    form.change({ ...form.data, ...supplyFlow });
+    expect(saved).toStrictEqual([{ type, ...supplyFlow }]);
   });
 
   test('card-bundle "Empty section kept": clearing the only key of the animation section keeps the section', async () => {
     const config = { ...card, animation: { nominal_flow: 300 } };
     const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
     const saved = collectSaved(editor);
-    // Clearing a number field removes its key; the section's shown default (animation on) must not be written.
-    form.change({ ...form.data, animation: { enabled: true } });
-    expect(saved).toEqual([{ ...card, animation: {} }]);
+    // ha-form reports the cleared field as undefined; the shown default (animation on) must not be written.
+    form.change(cleared(form.data, 'animation.nominal_flow'));
+    expect(saved).toStrictEqual([{ ...card, animation: {} }]);
   });
 
   test('card-bundle "Typing the default into an unset field": entering 10 as smoothing saves no smoothing', async () => {
@@ -255,23 +265,58 @@ describe('hrv-card-editor shown defaults (airflow diagram schema)', () => {
     const saved = collectSaved(editor);
     toggle.change({ advanced: true });
     await editor.updateComplete;
-    expect(form.data).toMatchObject({ smoothing: 10 });
-    // The user empties the field, then types the default.
-    const { smoothing: _shown, ...cleared } = form.data;
-    form.change(cleared);
+    // The user empties the field, then types the default, as a number or as text.
+    for (const typed of [10, '10']) {
+      form.change(cleared(form.data, 'smoothing'));
+      await editor.updateComplete;
+      expect(form.data).not.toHaveProperty('smoothing');
+      form.change({ ...form.data, smoothing: typed });
+      await editor.updateComplete;
+      expect(saved.at(-1)).toStrictEqual(card);
+    }
+    expect(saved).toHaveLength(4);
+  });
+
+  test('card-bundle "Clearing a field": a cleared field stays empty, and typing 5 saves 5', async () => {
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
+    const saved = collectSaved(editor);
+    toggle.change({ advanced: true });
     await editor.updateComplete;
-    form.change({ ...form.data, smoothing: 10 });
-    expect(saved).toHaveLength(2);
-    expect(saved.at(-1)).not.toHaveProperty('smoothing');
-    expect(saved.at(-1)).toEqual(card);
+    expect(form.data).toMatchObject({ smoothing: 10 });
+    form.change(cleared(form.data, 'smoothing'));
+    await editor.updateComplete;
+    expect(form.data).not.toHaveProperty('smoothing');
+    expect(saved).toStrictEqual([card]);
+    form.change({ ...form.data, smoothing: 5 });
+    expect(saved.at(-1)).toStrictEqual({ ...card, smoothing: 5 });
+  });
+
+  test('clearing a value the config sets leaves it empty until the config is set from outside', async () => {
+    const config = { ...card, smoothing: 5 };
+    const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    const saved = collectSaved(editor);
+    expect(form.data).toMatchObject({ smoothing: 5 });
+    form.change(cleared(form.data, 'smoothing'));
+    await editor.updateComplete;
+    expect(form.data).not.toHaveProperty('smoothing');
+    expect(saved).toStrictEqual([card]);
+
+    // Home Assistant handing back the config the editor fired is not a change from outside.
+    editor.setConfig(card);
+    await editor.updateComplete;
+    expect(form.data).not.toHaveProperty('smoothing');
+
+    // A different config from outside, such as an edit in the code editor, shows the default again.
+    editor.setConfig({ ...card, exchanger_type: 'erv' });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ smoothing: 10 });
   });
 
   test('card-bundle "Default already set": exchanger_type hrv stays when another field changes', async () => {
     const config = { ...card, exchanger_type: 'hrv' };
     const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
     const saved = collectSaved(editor);
-    form.change({ ...form.data, fans: { supply_flow: 'sensor.supply_flow' } });
-    expect(saved).toEqual([{ ...config, fans: { supply_flow: 'sensor.supply_flow' } }]);
-    expect(saved[0]).toHaveProperty('exchanger_type', 'hrv');
+    form.change({ ...form.data, ...supplyFlow });
+    expect(saved).toStrictEqual([{ ...config, ...supplyFlow }]);
   });
 });

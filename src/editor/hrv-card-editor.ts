@@ -4,15 +4,17 @@
 // Home Assistant element.
 import { css, html, LitElement, nothing, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import type { CardConfig } from '../lib/config';
+import { valueAt, type CardConfig } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import type { HassLike } from '../lib/hass';
 import { EDITOR } from '../strings';
 import {
+  clearedPaths,
   hasAdvancedValue,
   isSection,
   visibleSchema,
   withoutShownDefaults,
+  withoutUndefined,
   withShownDefaults,
   type EditorSchema,
   type FormField,
@@ -69,6 +71,10 @@ export class HrvCardEditor extends LitElement {
   // Rebuilt only when the config or the schema changes, so ha-form is not handed new data on every render.
   private _shown: CardConfig = {};
 
+  // The fields the user just cleared. They stay empty instead of showing their default again (the box would refill
+  // and typing 5 would give 105) until the config is set from outside.
+  private _emptied = new Set<string>();
+
   constructor() {
     super();
     if (!this._formDefined) {
@@ -85,6 +91,8 @@ export class HrvCardEditor extends LitElement {
 
   /** Called by Home Assistant with the card's config, also after edits in the code editor. */
   setConfig(config: CardConfig): void {
+    // Home Assistant may hand back the config this editor just fired: that is not a change from outside.
+    if (this._emptied.size > 0 && JSON.stringify(config) !== JSON.stringify(this._config)) this._emptied = new Set();
     this._config = config;
     if (this._locked && !this._switch.advanced) this._switch = { advanced: true };
   }
@@ -95,7 +103,7 @@ export class HrvCardEditor extends LitElement {
       this._formSchema = visibleSchema(this.schema, this._switch.advanced);
     }
     if (this._config && (changed.has('schema') || changed.has('_config') || changed.has('_switch'))) {
-      this._shown = withShownDefaults(this._formSchema, this._config);
+      this._shown = withShownDefaults(this._formSchema, this._config, this._emptied);
     }
   }
 
@@ -106,10 +114,12 @@ export class HrvCardEditor extends LitElement {
 
   private _configChanged = (event: CustomEvent<{ value: CardConfig }>): void => {
     event.stopPropagation();
-    // ha-form reports the whole data it displays, defaults included: keep out those the config did not have.
-    const config = this._config
-      ? withoutShownDefaults(this.schema, this._config, event.detail.value)
-      : event.detail.value;
+    // ha-form reports the whole data it displays, defaults included: keep out those the config did not have, and
+    // the keys of cleared fields (reported as undefined).
+    const value = withoutUndefined(event.detail.value);
+    const cleared = clearedPaths(this.schema, this._shown, value);
+    this._emptied = new Set([...this._emptied, ...cleared].filter((path) => valueAt(value, path) === undefined));
+    const config = this._config ? withoutShownDefaults(this.schema, this._config, value) : value;
     this._config = config;
     this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
   };

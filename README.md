@@ -90,6 +90,7 @@ helps a browser that still shows it.
    with the advanced settings on, the layout "Automatic") and stays unset: the YAML changes only at the field you
    edit, and a section that is in the YAML stays there, also when it ends up empty. Typing the default into an
    unset field leaves it unset; to pin a default, set it in the YAML (a default the YAML already sets stays).
+   Clearing a field leaves it empty (the option becomes unset) and you can type a new value.
 5. Save. **Show code editor** shows the same config as YAML; see [Options](#options) and [Examples](#examples).
 
 ![The visual editor of the airflow diagram card, with the exchanger type first, its groups collapsed and the live sample preview](docs/images/editor.png)

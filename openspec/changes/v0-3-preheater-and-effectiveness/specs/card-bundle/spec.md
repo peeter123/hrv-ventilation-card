@@ -23,6 +23,11 @@ config SHALL stay in it, also when it ends up empty. A default the config alread
 - **WHEN** the config sets no smoothing window and the user enters 10, its default
 - **THEN** the saved config contains no smoothing window
 
+#### Scenario: Clearing a field
+- **WHEN** the config sets no smoothing window, and the user clears the field that shows 10 and types 5
+- **THEN** the field stays empty after clearing, without the default coming back, and the saved config contains
+  a smoothing window of 5
+
 #### Scenario: Default already set
 - **WHEN** the config sets `exchanger_type: hrv` and the user changes another field
 - **THEN** the saved config still contains `exchanger_type: hrv`
