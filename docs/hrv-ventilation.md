@@ -287,7 +287,9 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     ("Pre-heater: <state>", tap opens `pre_heater.power`), a centred flex box with a gap, so the pair widens around
     the middle. It is given only while the level is above 0 and the entity is available, and otherwise left out of
     the DOM rather than kept invisible like other labels: an invisible label would push power off-centre all summer.
-    The top row's height does not depend on it, so leaving it out changes no height. `pre_heater.power` counts for
+    The top row's height does not depend on it, so leaving it out changes no height. While it is shown, an
+    unavailable (invisible) power is left out too, so the figure stays centred. Its label class is `pre-heater-power`
+    (the energy label `pre-heater-energy`), not `power`, which stays the unit's power. `pre_heater.power` counts for
     showing the top row.
   - **Energy cell.** `pre_heater.energy` is a status role in column 2, row 3 (the cell under the next bypass change;
     the filter days stay in column 1's bottom cell), with the heat wave icon, the tooltip "Pre-heater energy: <state>" and its tap.

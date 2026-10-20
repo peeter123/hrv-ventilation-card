@@ -309,6 +309,14 @@ describe('labelModel', () => {
       expect(roles(labelModel(WITH_HEATER, allStates(), FULL_LAYOUT).top)).toEqual(['status.power', 'status.rmot']);
     });
 
+    test('airflow-diagram-card "Pre-heater off": with unavailable shown, an unavailable or unknown heater stays out', () => {
+      for (const state of ['unavailable', 'unknown']) {
+        const states = { ...allStates(), 'sensor.hrv_heater': { state, attributes: {} } };
+        const top = labelModel(WITH_HEATER, states, { ...FULL_LAYOUT, showUnavailable: true }).top;
+        expect(roles(top), state).toEqual(['status.power', 'status.rmot']);
+      }
+    });
+
     test('airflow-diagram-card "Only pre-heater power, pre-heater off": the top row is shown, empty', () => {
       const config: CardConfig = { ...TEMPERATURES_ONLY, pre_heater: { power: 'sensor.hrv_heater' } };
       const states = { 'sensor.hrv_heater': { state: '0', attributes: { unit_of_measurement: 'W' } } };

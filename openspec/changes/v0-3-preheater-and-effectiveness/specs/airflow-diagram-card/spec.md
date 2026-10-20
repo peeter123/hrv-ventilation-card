@@ -18,7 +18,7 @@ remaining, power, running mean outdoor temperature, saved heating power, saved c
 
 ### Requirement: Top row and status grid
 The season icon, power and running mean outdoor temperature SHALL be shown in a top row above the drawing: the icon
-at the left, power centred on the card and the running mean outdoor temperature at the right. The status values
+at the left, power centred on the card (or, while the pre-heater figure is shown, power and that figure centred together) and the running mean outdoor temperature at the right. The status values
 SHALL be shown below the drawing in a grid of three equal columns, one subject each, with a fixed cell per value:
 the fans (fan level, next fan change, filter days), the bypass (bypass mode, next bypass change, pre-heater energy) and comfort
 (operating mode, temperature profile, profile target temperature), top to bottom. A value SHALL keep its cell

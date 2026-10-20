@@ -115,19 +115,32 @@ afterEach(() => {
 });
 
 describe('airflow diagram layout', () => {
-  for (const [theme, type] of [
-    ['light', 'hrv'],
-    ['dark', 'hrv'],
+  for (const [theme, type, heater] of [
+    ['light', 'hrv', false],
+    ['dark', 'hrv', false],
     // The moisture figure's place does not depend on the theme.
-    ['light', 'erv'],
+    ['light', 'erv', false],
+    // The pre-heater on, with its energy: the figure in the top row and the energy cell in the status grid.
+    ['dark', 'erv', true],
   ] as const) {
-    test(`${theme}, ${type}: no labels overlap or leave the card, text at least 11 px, 280 to 600 px`, async () => {
-      const shown = await show(280, theme, 'auto', VALUES, { exchanger_type: type });
+    test(`${theme}, ${type}${heater ? ', pre-heater on' : ''}: no labels overlap or leave the card, text at least 11 px, 280 to 600 px`, async () => {
+      const shown = await show(
+        280,
+        theme,
+        'auto',
+        heater ? { ...VALUES, preHeater: 1000 } : VALUES,
+        heater
+          ? { exchanger_type: type, pre_heater: { power: id.preHeater, energy: id.preHeaterEnergy } }
+          : { exchanger_type: type },
+      );
       const { root } = shown;
       for (const width of [280, 320, COMPACT_BELOW, 360, 400, 600]) {
         await resize(shown, width);
         const where = `${String(width)} px`;
         if (type === 'erv') expect(root.querySelector('.moisture-recovery .figure'), where).not.toBeNull();
+        if (heater) expect(root.querySelector('.top .pre-heater-power'), where).not.toBeNull();
+        if (heater && width >= COMPACT_BELOW)
+          expect(root.querySelector('.status .pre-heater-energy'), where).not.toBeNull();
         const boxes = shownBoxes(root);
         expect(boxes.length, where).toBeGreaterThan(width < COMPACT_BELOW ? 4 : 20);
         const card = box(root, 'ha-card');
@@ -235,9 +248,9 @@ describe('airflow diagram layout', () => {
       },
     };
     await card.updateComplete;
-    // The pre-heater label follows power in the centre cell, and both have the class `power`.
-    const heater = '.top .centre .label:nth-child(2)';
-    const parts = ['ha-icon.season', '.top .centre .label:nth-child(1)', heater, '.top .rmot'].map((selector) => ({
+    // The pre-heater label follows power in the centre cell.
+    const heater = '.top .pre-heater-power';
+    const parts = ['ha-icon.season', '.top .power', heater, '.top .rmot'].map((selector) => ({
       name: selector,
       box: box(root, selector),
     }));
@@ -255,12 +268,36 @@ describe('airflow diagram layout', () => {
       parts.slice(i + 1).flatMap((b) => (overlap(a.box, b.box) ? [`${a.name} / ${b.name}`] : [])),
     );
     expect(overlapping).toEqual([]);
+    // No value is cut off with an ellipsis.
+    for (const value of root.querySelectorAll('.top .value')) {
+      expect(value.scrollWidth, value.textContent).toBeLessThanOrEqual(value.clientWidth);
+    }
+  });
+
+  test('an unavailable power takes no width while the pre-heater figure is shown, which stays centred', async () => {
+    for (const width of [340, 360, 400]) {
+      const { card, root } = await show(width, 'light', 'auto', { ...VALUES, preHeater: 1000 }, PRE_HEATER);
+      const hass = card.hass;
+      const power = hass?.states[id.power];
+      if (!hass || !power) throw new Error('no hass');
+      const before = box(root, '.top').height;
+      card.hass = { ...hass, states: { ...hass.states, [id.power]: { ...power, state: 'unavailable' } } };
+      await card.updateComplete;
+      expect(root.querySelector('.top .power'), String(width)).toBeNull();
+      const centre = (rect: DOMRect): number => rect.left + rect.width / 2;
+      expect(
+        Math.abs(centre(box(root, '.top .pre-heater-power')) - centre(box(root, 'ha-card'))),
+        String(width),
+      ).toBeLessThan(1);
+      expect(box(root, '.top').height, String(width)).toBeCloseTo(before, 0);
+      document.body.innerHTML = '';
+    }
   });
 
   for (const width of [400, 600]) {
     test(`airflow-diagram-card "Icon centred on its text": the pre-heater icons at ${String(width)} px`, async () => {
       const { root } = await show(width, 'light', 'auto', { ...VALUES, preHeater: 1000 }, PRE_HEATER);
-      for (const selector of ['.top .centre .label:nth-child(2)', '.status .label.energy']) {
+      for (const selector of ['.top .pre-heater-power', '.status .pre-heater-energy']) {
         const label = element(root, selector);
         const icon = drawnIcon(label.querySelector('ha-icon'));
         const value = label.querySelector('.value')?.getBoundingClientRect();

@@ -203,13 +203,15 @@ dialog of `pre_heater.power`.
 
 The same state also shows in the top row, in the centre after the power, with a heat wave icon and the tooltip
 "Pre-heater: " and the state; tapping it opens `pre_heater.power`. It is there only while the pre-heater is on and
-its entity is available. Otherwise it is left out, not hidden, so the power stays centred while the heater is off.
+its entity is available. Otherwise it is left out, not hidden, so the power stays centred while the heater is off; while
+the figure is shown, power and figure are centred together, and an unavailable power then takes no width.
 `pre_heater.power` alone is enough to show the top row. The two figures stand side by side: the card adds them up
 nowhere and shows no share, because whether a unit's power reading includes its pre-heater differs per unit.
 
 `pre_heater.energy` shows in the status grid in the second column's bottom cell, after a heat wave icon, with the tooltip
 "Pre-heater energy: " and its state (for example "12 kWh"); tapping it opens that sensor. The cell above it holds the
-next bypass change.
+next bypass change. The compact layout (below 340 px, or `layout: compact`) has no status grid, so the energy is not
+shown there.
 
 In the visual editor the pre-heater has its own group after the status group. The basic fields are the power
 (a sensor, binary sensor or switch) and the energy (a sensor); the maximum power and the glow colour are advanced.

@@ -3,13 +3,14 @@
 // renders the areas.
 //
 // Rows follow the config, not the states: a configured role always has its label in the model (hidden while it has
-// nothing to show), so the card keeps its height when a value becomes unavailable or a season flips.
+// nothing to show), so the card keeps its height when a value becomes unavailable or a season flips. The one exception
+// is the pre-heater power in the top row: it is in the model only while the pre-heater is on, so that it is left out
+// (not kept hidden) while off and the power stays centred; it is as high as the power, so the row keeps its height.
 import { isUnavailable, numericValue, type StateLike } from '../lib/availability';
 import { entityAt, mapStreams, type CardConfig, type RolePath, type Stream } from '../lib/config';
-import type { EntityStateLike } from '../lib/hass';
 import { NOT_PLANNED_STATE } from '../lib/unit-state';
 import { DIAGRAM } from '../strings';
-import { preHeaterLevel } from './preheater';
+import { preHeaterOn, type PreHeaterState } from './preheater';
 
 /** The `layout` option: automatic by card width, or one layout forced. */
 export type LayoutChoice = 'auto' | 'full' | 'compact';
@@ -59,9 +60,6 @@ export interface LabelModel {
   /** The status grid below the drawing (see STATUS_CELLS), or undefined when the grid is not shown. */
   status?: DiagramLabel[];
 }
-
-/** A state as the label model reads it; the attributes (the unit) matter for the pre-heater power. */
-export type LabelState = StateLike & Partial<Pick<EntityStateLike, 'attributes'>>;
 
 export interface LabelOptions {
   showUnavailable: boolean;
@@ -144,7 +142,7 @@ function isVisible(role: RolePath, state: StateLike | undefined, showUnavailable
  */
 export function labelModel(
   config: CardConfig,
-  states: Readonly<Record<string, LabelState | undefined>>,
+  states: Readonly<Record<string, PreHeaterState | undefined>>,
   { showUnavailable, compact }: LabelOptions,
 ): LabelModel {
   const labels = (roles: readonly RolePath[]): DiagramLabel[] =>
@@ -181,11 +179,7 @@ export function labelModel(
   };
   if (configured([...TOP_ROLES, ...SEASON_ROLES, 'pre_heater.power'])) {
     const heaterId = entityAt(config, 'pre_heater.power');
-    const heater = heaterId === undefined ? undefined : states[heaterId];
-    const heating =
-      heater !== undefined &&
-      !isUnavailable(heater) &&
-      preHeaterLevel({ state: heater.state, attributes: heater.attributes ?? {} }, undefined) > 0;
+    const heating = heaterId !== undefined && preHeaterOn(states[heaterId]);
     model.top = labels(heating ? ['status.power', 'pre_heater.power', 'status.rmot'] : TOP_ROLES);
   }
   if (compact) return model;

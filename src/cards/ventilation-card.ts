@@ -561,7 +561,9 @@ export class HrvVentilationCard extends HrvCard {
     const hass = this.shownHass;
     const text = hass ? formatState(hass, label.entityId) : '';
     const tap = this.tap(label.entityId, 'img');
-    const kind = label.role.split('.')[1] ?? '';
+    // The pre-heater's roles get their own class: `pre_heater.power` must not match `.power` of the unit's power.
+    const [group = '', name = ''] = label.role.split('.');
+    const kind = group === 'pre_heater' ? `pre-heater-${name}` : name;
     const icon = label.icon ? html`<ha-icon .icon=${label.icon} aria-hidden="true"></ha-icon>` : nothing;
     // Nothing planned: a dimmed dash, while the tooltip and the more-info dialog still give the state.
     const value = html`<span class="value">${label.prefix}${label.notPlanned ? DIAGRAM.notPlanned : text}</span>`;
@@ -584,8 +586,12 @@ export class HrvVentilationCard extends HrvCard {
       const label = labels.find((candidate) => candidate.role === role);
       return label ? this.label(label) : nothing;
     };
+    // While the pre-heater figure is shown, an unavailable (invisible) power takes no width, so the figure stays centred.
+    const heating = labels.some((label) => label.role === 'pre_heater.power');
+    const power = labels.find((label) => label.role === 'status.power');
+    const powerCell = heating && power && !power.visible ? nothing : cell('status.power');
     return html`<div class="row top">
-      <span>${this.season(season)}</span><span class="centre">${cell('status.power')}${cell('pre_heater.power')}</span
+      <span>${this.season(season)}</span><span class="centre">${powerCell}${cell('pre_heater.power')}</span
       ><span>${cell('status.rmot')}</span>
     </div>`;
   }

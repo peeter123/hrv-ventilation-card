@@ -829,7 +829,7 @@ describe('the pre-heater energy cell', () => {
   test('airflow-diagram-card "Pre-heater energy cell": a heat wave icon and the energy in the second column, third row', async () => {
     const config: CardConfig = { ...CONFIG, pre_heater: { energy: 'sensor.hrv_heater_energy' } };
     const { root } = await render(config, '0', [state('sensor.hrv_heater_energy', '12', 'kWh')]);
-    const label = root.querySelector<HTMLElement>('.status .label.energy');
+    const label = root.querySelector<HTMLElement>('.status .label.pre-heater-energy');
     expect(label?.textContent.trim()).toBe('12 kWh');
     expect(label?.title).toBe('Pre-heater energy: 12 kWh');
     expect(label?.querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:heat-wave');
