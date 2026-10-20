@@ -138,7 +138,7 @@
 - [x] 6.3 Browser tests: the top row at 280 px with power 1032 W, the pre-heater at 1000 W and RMOT -3.5 °C has no
   overlaps ("Narrow card"), and the coil icons are centred on their text at 400 and 600 px ("Icon centred on its
   text"); verify the tests pass
-- [ ] 6.4 Add the `pre_heater` section to `DIAGRAM_SCHEMA` after the status section, with a power picker for
+- [x] 6.4 Add the `pre_heater` section to `DIAGRAM_SCHEMA` after the status section, with a power picker for
   sensors, binary sensors and switches (a new field helper), an energy picker and the maximum power as an advanced
   number, and the labels in `src/strings.ts`; verify the editor tests for "Editing the card" and "Advanced settings
   on"
