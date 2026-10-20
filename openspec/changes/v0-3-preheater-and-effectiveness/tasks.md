@@ -41,7 +41,7 @@
   `role="img"`, below the other boxes, with the texts in `src/strings.ts` (NBSP before %); verify unit tests for
   "Bypass closed" and "Bypass modulating", the strings and NBSP tests, and a card test that a tap on the box opens
   nothing while the badge and the moisture figure keep their taps
-- [ ] 3.3 Browser tests for the rings: in the light and dark preview themes, the badge, the moisture figure and the
+- [x] 3.3 Browser tests for the rings: in the light and dark preview themes, the badge, the moisture figure and the
   bypass position keep a contrast of at least 4.5:1 and are not covered by a ring at 280 to 600 px (scenario "Text
   on the exchanger"), and the rings are drawn in the compact layout at 320 px ("Both layouts"); verify the tests
   pass, moving the bypass position down if the measurement calls for it (design: risks)
