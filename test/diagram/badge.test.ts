@@ -243,16 +243,27 @@ describe('effectivenessLabel', () => {
   });
 
   test('airflow-diagram-card "Bypass modulating": free cooling, a figure without a value is not measurable', () => {
-    const modulating = withFigures(61, undefined, { mode: 'cooling', freeCooling: true });
+    const modulating: RecoveryResult = {
+      ...withFigures(61, undefined, { mode: 'cooling', freeCooling: true }),
+      recovered: { sensible: 500, latent: 110 },
+      lost: { sensible: 300, latent: 90 },
+    };
     expect(effectivenessLabel(modulating, 40, true, LOCALE)).toBe(
-      nb('Effectiveness: free cooling 61 % (1,200 / 1,304 W), moisture not measurable (bypass 40 %)'),
+      nb('Effectiveness: free cooling 61 % (610 / 1,000 W), moisture not measurable (bypass 40 %)'),
     );
   });
 
   test('airflow-diagram-card "Moisture kept out of the house": cooling, the rates as magnitudes', () => {
-    const keptOut = withFigures(76, 50, { mode: 'cooling', rates: [-200, -400] });
+    // 200 m3/h with 14.0 g/m3 outdoor, 13.0 supply and 12.0 extract: the supply air brings in 200 g/h, 400 g/h leave.
+    const flow = 200;
+    const keptOut: RecoveryResult = {
+      ...withFigures(76, ((13 - 14) / (12 - 14)) * 100, { mode: 'cooling' }),
+      recovered: { sensible: 700, latent: 60 },
+      lost: { sensible: 200, latent: 40 },
+      moisture: { recovered: flow * (13 - 14), extracted: flow * (12 - 14), outside: flow * (12 - 13) },
+    };
     expect(effectivenessLabel(keptOut, 0, true, LOCALE)).toBe(
-      nb('Effectiveness: cooling 76 % (1,200 / 1,304 W), moisture 50 % (200 / 400 g/h)'),
+      nb('Effectiveness: cooling 76 % (760 / 1,000 W), moisture 50 % (200 / 400 g/h)'),
     );
   });
 

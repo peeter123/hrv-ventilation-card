@@ -89,7 +89,7 @@ export interface RecoveryResult {
 }
 
 /**
- * The recovered total and the potential in W (sensible plus latent, each part rounded to whole W): the figures of the
+ * The recovered total and the potential in W (sensible plus latent, each part first rounded to whole W as the legend shows it): the figures of the
  * recovery card's header and the effectiveness tooltip. Signed as the parts are.
  */
 export function recoveryTotals(result: RecoveryResult): { recovered: number; potential: number } {

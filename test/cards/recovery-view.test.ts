@@ -32,6 +32,15 @@ describe('recoveryView', () => {
     expect(view.headerColor).toBe('#db4437');
   });
 
+  test('the parts are rounded to whole W before they are summed', () => {
+    const view = recoveryView(
+      result({ recovered: { sensible: 0.4, latent: 0.4 }, lost: { sensible: 0.4, latent: 0.4 } }),
+      { colors: COLORS, minScale: 500 },
+      EN,
+    );
+    expect(view.header).toBe(nb('Recovered 0 W'));
+  });
+
   test('without a positive potential the header has no percentage', () => {
     const view = recoveryView(
       result({ recovered: { sensible: 0, latent: 0 }, lost: { sensible: 0, latent: 0 } }),
