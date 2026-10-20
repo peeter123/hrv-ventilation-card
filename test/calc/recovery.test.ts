@@ -249,6 +249,13 @@ describe('recovery-calculation scenarios', () => {
       expect(temperatureEffectiveness(19, 21, 22)).toBeCloseTo(66.67, 2);
     });
 
+    test('the gradient gate holds in both directions and at its boundaries', () => {
+      expect(temperatureEffectiveness(30, 24, 22)).toBeCloseTo(75, 9); // summer: outdoor warmer than extract
+      expect(temperatureEffectiveness(20, 20, 20)).toBeUndefined(); // zero gradient, no NaN
+      expect(moistureEffectiveness(6.0, 6.75, 7.5)).toBeCloseTo(50, 9); // exactly 1.5 g/m³
+      expect(moistureEffectiveness(6.0, 6.7, 7.4)).toBeUndefined();
+    });
+
     test('"One figure gated": 8 K and 0.7 g/m³ apart give the temperature effectiveness only', () => {
       const result = calculate({
         ...winter,

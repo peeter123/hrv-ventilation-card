@@ -87,7 +87,9 @@ export interface RecoveryResult {
   effectiveness: Effectiveness;
 }
 
-/** The supply-side ratio (supply - outdoor) / (extract - outdoor) in %, capped to 0-100; undefined below the gradient. */
+/**
+ * The supply-side ratio (supply - outdoor) / (extract - outdoor) in %, capped to 0-100; undefined below the gradient.
+ */
 const effectivenessRatio = (
   [outdoor, supply, extract]: [number, number, number],
   minGradient: number,
