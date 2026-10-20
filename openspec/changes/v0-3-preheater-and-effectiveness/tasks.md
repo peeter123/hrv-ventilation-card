@@ -94,7 +94,7 @@
   latent heat counts; diagram: the rim geometry and clip, the colours and contrast rule, the tooltip's absolute
   values, the figure's place and icons, the flow labels); verify the README tests pass and no doc still mentions the
   halo, the teal ring or a temperature ring
-- [ ] 4.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (HRV and ERV;
+- [x] 4.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (HRV and ERV;
   heating, cooling, free cooling and small gradient; bypass 0 % and 50 %; 280, 400 and 600 px; light and dark)
   inspected by an agent, and apply the user's feedback; verify the user approves before the review
 - [ ] 4.8 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed
