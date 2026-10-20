@@ -289,11 +289,11 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     the DOM rather than kept invisible like other labels: an invisible label would push power off-centre all summer.
     The top row's height does not depend on it, so leaving it out changes no height. `pre_heater.power` counts for
     showing the top row.
-  - **Energy cell.** `pre_heater.energy` is a status role in column 2, row 3 (the cell under the next fan change;
+  - **Energy cell.** `pre_heater.energy` is a status role in column 2, row 3 (the cell under the next bypass change;
     the filter days stay in column 1's bottom cell), with the heating coil icon, the tooltip "Pre-heater energy: <state>" and its tap.
   - **No sum, no share.** The figure stands side by side with power. Whether a unit's power reading includes its
     pre-heater differs per unit and could not be confirmed on the live one, so adding the two or showing a share
-    could double count or understate. No follow-up is planned (proposal, non-goals).
+    could double count or understate. No follow-up is planned (the proposal's "Out of Scope").
 - **Seasons.** With both season sensors configured and both off, the top row shows the "between seasons" icon.
 - **Layout.** `layout: auto` switches to compact below 340 px card width. A narrow desktop sections column is about
   350 px and a full-width card on a 360 px phone about 344 px, so both show the full layout.

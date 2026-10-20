@@ -208,8 +208,8 @@ its entity is available. Otherwise it is left out, not hidden, so the power stay
 nowhere and shows no share, because whether a unit's power reading includes its pre-heater differs per unit.
 
 `pre_heater.energy` shows in the status grid in the second column's bottom cell, after a heating coil, with the tooltip
-"Pre-heater energy: " and its state (for example "12 kWh"); tapping it opens that sensor. Without a next fan change
-the cell above it stays empty as before.
+"Pre-heater energy: " and its state (for example "12 kWh"); tapping it opens that sensor. The cell above it holds the
+next bypass change.
 
 In the visual editor the pre-heater has its own group after the status group. The basic fields are the power
 (a sensor, binary sensor or switch) and the energy (a sensor); the maximum power and the glow colour are advanced.
