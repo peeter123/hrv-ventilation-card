@@ -177,9 +177,23 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
-| `power` | entity | | | Pre-heater power (a sensor in W or kW), or an on/off entity (sensor, binary sensor or switch). |
-| `energy` | entity | | | Pre-heater energy use (status grid). |
-| `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000). |
+| `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
+| `energy` | entity | | | The pre-heater's energy sensor. Reserved for the status grid; the card does not show it yet. |
+| `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000). Without it the coil glows fully at any power above 0. |
+
+A unit with a pre-heater (a heating coil that warms the outdoor air against frost) gets a coil drawn across the
+outdoor stream, between the outdoor symbol and the bypass bend, when `pre_heater.power` is configured. The coil is
+dim (the secondary text colour) while the heater is off or its entity is unavailable or unknown, and glows in the warm
+colour when it heats:
+
+- With a power sensor and `max_power`, the glow grows with the power as a share of the maximum. It is at least a tenth
+  while the heater draws any power, so a modulating heater at a few percent does not look off, and full at the maximum
+  or above.
+- With a power sensor and no `max_power`, any power above 0 is full.
+- With an on/off entity, the coil glows fully while it is on and is dim while it is off. `max_power` has no effect.
+
+Hovering the coil shows "Pre-heater: " and the state as Home Assistant formats it; tapping it opens the more-info
+dialog of `pre_heater.power`.
 
 #### Seasons object
 
