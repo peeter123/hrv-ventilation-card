@@ -76,7 +76,7 @@
   the recovered and the extracted moisture in g/h for the moisture figure, both as magnitudes; texts in
   `src/strings.ts` (NBSP before the units); verify unit tests for "Bypass closed", "Bypass modulating", "Figure not
   measurable" and "Moisture kept out of the house", and the strings and NBSP tests
-- [ ] 4.4 Move the moisture figure right of the exchanger, centred at y 100 between the exchanger and the house
+- [x] 4.4 Move the moisture figure right of the exchanger, centred at y 100 between the exchanger and the house
   symbol, with `mdi:water-plus` while recovering and `mdi:water-minus` while keeping moisture out, and the magnitude
   without a sign (the unit on a second line where it does not fit); remove the halo (`HALO_SHADOW`, its padding, and
   the `rings` class if nothing else uses it); move both flow labels below their arrowheads (design: "Moisture figure
