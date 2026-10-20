@@ -11,7 +11,7 @@
 // restart the animation; the card's styles stop it with `animation.enabled: false` or reduced motion.
 import { svg, type SVGTemplateResult } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
-import type { Effectiveness } from '../calc/recovery';
+import { MOISTURE_COLOR } from '../lib/colors';
 import type { Stream } from '../lib/config';
 
 /** The drawing's coordinate system: 2 by 1, the drawing band's aspect ratio. */
@@ -27,6 +27,9 @@ export const PATHS = {
 
 const STROKE = 14;
 
+/** Rounded to a number of decimals, so float noise (1 - 0.07 = 0.9299999999999999) stays out of the DOM. */
+const rounded = (value: number, decimals: number): number => Math.round(value * 10 ** decimals) / 10 ** decimals;
+
 // The arrowheads at the supply and exhaust ends, wider than the stroke. The stream ends stay clear of the outer
 // 70 units, where the corner labels are.
 const HEADS = {
@@ -39,11 +42,19 @@ const EXCHANGER_INNER = '181.3,38 218.7,38 240.7,100 218.7,162 181.3,162 159.3,1
 
 // The effectiveness rings start at the top centre and run clockwise, so a dash of the figure's length (the paths have
 // pathLength 100) is the figure in %. The moisture ring runs along the rim's midline (the midpoints of the outer and
-// inner vertices), the temperature ring along the inner outline.
-const MOISTURE_RING = 'M 200 32 L 221.45 32 L 247.85 100 L 221.45 168 L 178.55 168 L 152.15 100 L 178.55 32 Z';
-const TEMPERATURE_RING = 'M 200 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 L 181.3 38 Z';
-// The moisture ring's colour: the installation's recovered-moisture teal, distinct from the default warm and cold.
-const MOISTURE_COLOR = '#00897b';
+// inner vertices), the temperature ring along the inner outline. The moisture ring's colour is the recovered-moisture
+// teal, distinct from the default warm and cold; the temperature ring takes the mode's colour (see Rings).
+const RINGS = {
+  moisture: {
+    d: 'M 200 32 L 221.45 32 L 247.85 100 L 221.45 168 L 178.55 168 L 152.15 100 L 178.55 32 Z',
+    width: 8,
+    color: MOISTURE_COLOR,
+  },
+  temperature: {
+    d: 'M 200 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 L 181.3 38 Z',
+    width: 3,
+  },
+} as const;
 
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
@@ -67,12 +78,12 @@ export function drawingIds(): DrawingIds {
 /** The `exchanger_type` option: heat recovery (HRV) or energy recovery (ERV), which also passes moisture. */
 export type ExchangerType = 'hrv' | 'erv';
 
-/** The effectiveness rings (the `show_effectiveness` option). */
+/** The effectiveness rings (the `show_effectiveness` option). A ring without a figure is empty, with its track. */
 export interface Rings {
-  /** The figures in %; a ring without one is empty, with its track. */
-  figures: Effectiveness;
-  /** Whether the moisture ring is drawn: an ERV with humidity for every stream. */
-  moisture: boolean;
+  /** The temperature effectiveness in %. */
+  temperature: number | undefined;
+  /** The moisture ring, drawn when set: an ERV with humidity for every stream. Its effectiveness in %. */
+  moisture?: { figure: number | undefined };
   /** The temperature ring's colour: the warm colour in heating, the cold colour in cooling. */
   color: string;
 }
@@ -96,7 +107,7 @@ export const BASE_DURATION = 1.5;
 
 /** The CSS custom properties that set a stream's animation: its duration, and paused while it stands still. */
 function speedProperties(stream: 'supply' | 'exhaust', speed: number): Record<string, string> {
-  const duration = speed > 0 ? Math.round((BASE_DURATION / speed) * 1000) / 1000 : BASE_DURATION;
+  const duration = speed > 0 ? rounded(BASE_DURATION / speed, 3) : BASE_DURATION;
   return {
     [`--${stream}-duration`]: `${String(duration)}s`,
     [`--${stream}-state`]: speed > 0 ? 'running' : 'paused',
@@ -126,20 +137,19 @@ const symbol = (x: number, color: string, shape: string): SVGTemplateResult =>
   </g>`;
 
 /** A ring and the faint full-length track under it, in the ring's colour. */
-function ring(name: string, d: string, color: string, width: number, figure: number | undefined): SVGTemplateResult {
-  // Rounded, so float noise stays out of the DOM; the dash length is the figure in % of the path's length of 100.
-  const dash = Math.round((figure ?? 0) * 100) / 100;
-  return svg`<path class="ring-track ${name}" d=${d} stroke-width=${width}
+function ring(name: keyof typeof RINGS, color: string, figure: number | undefined): SVGTemplateResult {
+  const { d, width } = RINGS[name];
+  // The dash length is the figure in % of the path's length of 100.
+  const dash = rounded(figure ?? 0, 2);
+  return svg`<path class="ring-track ${name}" d=${d} fill="none" stroke-width=${width}
       style=${styleMap({ stroke: `color-mix(in srgb, ${color} 25%, var(--secondary-background-color))` })}></path>
-    <path class="ring ${name}" d=${d} stroke-width=${width} pathLength="100" stroke-dasharray="${String(dash)} 100"
+    <path class="ring ${name}" d=${d} fill="none" stroke-width=${width} pathLength="100" stroke-dasharray="${String(dash)} 100"
       style=${styleMap({ stroke: color })}></path>`;
 }
 
 /** The drawing for the current colours and bypass strength. A path at strength 0 is left out. */
 export function drawing({ ids, exchanger, colors, bypass, speeds, rings }: DrawingInput): SVGTemplateResult {
-  // Rounded, so float noise (1 - 0.07 = 0.9299999999999999) stays out of the DOM.
-  const share = (value: number): number => Math.round(value * 1000) / 1000;
-  const [around, through] = [share(bypass), share(1 - bypass)];
+  const [around, through] = [rounded(bypass, 3), rounded(1 - bypass, 3)];
   const supplyStroke = `url(#${ids.supply})`;
   const exhaustStroke = `url(#${ids.exhaust})`;
   return svg`<svg
@@ -161,8 +171,8 @@ export function drawing({ ids, exchanger, colors, bypass, speeds, rings }: Drawi
     ${symbol(364, colors.extract, HOUSE)}
     <polygon class="exchanger ${exchanger}" points=${EXCHANGER}></polygon>
     <polygon class="exchanger-inner" points=${EXCHANGER_INNER}></polygon>
-    ${rings?.moisture ? ring('moisture', MOISTURE_RING, MOISTURE_COLOR, 8, rings.figures.moisture) : null}
-    ${rings ? ring('temperature', TEMPERATURE_RING, rings.color, 3, rings.figures.temperature) : null}
+    ${rings?.moisture ? ring('moisture', RINGS.moisture.color, rings.moisture.figure) : null}
+    ${rings ? ring('temperature', rings.color, rings.temperature) : null}
     ${streamPath('bypass', supplyStroke, around)}
     ${streamPath('supply', supplyStroke, through)}
     <polygon class="head" points=${HEADS.supply} style=${styleMap({ fill: colors.supply })}></polygon>

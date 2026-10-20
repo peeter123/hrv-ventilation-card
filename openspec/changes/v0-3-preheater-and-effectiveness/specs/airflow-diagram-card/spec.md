@@ -111,7 +111,8 @@ temperature profile, saved heating power, saved cooling power and moisture recov
 ## ADDED Requirements
 
 ### Requirement: Effectiveness rings
-With `show_effectiveness: true` (default false) and the badge's inputs configured, the card SHALL draw two progress
+With `show_effectiveness: true` (default false) and the calculation's inputs configured (humidity only for the moisture
+ring), the card SHALL draw two progress
 rings on the exchanger, both starting at the top centre and running clockwise: the moisture effectiveness along the
 outer rim and the temperature effectiveness along the inner outline. Each SHALL be as long as its figure from the
 shared calculation, 0 to 100 % of the way round, over a faint full-length track.

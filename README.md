@@ -236,7 +236,8 @@ colour in heating mode and the cold colour in cooling mode. The thick outer ring
 teal, is the moisture effectiveness; it is drawn on an ERV (`exchanger_type: erv`) with a humidity for the outdoor,
 supply and extract stream, and never on an HRV, which gets the temperature ring only. The figures are those of the
 calculation described in [docs/hrv-ventilation.md](docs/hrv-ventilation.md#formulas): supply side, limited to 0 to
-100 %, and from the same sensors as the badge, so the rings need the same inputs. The air streams are drawn over the
+100 %, and from the same sensors as the badge. The rings are drawn only with the inputs of the sensible calculation
+(the three temperatures and `fans.supply_flow`); the moisture ring also needs the humidities. The air streams are drawn over the
 rings, so a stream covers part of each slanted side; the top and bottom edges stay visible. The exact figures are in
 the tooltip of the exchanger and in its accessible name: "Effectiveness: temperature 85 %, moisture 62 %", with "not
 measurable" for a ring without a value and, while the bypass is above 0 %, its position.

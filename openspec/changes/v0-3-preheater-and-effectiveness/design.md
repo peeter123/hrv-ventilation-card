@@ -49,7 +49,7 @@ from the same inputs (raw temperatures, smoothed absolute humidity), capped to 0
 gradient (3 K, 1.5 g/m³, as constants next to the formula) or, for moisture, while latent figures are unknown.
 There is no bypass gate.
 
-- *Why in the result and not a separate function?* The rings need the same inputs as the badge, at the same moment.
+- *Why in the result and not a separate function?* The rings need the badge's inputs (less the humidities), at the same moment.
   One calculation per render keeps the badge, the moisture figure and the rings consistent, as for the moisture
   figure. A missing input then empties both rings, which the spec states.
 - *Why no bypass gate, unlike the macro?* The user chose (2026-10-19) to show the figure while the bypass modulates.
@@ -71,7 +71,8 @@ Two paths go into the drawing between the exchanger polygons and the streams, so
 
 Each path has `pathLength="100"` and `stroke-dasharray: <figure> 100`, so the figure in % is the dash length with no
 geometry in the code. Under each runs a track: the same path at full length in a faint mix of the ring colour and
-the fill. An empty ring is the track alone. The rings are only rendered with `show_effectiveness: true`, and the
+the fill. An empty ring is the track alone. The rings are only rendered with `show_effectiveness: true` and the inputs of the sensible calculation (the badge's
+without the humidities; without them a ring could never fill), and the
 moisture ring and its track only on an ERV with humidity for every stream.
 
 Colours: the temperature ring takes the configured warm colour in heating and the cold colour in cooling, as the
@@ -89,11 +90,12 @@ wide as the hexagon is at the height it sits, so on a narrow card its glyphs mee
 deep for three digits and 3.7 px for four in the test font, 2.1 px and 3.9 px with Arial, whose digits are as wide as
 Roboto's (measured against the glyphs' boxes, whose corners are empty). Moving it up only helps from 320 px and puts a
 four-digit figure into the streams at 280 px, and shrinking it would go below the 11 px label minimum, so the figure
-keeps its size and, while `show_effectiveness` is on (a `rings` class on the drawing), gets a halo: a text stroke of
-9 px in the exchanger's colour (`--erv-fill`, the ERV fill), 4.5 px of it outside the glyphs, painted under them with
-`paint-order: stroke fill`, so the glyph shapes stay as they are and a ring that meets a glyph is masked around it.
-The halo is only applied where the browser supports `paint-order` on HTML text (`@supports`), as it would otherwise
-be painted over the glyphs; the figure then has no halo. The value's padding (undone by an equal negative margin)
+keeps its size and, while `show_effectiveness` is on (a `rings` class on the drawing), gets a halo: about 130 zero-blur
+text shadows in the exchanger's colour (`--erv-fill`, the ERV fill), on a 0.75 px grid within 4.5 px and round its edge,
+so 4.5 px of solid halo surrounds the glyphs, thin strokes such as the minus sign included. A shadow is always painted behind the glyphs, so the glyph shapes stay as they are
+and a ring that meets a glyph is masked around it. (A text stroke under the fill with `paint-order` would do the same,
+but no `@supports` query can tell whether `paint-order` applies to HTML text; where it does not, the stroke would cover
+the digits.) The value's padding (undone by an equal negative margin)
 keeps its overflow clip from cutting the halo of the first and last glyph. Without the rings nothing changes, so
 existing configs render as in v0.2. The text keeps 4.5:1 against the halo, as it does against the fill. The browser
 test requires the halo to be at least as wide as the measured overlap plus 0.5 px for the three and the four-digit

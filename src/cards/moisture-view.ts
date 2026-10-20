@@ -7,6 +7,7 @@
 import { CALCULATION_OPTIONS } from '../calc/inputs';
 import type { MoistureRates } from '../calc/recovery';
 import { barScale, layoutSegments } from '../lib/bar';
+import { MOISTURE_COLOR } from '../lib/colors';
 import type { Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
 import type { ColorOption, NumberOption, OptionSpec } from '../lib/options';
@@ -24,7 +25,7 @@ export const MOISTURE_OPTIONS = {
   ...CALCULATION_OPTIONS,
   neutralThreshold: { kind: 'number', path: 'neutral_threshold', min: 0, max: 5, default: 0.3 },
   minScale: { kind: 'number', path: 'min_scale', min: 50, max: 100_000, default: 250 },
-  dryingColor: { kind: 'color', path: 'drying_color', default: '#00897b' },
+  dryingColor: { kind: 'color', path: 'drying_color', default: MOISTURE_COLOR },
   gainingColor: { kind: 'color', path: 'gaining_color', default: '#8e24aa' },
 } as const satisfies Record<string, NumberOption | ColorOption>;
 

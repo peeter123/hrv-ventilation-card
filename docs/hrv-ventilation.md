@@ -141,42 +141,49 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
 - **Effectiveness rings (`show_effectiveness`, off by default).** Two dashed SVG paths drawn between the exchanger
   polygons and the streams, so the streams cover them (drawn above the streams, the rings would cut the air paths in
   four places and read as the foreground; a fill level in the core would sit under the badge and the moisture figure
-  and lower their contrast). The paths are in the exchanger's 400 by 200 coordinates (`MOISTURE_RING`,
-  `TEMPERATURE_RING` in `src/diagram/drawing.ts`) and start at the top centre, running clockwise.
+  and lower their contrast). The paths are in the exchanger's 400 by 200 coordinates (`RINGS` in
+  `src/diagram/drawing.ts`, with each ring's width and path) and start at the top centre, running clockwise.
   - **Geometry:** the moisture ring (8 units wide) runs on the midline of the exchanger's rim, the midpoints of the
     outer and inner vertices, so it stays inside the rim. The temperature ring (3 units) runs on the inner outline,
     over its 1.5 unit line. Each path has `pathLength="100"` and `stroke-dasharray: <figure> 100`, so the dash length
     is the figure in %, with no geometry in the code. Under each runs a track: the same path at full length, in a mix
     of 25 % of the ring colour with `--secondary-background-color`. An empty ring is the track alone.
-  - **When drawn:** only with the option. The moisture ring and its track only on an ERV with a humidity for every
-    stream (`moistureRing`); an HRV, or an ERV without humidity, has the temperature ring alone. A ring is empty
+  - **When drawn:** only with the option and the inputs of the sensible calculation (`RINGS_REQUIREMENTS` in
+    `src/diagram/badge.ts`: the badge's requirements without the humidities); without them (say no
+    `fans.supply_flow`) nothing is drawn, as the rings could never fill. The moisture ring and its track only on an
+    ERV with a humidity for every stream (`rings.moisture` in the card's settings, which is undefined while no
+    ring is drawn); an HRV, or an ERV without humidity, has the temperature ring alone. A ring is empty
     below its gate or while the calculation has no result (see Effectiveness under Formulas). No bypass gate.
   - **Colours:** the temperature ring is the cold colour while the calculation's mode is cooling and the warm colour
-    otherwise, also when there is no result; unlike the badge it never turns grey at a low saving. The moisture ring is the fixed teal `#00897b`, the colour the author's charts use for recovered
-    moisture, distinct from the default red and blue. Both are set inline on the elements, and the track is mixed
+    otherwise (`modeColor` in `src/diagram/badge.ts`, which the badge's tint uses too), also when there is no result;
+    unlike the badge it never turns grey at a low saving. The moisture ring is the fixed teal `#00897b`
+    (`MOISTURE_COLOR` in `src/lib/colors.ts`, also the moisture bar's default drying colour), the colour the
+    author's charts use for recovered moisture, distinct from the default red and blue. Both are set inline on the elements, and the track is mixed
     from them.
   - **Tooltip box.** `.on-drawing.effectiveness` is an HTML box over the exchanger (x 145 to 255, y 26 to 174),
     clipped to the hexagon, `role="img"`, with `title` and `aria-label` from `effectivenessLabel` in
     `src/diagram/badge.ts` (texts in `src/strings.ts`): whole percents, "not measurable" for a ring without a
-    value, the bypass position while above 0 %, and the moisture figure only where the moisture ring is drawn. It is
+    value, the bypass position while above 0 % (from the calculation's own bypass input; whole percent from 1 %, one
+    decimal below, so a bypass that already turns the ring cold is named), and the moisture figure only where the
+    moisture ring is drawn. It is
     not tappable. It is first in the DOM, so the bypass position, the badge and the moisture figure stay on top of it
     with their own tooltips and taps.
   - **Position of the other texts.** The bypass position is at `top: 21.5%` (it was 20.5%) to clear the inner ring.
     The moisture figure keeps its size (11 px at least) and, while the rings are on (a `rings` class on the drawing),
-    gets a halo: `-webkit-text-stroke: 9px var(--erv-fill)` with `paint-order: stroke fill`, so 4.5 px of the stroke
-    shows around the glyphs, in the exchanger's fill (`--erv-fill`, the ERV fill, defined on `.drawing` and used by the
-    exchanger polygon too). It masks a ring where it meets the digits on a narrow card: a four-digit rate meets the
+    gets a halo: about 130 zero-blur `text-shadow`s in `var(--erv-fill)` (every offset of a 0.75 px grid within 4.5 px,
+    plus 32 directions at 4.5 px, generated as `HALO_SHADOW` in `ventilation-card.ts`: fewer, at a few radii, left a
+    comb of gaps along the thin minus sign), so 4.5 px of solid halo shows around the glyphs, in the exchanger's fill
+    (`--erv-fill`, the ERV fill, defined on `.drawing` and used by the exchanger polygon too). A shadow is always
+    painted behind the glyphs, so no browser can cover a digit with it. It masks a ring where it meets the digits on a narrow card: a four-digit rate meets the
     rings up to 3.9 px deep, a three-digit one 2.1 px (the largest overlaps measured at 280 to 600 px, with Arial, whose
-    digits are as wide as Roboto's; the test font gives 3.7 and 1 px). It sits inside `@supports (paint-order:
-    stroke fill) and (-webkit-text-stroke: 1px red)`: where `paint-order` does not apply to HTML text the stroke
-    would be painted over the glyphs, so the figure then has no halo. The value's padding, undone by an equal
+    digits are as wide as Roboto's; the test font gives 3.7 and 1 px). The value's padding, undone by an equal
     negative margin, keeps its overflow clip (for the ellipsis) from cutting the halo of the first and last glyph.
     The halo may notch a stream's edge by up to 1.5 px on a 280 px card with a four-digit figure. Without the rings
     nothing changes.
   - **Browser tests** (`test/cards/ventilation-card.browser.test.ts`, "effectiveness rings"): at 280 to 600 px in
     both preview themes, with both rings drawn, the badge and the bypass position must clear every ring strictly; the
     bypass position and the moisture figure keep 4.5:1 against the exchanger fill and the badge against its own fill;
-    the halo must be at least as wide as the overlap measured between the rings and the
+    the halo (the largest radius in the computed `text-shadow`) must be at least as wide as the overlap measured between the rings and the
     glyph boxes of the three and the four-digit figure (plus 0.5 px), and notch no stream by more than 1.5 px;
     without the rings the figure has no halo; the compact layout draws the rings and tracks at 320 px. A change to
     the ring geometry, the figure's position or font size has to keep them passing.

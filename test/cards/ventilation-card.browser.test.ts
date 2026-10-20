@@ -67,7 +67,14 @@ async function show(
   await card.updateComplete;
   const root = card.shadowRoot;
   if (!root) throw new Error('no shadow root');
-  return { card, root };
+  return { card, root, wrapper };
+}
+
+/** Changes the width of a shown card and waits for the card to lay out for it (the ResizeObserver reports it). */
+async function resize({ card, wrapper }: Awaited<ReturnType<typeof show>>, width: number): Promise<void> {
+  wrapper.style.width = `${String(width)}px`;
+  await frames();
+  await card.updateComplete;
 }
 
 /** The boxes of everything shown as text or icon, and of the arrowheads, which labels must not cover either. */
@@ -246,10 +253,17 @@ describe('airflow diagram layout', () => {
   });
 });
 
+/** A 2D canvas context: one for reading colours back, one for measuring text. */
+function canvasContext(options?: CanvasRenderingContext2DSettings): CanvasRenderingContext2D {
+  const found = document.createElement('canvas').getContext('2d', options);
+  if (!found) throw new Error('no canvas');
+  return found;
+}
+const context = canvasContext({ willReadFrequently: true });
+const measuring = canvasContext();
+
 /** A CSS colour as the browser computes it (rgb() or color(srgb ...)), as 0 to 255 channels, through a canvas. */
 function channels(color: string): [number, number, number] {
-  const context = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
-  if (!context) throw new Error('no canvas');
   context.fillStyle = color;
   context.fillRect(0, 0, 1, 1);
   const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
@@ -267,6 +281,27 @@ function contrast(a: string, b: string): number {
   };
   const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
   return (light + 0.05) / (dark + 0.05);
+}
+
+/** Whether a rectangle's outline (in screen px) touches one of the drawing's air streams, for the card in `root`. */
+function streamCrossing(root: ShadowRoot): (rect: DOMRect) => boolean {
+  const toDrawing = root.querySelector<SVGGraphicsElement>('svg .exchanger')?.getScreenCTM()?.inverse();
+  if (!toDrawing) throw new Error('no exchanger');
+  const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
+  return (rect) => {
+    for (let i = 0; i <= 10; i++) {
+      for (const [x, y] of [
+        [rect.left + (rect.width * i) / 10, rect.top],
+        [rect.left + (rect.width * i) / 10, rect.bottom],
+        [rect.left, rect.top + (rect.height * i) / 10],
+        [rect.right, rect.top + (rect.height * i) / 10],
+      ] as const) {
+        const point = new DOMPoint(x, y).matrixTransform(toDrawing);
+        if (streams.some((stream) => stream.isPointInStroke(point))) return true;
+      }
+    }
+    return false;
+  };
 }
 
 describe('exchanger type', () => {
@@ -307,28 +342,19 @@ describe('exchanger type', () => {
   });
 
   test('a four-digit kept-out figure stays between the slanted sides, clear of the streams and the badge', async () => {
+    // No smoothing: the humidity history of the other tests would average this day away.
+    const shown = await show(280, 'light', 'auto', KEPT_OUT, { exchanger_type: 'erv', smoothing: 0 });
+    const { root } = shown;
     for (const width of [280, 320, COMPACT_BELOW, 400, 600]) {
-      // No smoothing: the humidity history of the other tests would average this day away.
-      const { root } = await show(width, 'light', 'auto', KEPT_OUT, { exchanger_type: 'erv', smoothing: 0 });
+      await resize(shown, width);
       const text = box(root, '.moisture-recovery .value');
       expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/−\d,\d{3}/);
       // The text's middle row lies in the hexagon; only the empty corners of its line box may reach past the sides.
       const inside = inExchanger(root);
       const middle = text.top + text.height / 2;
       expect(inside(text.left, middle) && inside(text.right, middle), `${String(width)} px`).toBe(true);
-      const toDrawing = root.querySelector<SVGGraphicsElement>('svg .exchanger')?.getScreenCTM()?.inverse();
-      const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
-      for (let i = 0; i <= 10; i++) {
-        for (const y of [text.top, text.bottom]) {
-          const point = new DOMPoint(text.left + (text.width * i) / 10, y).matrixTransform(toDrawing);
-          expect(
-            streams.some((stream) => stream.isPointInStroke(point)),
-            `${String(width)} px`,
-          ).toBe(false);
-        }
-      }
+      expect(streamCrossing(root)(text), `${String(width)} px`).toBe(false);
       expect(overlap(box(root, '.saving .badge'), text)).toBe(false);
-      document.body.innerHTML = '';
     }
   });
 
@@ -372,34 +398,15 @@ describe('effectiveness rings', () => {
     return found;
   };
 
-  /** The box around a text and the icons in it. */
-  const textBox = (element: Element): DOMRect => {
-    const parts = [
-      ...textNodes(element).map(({ box }) => box),
-      ...[...element.querySelectorAll('ha-icon')].map(drawnIcon),
-    ];
-    if (parts.length === 0) throw new Error('no text');
-    const left = Math.min(...parts.map((part) => part.left));
-    const top = Math.min(...parts.map((part) => part.top));
-    return new DOMRect(
-      left,
-      top,
-      Math.max(...parts.map((part) => part.right)) - left,
-      Math.max(...parts.map((part) => part.bottom)) - top,
-    );
-  };
-
   /**
    * The ink of an element's text, one box per glyph (and per icon), measured with a canvas in the element's font:
    * the empty corners of a line box, such as the space under "983 g/h" except for its "g", are not text, and a ring
    * may pass through them. The baseline is where a zero-size inline box, put after the text for a moment, lands.
    */
   function inkBoxes(element: Element): DOMRect[] {
-    const context = document.createElement('canvas').getContext('2d');
-    if (!context) throw new Error('no canvas');
     const boxes = [...element.querySelectorAll('ha-icon')].map(drawnIcon);
     for (const { node, box } of textNodes(element)) {
-      context.font = getComputedStyle(node.parentElement as Element).font;
+      measuring.font = getComputedStyle(node.parentElement as Element).font;
       const text = node.textContent ?? '';
       const probe = document.createElement('span');
       probe.style.cssText = 'display: inline-block; width: 0; height: 0';
@@ -407,9 +414,9 @@ describe('effectiveness rings', () => {
       const baseline = probe.getBoundingClientRect().bottom;
       probe.remove();
       for (let i = 0; i < text.length; i++) {
-        const glyph = context.measureText(text.charAt(i));
+        const glyph = measuring.measureText(text.charAt(i));
         if (glyph.actualBoundingBoxRight + glyph.actualBoundingBoxLeft <= 0) continue; // a space
-        const x = box.left + context.measureText(text.slice(0, i)).width;
+        const x = box.left + measuring.measureText(text.slice(0, i)).width;
         boxes.push(
           new DOMRect(
             x - glyph.actualBoundingBoxLeft,
@@ -423,19 +430,36 @@ describe('effectiveness rings', () => {
     return boxes;
   }
 
+  /** A ring track sampled along its path, in screen px, with half its drawn stroke width. */
+  interface Track {
+    name: string;
+    points: DOMPoint[];
+    half: number;
+  }
+
+  /** The tracks (as long as their rings, whatever the figure), sampled once for every text measured against them. */
+  function sampleTracks(root: ShadowRoot): Track[] {
+    return [...root.querySelectorAll<SVGPathElement>('svg .ring-track')].map((track) => {
+      const toScreen = track.getScreenCTM();
+      if (!toScreen) throw new Error('no ring transform');
+      const length = track.getTotalLength();
+      return {
+        name: track.getAttribute('class') ?? '',
+        points: Array.from({ length: 601 }, (_, i) =>
+          track.getPointAtLength((length * i) / 600).matrixTransform(toScreen),
+        ),
+        half: (parseFloat(track.getAttribute('stroke-width') ?? '0') / 2) * toScreen.a,
+      };
+    });
+  }
+
   /**
-   * The smallest gap, in screen px, between some boxes and the drawn stroke of a ring's track (which is as long as the
-   * ring, whatever its figure): the distance from the boxes to points sampled along the track's path, less half its
-   * stroke width, so a negative gap is a stroke over a box.
+   * The smallest gap, in screen px, between some boxes and the drawn stroke of a track: the distance from the boxes to
+   * the sampled points, less half the stroke width, so a negative gap is a stroke over a box.
    */
-  function clearance(track: SVGPathElement, rects: DOMRect[]): number {
-    const toScreen = track.getScreenCTM();
-    if (!toScreen) throw new Error('no ring transform');
-    const half = (parseFloat(track.getAttribute('stroke-width') ?? '0') / 2) * toScreen.a;
-    const length = track.getTotalLength();
+  function clearance({ points, half }: Track, rects: DOMRect[]): number {
     let nearest = Infinity;
-    for (let i = 0; i <= 600; i++) {
-      const point = track.getPointAtLength((length * i) / 600).matrixTransform(toScreen);
+    for (const point of points) {
       for (const rect of rects) {
         const dx = Math.max(rect.left - point.x, 0, point.x - rect.right);
         const dy = Math.max(rect.top - point.y, 0, point.y - rect.bottom);
@@ -445,35 +469,50 @@ describe('effectiveness rings', () => {
     return nearest - half;
   }
 
+  /** The halo of a text: the colours and the largest reach of its text shadows, and their largest blur. */
+  function haloOf(element: Element): { colors: string[]; radius: number; blur: number } {
+    const shadows = [
+      ...getComputedStyle(element).textShadow.matchAll(
+        /(rgba?\([^)]*\)|color\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px/g,
+      ),
+    ].map(([, color = '', x = '0', y = '0', blur = '0']) => ({
+      color,
+      radius: Math.hypot(parseFloat(x), parseFloat(y)),
+      blur: parseFloat(blur),
+    }));
+    return {
+      colors: shadows.map((shadow) => shadow.color),
+      radius: Math.max(0, ...shadows.map((shadow) => shadow.radius)),
+      blur: Math.max(0, ...shadows.map((shadow) => shadow.blur)),
+    };
+  }
+
   // The most, in px, by which the figure's halo may reach into a stream beside the glyphs' boxes (see the test).
   const STREAM_NOTCH = 1.5;
-
-  const tracks = (root: ShadowRoot): SVGPathElement[] => [...root.querySelectorAll<SVGPathElement>('svg .ring-track')];
+  const WIDTHS = [280, 320, COMPACT_BELOW, 360, 400, 500, 600];
 
   for (const theme of ['light', 'dark'] as const) {
-    test(`airflow-diagram-card "Text on the exchanger", ${theme}: the badge and bypass position keep 4.5:1 and no ring covers them, and the three and four digit moisture figure has a halo, 280 to 600 px`, async () => {
-      // How far a ring reaches into the figure's glyphs, in px, over the widths; the halo has to cover it.
-      const overlap = { 'three digits': 0, 'four digits': 0 };
-      const halo: number[] = [];
-      for (const [digits, values] of [
-        ['three digits', VALUES],
-        ['four digits', KEPT_OUT],
-      ] as const) {
-        for (const width of [280, 320, COMPACT_BELOW, 360, 400, 500, 600]) {
-          const { root } = await show(width, theme, 'auto', values, RINGS);
+    for (const [digits, values] of [
+      ['three digits', VALUES],
+      ['four digits', KEPT_OUT],
+    ] as const) {
+      test(`airflow-diagram-card "Text on the exchanger", ${theme}, ${digits}: the badge and bypass position keep 4.5:1 and no ring covers them, and the moisture figure has a halo, 280 to 600 px`, async () => {
+        const shown = await show(WIDTHS[0] ?? 280, theme, 'auto', values, RINGS);
+        const { root } = shown;
+        // How far a ring reaches into the figure's glyphs, in px, over the widths; the halo has to cover it.
+        let deepest = 0;
+        let smallestHalo = Infinity;
+        for (const width of WIDTHS) {
+          await resize(shown, width);
           const where = `${theme} ${digits} ${String(width)} px`;
           // Both rings are drawn, so the test measures the rings as they are in use.
-          expect(
-            tracks(root)
-              .map((track) => track.getAttribute('class')?.split(' ')[1])
-              .sort(),
-            where,
-          ).toEqual(['moisture', 'temperature']);
+          expect(root.querySelectorAll('svg .ring-track.moisture, svg .ring-track.temperature'), where).toHaveLength(2);
           const exchanger = root.querySelector<SVGPolygonElement>('svg .exchanger');
           const badge = root.querySelector('.saving .badge');
           const bypass = root.querySelector('.bypass-position .label:not(.hidden)');
           const figure = root.querySelector('.moisture-recovery .figure');
-          if (!exchanger || !badge || !figure) throw new Error(`a text is missing at ${where}`);
+          const value = figure?.querySelector('.value');
+          if (!exchanger || !badge || !figure || !value) throw new Error(`a text is missing at ${where}`);
           if (digits === 'three digits') {
             expect(bypass, where).not.toBeNull();
             for (const ring of root.querySelectorAll('svg .ring')) {
@@ -483,15 +522,15 @@ describe('effectiveness rings', () => {
           } else {
             expect(figure.textContent, where).toMatch(/\d,\d{3}/);
           }
-          for (const [name, element] of Object.entries({ badge, bypass })) {
-            if (!element) continue;
-            for (const track of tracks(root)) {
-              const gap = clearance(track, inkBoxes(element));
-              expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(0);
+          // Each text measured once, each track sampled once.
+          const tracks = sampleTracks(root);
+          const ink = { badge: inkBoxes(badge), bypass: bypass ? inkBoxes(bypass) : [], figure: inkBoxes(figure) };
+          for (const track of tracks) {
+            for (const name of ['badge', 'bypass'] as const) {
+              if (ink[name].length > 0)
+                expect(clearance(track, ink[name]), `${name} / ${track.name}, ${where}`).toBeGreaterThan(0);
             }
-          }
-          for (const track of tracks(root)) {
-            overlap[digits] = Math.max(overlap[digits], -clearance(track, inkBoxes(figure)));
+            deepest = Math.max(deepest, -clearance(track, ink.figure));
           }
           // What is behind the text: the exchanger's fill for the bypass position and the figure, the badge's own fill.
           const fill = getComputedStyle(exchanger).fill;
@@ -501,40 +540,26 @@ describe('effectiveness rings', () => {
           expect(contrast(fill, getComputedStyle(figure).color), `figure, ${where}`).toBeGreaterThanOrEqual(4.5);
           const badgeFill = getComputedStyle(badge, '::before').backgroundColor;
           expect(contrast(badgeFill, getComputedStyle(badge).color), `badge, ${where}`).toBeGreaterThanOrEqual(4.5);
-          // The figure keeps its size, 11 px at least, and a halo in the exchanger's colour (a text stroke under the
-          // fill) masks a ring where it meets a glyph; the text keeps 4.5:1 against the halo as against the fill.
-          const style = getComputedStyle(figure);
-          const value = figure.querySelector('.value');
-          if (!value) throw new Error('no moisture value');
+          // The figure keeps its size, 11 px at least, and a halo in the exchanger's colour (solid text shadows, painted
+          // behind the glyphs) masks a ring where it meets a glyph; the text keeps 4.5:1 against the halo as against
+          // the fill.
           expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
-          expect(style.paintOrder.split(' ')[0], where).toBe('stroke');
-          expect(channels(style.webkitTextStrokeColor), where).toEqual(channels(fill));
-          expect(contrast(style.webkitTextStrokeColor, style.color), `halo, ${where}`).toBeGreaterThanOrEqual(4.5);
-          const width2 = parseFloat(style.webkitTextStrokeWidth) / 2;
-          halo.push(width2);
+          const halo = haloOf(value);
+          expect(halo.colors.length, where).toBeGreaterThan(0);
+          expect(halo.blur, where).toBe(0);
+          for (const color of halo.colors) {
+            expect(channels(color), where).toEqual(channels(fill));
+            expect(contrast(color, getComputedStyle(figure).color), `halo, ${where}`).toBeGreaterThanOrEqual(4.5);
+          }
+          smallestHalo = Math.min(smallestHalo, halo.radius);
           // The streams cross the badge, which hides them with its fill; they stay clear of the bypass position and
           // of the figure with its halo.
-          const toDrawing = exchanger.getScreenCTM()?.inverse();
-          const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
-          const crossed = (rect: DOMRect): boolean => {
-            for (let i = 0; i <= 10; i++) {
-              for (const [x, y] of [
-                [rect.left + (rect.width * i) / 10, rect.top],
-                [rect.left + (rect.width * i) / 10, rect.bottom],
-                [rect.left, rect.top + (rect.height * i) / 10],
-                [rect.right, rect.top + (rect.height * i) / 10],
-              ] as const) {
-                const point = new DOMPoint(x, y).matrixTransform(toDrawing);
-                if (streams.some((stream) => stream.isPointInStroke(point))) return true;
-              }
-            }
-            return false;
-          };
-          if (bypass) expect(crossed(textBox(bypass)), `bypass ${where}`).toBe(false);
+          const crossed = streamCrossing(root);
+          for (const glyph of ink.bypass) expect(crossed(glyph), `bypass ${where}`).toBe(false);
           // The glyphs' boxes grown by the halo, less STREAM_NOTCH, stay clear of the streams: the boxes' corners are
           // empty and the halo is round, so it may notch a stream's edge there by that much and no more.
-          const reach = width2 - STREAM_NOTCH;
-          for (const glyph of inkBoxes(figure)) {
+          const reach = halo.radius - STREAM_NOTCH;
+          for (const glyph of ink.figure) {
             const grown = new DOMRect(
               glyph.left - reach,
               glyph.top - reach,
@@ -543,22 +568,17 @@ describe('effectiveness rings', () => {
             );
             expect(crossed(grown), `figure halo ${where}`).toBe(false);
           }
-          document.body.innerHTML = '';
         }
-      }
-      for (const digits of ['three digits', 'four digits'] as const) {
-        expect(Math.min(...halo), `halo width for ${digits}`).toBeGreaterThanOrEqual(overlap[digits] + 0.5);
-      }
-    });
+        expect(smallestHalo, `halo radius for ${digits}`).toBeGreaterThanOrEqual(deepest + 0.5);
+      });
+    }
   }
 
   test('without the rings the moisture figure has no halo', async () => {
     const { root } = await show(280, 'light', 'auto', VALUES, { exchanger_type: 'erv' });
-    const figure = root.querySelector('.moisture-recovery .figure');
-    if (!figure) throw new Error('no moisture figure');
-    const style = getComputedStyle(figure);
-    expect(style.webkitTextStrokeWidth).toBe('0px');
-    expect(style.paintOrder).toBe('normal');
+    const value = root.querySelector('.moisture-recovery .figure .value');
+    if (!value) throw new Error('no moisture figure');
+    expect(getComputedStyle(value).textShadow).toBe('none');
   });
 
   test('airflow-diagram-card "Both layouts": the rings and their tracks are drawn at 320 px in the compact layout', async () => {

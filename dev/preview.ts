@@ -116,7 +116,9 @@ function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
   // No entities: the card shows its sample values (the mock states are still merged under them).
   if (sample) {
     const bare = { type: `custom:${tag}` };
-    return tag === 'hrv-ventilation-card' ? { ...bare, exchanger_type: options.exchanger } : bare;
+    return tag === 'hrv-ventilation-card'
+      ? { ...bare, exchanger_type: options.exchanger, show_effectiveness: options.showEffectiveness }
+      : bare;
   }
   const shared = { type: `custom:${tag}`, ...CONFIGS[options.config], smoothing: options.smoothing };
   if (tag !== 'hrv-ventilation-card') return shared;

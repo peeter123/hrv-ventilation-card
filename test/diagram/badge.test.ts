@@ -1,6 +1,14 @@
 import { describe, expect, test } from 'vitest';
 import type { RecoveryResult } from '../../src/calc/recovery';
-import { effectivenessLabel, hasBadge, moistureFigure, savingBadge, savingTarget } from '../../src/diagram/badge';
+import {
+  effectivenessLabel,
+  hasBadge,
+  hasRings,
+  modeColor,
+  moistureFigure,
+  savingBadge,
+  savingTarget,
+} from '../../src/diagram/badge';
 import type { CardConfig } from '../../src/lib/config';
 import { nb } from '../nbsp';
 
@@ -134,6 +142,30 @@ describe('hasBadge', () => {
   });
 });
 
+describe('hasRings', () => {
+  test('the badge inputs without the humidities: the three temperatures and the supply flow', () => {
+    const { humidity: _outdoor, ...outdoor } = CALCULATION['outdoor'] as Record<string, string>;
+    const sensible: CardConfig = {
+      ...TEMPERATURES,
+      outdoor,
+      fans: CALCULATION['fans'],
+    };
+    expect(hasRings(sensible)).toBe(true);
+    expect(hasBadge(sensible)).toBe(false);
+    expect(hasRings(CALCULATION)).toBe(true);
+    expect(hasRings(TEMPERATURES)).toBe(false);
+    expect(hasRings({ ...sensible, extract: {} })).toBe(false);
+  });
+});
+
+describe('modeColor', () => {
+  test('cold in cooling, warm in heating and without a mode', () => {
+    expect(modeColor('cooling', COLORS)).toBe(COLORS.cold);
+    expect(modeColor('heating', COLORS)).toBe(COLORS.warm);
+    expect(modeColor(undefined, COLORS)).toBe(COLORS.warm);
+  });
+});
+
 describe('savingTarget', () => {
   const BOTH = { heating: 'sensor.heat', cooling: 'sensor.cool' };
   const reading = (state: string, unit = 'W') => ({ state, attributes: { unit_of_measurement: unit } });
@@ -222,10 +254,22 @@ describe('effectivenessLabel', () => {
     );
   });
 
-  test('the bypass part follows the whole percent shown: 0.3 gives none, 0.6 gives "bypass 1 %"', () => {
-    expect(effectivenessLabel(withFigures(92), 0.3, false, LOCALE)).toBe(nb('Effectiveness: temperature 92 %'));
+  test('any bypass above 0 is named, as it turns the calculation to cooling: one decimal below 1 %', () => {
+    expect(effectivenessLabel(withFigures(92), 0, false, LOCALE)).toBe(nb('Effectiveness: temperature 92 %'));
+    expect(effectivenessLabel(withFigures(92), 0.3, false, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 % (bypass 0.3 %)'),
+    );
     expect(effectivenessLabel(withFigures(92), 0.6, false, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 % (bypass 0.6 %)'),
+    );
+    expect(effectivenessLabel(withFigures(92), 0.04, false, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 % (bypass 0.1 %)'),
+    );
+    expect(effectivenessLabel(withFigures(92), 1.4, false, LOCALE)).toBe(
       nb('Effectiveness: temperature 92 % (bypass 1 %)'),
+    );
+    expect(effectivenessLabel(withFigures(92), 40, false, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 % (bypass 40 %)'),
     );
   });
 

@@ -2,7 +2,7 @@
 // drawing band with the stream labels, the saving badge and on an ERV the moisture figure over the drawing, and a
 // status grid of fixed cells. What
 // to show comes from the pure functions in src/diagram/; this element only renders it.
-import { css, html, nothing, type TemplateResult } from 'lit';
+import { css, html, nothing, unsafeCSS, type TemplateResult } from 'lit';
 import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -10,6 +10,8 @@ import type { RecoveryResult } from '../calc/recovery';
 import {
   effectivenessLabel,
   hasBadge,
+  hasRings,
+  modeColor,
   moistureFigure,
   savingBadge,
   savingTarget,
@@ -33,7 +35,6 @@ import {
   type RolePath,
   type Stream,
 } from '../lib/config';
-import { numericValue } from '../lib/availability';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { formatState, stateOf } from '../lib/hass';
@@ -61,16 +62,45 @@ interface DiagramSettings {
    */
   savings: Record<RecoveryResult['mode'], string | undefined>;
   moistureRecovery?: string;
-  /** The effectiveness rings are drawn. */
-  rings: boolean;
-  /** The moisture ring is drawn too: an ERV with humidity for every stream. */
-  moistureRing: boolean;
+  /**
+   * The effectiveness rings are drawn: the option is on and the config has the inputs of the sensible calculation.
+   * `moisture`: the moisture ring too, on an ERV with humidity for every stream.
+   */
+  rings?: { moisture: boolean };
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
   flows: { supply?: string; exhaust?: string };
   animate: boolean;
   nominalFlow?: number;
 }
+
+/** The radius of the moisture figure's halo (see the styles), in px. */
+const HALO_RADIUS = 4.5;
+const HALO_PX = unsafeCSS(`${String(HALO_RADIUS)}px`);
+
+/**
+ * The halo's text shadows, zero-blur copies of the glyphs in the exchanger's colour: every offset of a 0.75 px grid
+ * within the radius, so that even a thin stroke (the minus sign) leaves no gaps, and 32 directions at the radius
+ * itself for a round edge.
+ */
+const HALO_SHADOW = unsafeCSS(
+  (() => {
+    const offsets = new Set<string>();
+    const add = (x: number, y: number): void => {
+      offsets.add(`${x.toFixed(2)}px ${y.toFixed(2)}px 0 var(--erv-fill)`);
+    };
+    const step = 0.75;
+    const reach = Math.floor(HALO_RADIUS / step);
+    for (let i = -reach; i <= reach; i++) {
+      for (let j = -reach; j <= reach; j++) {
+        if (Math.hypot(i * step, j * step) <= HALO_RADIUS) add(i * step, j * step);
+      }
+    }
+    for (let k = 0; k < 32; k++)
+      add(HALO_RADIUS * Math.cos((k * Math.PI) / 16), HALO_RADIUS * Math.sin((k * Math.PI) / 16));
+    return [...offsets].join(', ');
+  })(),
+);
 
 /** A label's tooltip: what it is and its state, e.g. "Next bypass change: 01:30". */
 const roleTitle = (role: RolePath, text: string): string => {
@@ -162,11 +192,6 @@ export class HrvVentilationCard extends HrvCard {
       stroke: var(--divider-color);
       stroke-width: 1.5;
     }
-    /* The effectiveness rings: the colours are set on the elements (the ring colour, the track mixed from it). */
-    .ring,
-    .ring-track {
-      fill: none;
-    }
     .stream {
       fill: none;
     }
@@ -240,23 +265,16 @@ export class HrvVentilationCard extends HrvCard {
       bottom: 24%;
     }
     /*
-     * With the rings, a halo in the exchanger's colour around the figure's glyphs: a text stroke painted under the
-     * fill (paint-order), so the glyph shapes stay as they are and a ring that meets a glyph on a narrow card is
-     * masked around it. The visible halo is half the stroke width, 4.5 px: a four-digit figure meets the rings
-     * 3.9 px deep (a three-digit one 2.1 px) with digits as wide as Roboto's. Only where the browser applies
-     * paint-order to HTML text; elsewhere the stroke would be painted over the glyphs, so the figure has no halo.
-     * The value clips its overflow for the ellipsis, so its padding (undone by the margin) keeps the halo of the
-     * first and last glyph from being cut.
+     * With the rings, a halo in the exchanger's colour around the figure's glyphs: zero-blur text shadows on a fine
+     * grid within the radius (HALO_SHADOW), painted behind the glyphs, so the glyph shapes stay as they are and a ring
+     * that meets a glyph on a narrow card is masked around it. The halo reaches 4.5 px: a four-digit figure meets the
+     * rings 3.9 px deep (a three-digit one 2.1 px) with digits as wide as Roboto's. The value clips its overflow for
+     * the ellipsis, so its padding (undone by the margin) keeps the halo of the first and last glyph from being cut.
      */
-    @supports (paint-order: stroke fill) and (-webkit-text-stroke: 1px red) {
-      .rings .moisture-recovery {
-        -webkit-text-stroke: 9px var(--erv-fill);
-        paint-order: stroke fill;
-      }
-      .rings .moisture-recovery .value {
-        padding: 4.5px;
-        margin: -4.5px;
-      }
+    .rings .moisture-recovery .value {
+      text-shadow: ${HALO_SHADOW};
+      padding: ${HALO_PX};
+      margin: -${HALO_PX};
     }
     /* On the exchanger's centre. */
     .saving {
@@ -418,10 +436,14 @@ export class HrvVentilationCard extends HrvCard {
         cooling: entityAt(config, 'status.cooling_saving'),
       },
       moistureRecovery: entityAt(config, 'status.moisture_recovery'),
-      rings: optionValue(config, DIAGRAM_OPTIONS.showEffectiveness),
-      moistureRing:
-        optionValue(config, DIAGRAM_OPTIONS.exchangerType) === 'erv' &&
-        hasAllHumidity(config, ['outdoor', 'supply', 'extract']),
+      rings:
+        optionValue(config, DIAGRAM_OPTIONS.showEffectiveness) && hasRings(config)
+          ? {
+              moisture:
+                optionValue(config, DIAGRAM_OPTIONS.exchangerType) === 'erv' &&
+                hasAllHumidity(config, ['outdoor', 'supply', 'extract']),
+            }
+          : undefined,
       temperatures: mapStreams((stream) => entityAt(config, `${stream}.temperature`)),
       bypass: entityAt(config, 'bypass.position'),
       flows: { supply: entityAt(config, 'fans.supply_flow'), exhaust: entityAt(config, 'fans.exhaust_flow') },
@@ -596,19 +618,19 @@ export class HrvVentilationCard extends HrvCard {
     const { compact } = this;
     const model = labelModel(this.config, hass.states, { showUnavailable: settings.showUnavailable, compact });
     const season = seasonIcon(this.config, hass.states, settings.colors);
-    // One calculation for the badge, the moisture figure and the rings, which need the same inputs.
-    const result = (settings.badge || settings.rings) && this.calculator ? this.calculator(hass).result : undefined;
+    // One calculation for the badge, the moisture figure and the rings, which share its inputs (the rings need the
+    // badge's without the humidities).
+    const calculation = (settings.badge || settings.rings) && this.calculator ? this.calculator(hass) : undefined;
+    const result = calculation?.result;
     const locale = localeFromHass(hass);
     const badge = settings.badge ? savingBadge(result, settings, locale) : undefined;
     const moisture = moistureFigure(result, settings, locale);
     const { states } = hass;
     const { temperatures, flows } = settings;
-    const rings = effectivenessLabel(
-      result,
-      numericValue(stateOf(states, settings.bypass)),
-      settings.moistureRing,
-      locale,
-    );
+    const { rings } = settings;
+    const ringsLabel = rings
+      ? effectivenessLabel(result, calculation?.inputs.bypass, rings.moisture, locale)
+      : undefined;
     const art = drawing({
       ids: this.ids,
       exchanger: settings.exchanger,
@@ -621,27 +643,27 @@ export class HrvVentilationCard extends HrvCard {
         supply: flowSpeed(stateOf(states, flows.supply), settings.nominalFlow),
         exhaust: flowSpeed(stateOf(states, flows.exhaust), settings.nominalFlow),
       },
-      rings: settings.rings
+      rings: rings
         ? {
-            figures: result?.effectiveness ?? {},
-            moisture: settings.moistureRing,
-            color: result?.mode === 'cooling' ? settings.colors.cold : settings.colors.warm,
+            temperature: result?.effectiveness.temperature,
+            moisture: rings.moisture ? { figure: result?.effectiveness.moisture } : undefined,
+            color: modeColor(result?.mode, settings.colors),
           }
         : undefined,
     });
 
     return html`<ha-card @click=${this.activate} @keydown=${this.activate}>
       ${model.top ? this.topRow(model.top, season) : nothing}
-      <div class="drawing ${settings.animate ? '' : 'still'} ${settings.rings ? 'rings' : ''}">
+      <div class="drawing ${settings.animate ? '' : 'still'} ${rings ? 'rings' : ''}">
         ${art}
         ${STREAMS.map(
           (stream) =>
             html`<div class="corner ${stream}">${model.corners[stream].map((label) => this.label(label))}</div>`,
         )}
         ${
-          settings.rings
-            ? html`<div class="on-drawing effectiveness" role="img" aria-label=${rings} title=${rings}></div>`
-            : nothing
+          ringsLabel === undefined
+            ? nothing
+            : html`<div class="on-drawing effectiveness" role="img" aria-label=${ringsLabel} title=${ringsLabel}></div>`
         }
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
         ${badge ? html`<div class="on-drawing saving">${this.badge(badge, savingTarget(result, settings.savings, states))}</div>` : nothing}

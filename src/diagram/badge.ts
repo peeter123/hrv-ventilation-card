@@ -14,6 +14,12 @@ export const BADGE_REQUIREMENTS: Requirements = {
   humidity: { streams: ['outdoor', 'supply', 'extract'], rule: 'required' },
 };
 
+/**
+ * The roles the effectiveness rings need: the badge's without the humidities, which only the moisture ring needs
+ * (the calculation is sensible-only without them).
+ */
+export const RINGS_REQUIREMENTS: Requirements = { paths: BADGE_REQUIREMENTS.paths };
+
 /** A saving above this (W) gets a warm or cold badge; at or below it the badge is grey. */
 export const SAVING_THRESHOLD = 0.5;
 
@@ -26,6 +32,13 @@ export interface Badge {
 
 /** True when the config has every input the badge needs. Checked once per config by the card. */
 export const hasBadge = (config: CardConfig): boolean => missingRoles(config, BADGE_REQUIREMENTS).length === 0;
+
+/** True when the config has the inputs of the sensible calculation, which the effectiveness rings need. */
+export const hasRings = (config: CardConfig): boolean => missingRoles(config, RINGS_REQUIREMENTS).length === 0;
+
+/** The configured colour of a calculation mode: cold in cooling, warm in heating and without a mode. */
+export const modeColor = (mode: RecoveryResult['mode'] | undefined, colors: { cold: string; warm: string }): string =>
+  mode === 'cooling' ? colors.cold : colors.warm;
 
 /**
  * The badge for a calculation result. Heating with a saving above the threshold gives a warm badge, cooling a cold
@@ -40,9 +53,7 @@ export function savingBadge(
   if (result === undefined) return options.showUnavailable ? { kind: 'grey', text: NO_VALUE } : undefined;
   const text = DIAGRAM.saving(formatNumber(result.saving, locale));
   if (result.saving <= SAVING_THRESHOLD) return { kind: 'grey', text };
-  return result.mode === 'heating'
-    ? { kind: 'warm', text, tint: options.colors.warm }
-    : { kind: 'cold', text, tint: options.colors.cold };
+  return { kind: result.mode === 'heating' ? 'warm' : 'cold', text, tint: modeColor(result.mode, options.colors) };
 }
 
 /**
@@ -98,9 +109,9 @@ export function moistureFigure(
 
 /**
  * The tooltip and accessible name of the effectiveness rings: both figures in whole percent, "not measurable" for one
- * without a value (or both without a calculation), and the bypass position while it is above 0 % (whole percent).
- * `moisture` is false where no moisture ring is drawn (an HRV, or an ERV without humidity), so the text leaves the
- * moisture figure out.
+ * without a value (or both without a calculation), and the bypass position while it is above 0 %, as the calculation
+ * turns to cooling then (whole percent from 1 %, one decimal below). `moisture` is false where no moisture ring is
+ * drawn (an HRV, or an ERV without humidity), so the text leaves the moisture figure out.
  */
 export function effectivenessLabel(
   result: RecoveryResult | undefined,
@@ -110,11 +121,11 @@ export function effectivenessLabel(
 ): string {
   const figure = (value: number | undefined): string =>
     value === undefined ? DIAGRAM.effectivenessNoValue : DIAGRAM.effectivenessPercent(formatNumber(value, locale));
-  // The bypass is decided on the whole percent shown, so a position that rounds to 0 is not written "(bypass 0 %)".
-  const shownBypass = bypass === undefined ? undefined : Math.round(bypass);
+  // Any position above 0 turns the ring cold, so it is named; below 1 % with a decimal, never as "0".
+  const open = bypass !== undefined && bypass > 0;
   return DIAGRAM.effectiveness(
     figure(result?.effectiveness.temperature),
     moisture ? figure(result?.effectiveness.moisture) : undefined,
-    shownBypass !== undefined && shownBypass > 0 ? formatNumber(shownBypass, locale) : undefined,
+    open ? (bypass >= 1 ? formatNumber(bypass, locale) : formatNumber(Math.max(bypass, 0.1), locale, 1)) : undefined,
   );
 }
