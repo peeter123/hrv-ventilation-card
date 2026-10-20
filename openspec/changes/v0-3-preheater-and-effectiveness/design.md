@@ -203,7 +203,7 @@ the top row ("Rows follow the config").
 ### Options and editor
 
 `DIAGRAM_OPTIONS` gets `showEffectiveness` (boolean, `show_effectiveness`, default false) and `preHeaterMaxPower`
-(number, `pre_heater.max_power`, 1 to 100000, no default), so the shared validator reports bad values. The editor gets
+(number, `pre_heater.max_power`, 1 to 4000, no default), so the shared validator reports bad values. The editor gets
 a `pre_heater` section after the status section: a power picker for the `sensor`, `binary_sensor` and `switch`
 domains (a new field helper, as `sensorField` offers sensors only), an energy picker for sensors and the maximum
 power as an advanced number. `show_effectiveness` is a basic switch after the animation section. Both new options
