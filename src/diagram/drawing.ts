@@ -11,7 +11,6 @@
 // restart the animation; the card's styles stop it with `animation.enabled: false` or reduced motion.
 import { svg, type SVGTemplateResult } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
-import { MOISTURE_COLOR } from '../lib/colors';
 import type { Stream } from '../lib/config';
 
 /** The drawing's coordinate system: 2 by 1, the drawing band's aspect ratio. */
@@ -42,37 +41,43 @@ const EXCHANGER_INNER = '181.3,38 218.7,38 240.7,100 218.7,162 181.3,162 159.3,1
 
 // The effectiveness rings start at the top centre and run clockwise, so a dash of the figure's length (the paths have
 // pathLength 100) is the figure in %. The moisture ring runs along the rim's midline (the midpoints of the outer and
-// inner vertices), the temperature ring along the inner outline. The moisture ring's colour is the recovered-moisture
-// teal, distinct from the default warm and cold; the temperature ring takes the mode's colour (see Rings).
-const RINGS = {
-  moisture: {
-    d: 'M 200 32 L 221.45 32 L 247.85 100 L 221.45 168 L 178.55 168 L 152.15 100 L 178.55 32 Z',
-    width: 8,
-    color: MOISTURE_COLOR,
-  },
-  temperature: {
-    d: 'M 200 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 L 181.3 38 Z',
-    width: 3,
-  },
-} as const;
+// inner vertices) with a stroke wider than the rim anywhere, clipped to the rim (RIM), so it fills the rim from outline
+// to outline; the empty rim is its track. The total ring runs along the inner outline over a faint track.
+const MOISTURE_RING = {
+  d: 'M 200 32 L 221.45 32 L 247.85 100 L 221.45 168 L 178.55 168 L 152.15 100 L 178.55 32 Z',
+  width: 14,
+};
+const TOTAL_RING = {
+  d: 'M 200 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 L 181.3 38 Z',
+  width: 3,
+};
+// The rim: both hexagons in one path, filled evenodd, so the clip leaves out the core.
+const RIM =
+  'M 175.8 26 L 224.2 26 L 255 100 L 224.2 174 L 175.8 174 L 145 100 Z ' +
+  'M 181.3 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 Z';
+
+/** Provisional share of the mode's colour in the total ring, the rest being the theme's text colour (task 4.5 tunes it). */
+const TOTAL_RING_SHARE = 70;
 
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
 const HOUSE = 'M 12 4 L 21 12 L 18 12 L 18 20 L 14 20 L 14 15 L 10 15 L 10 20 L 6 20 L 6 12 L 3 12 Z';
 
-/** The IDs one card instance gives its gradients: unique per instance, as several cards share a page's IDs. */
+/** The IDs one card instance gives its gradients and clip path: unique per instance, as several cards share a page's IDs. */
 export interface DrawingIds {
   supply: string;
   exhaust: string;
+  /** The clip path of the exchanger's rim, which the moisture ring is clipped to. */
+  rim: string;
 }
 
 let instances = 0;
 
-/** New gradient IDs for a card instance. */
+/** New gradient and clip IDs for a card instance. */
 export function drawingIds(): DrawingIds {
   instances += 1;
   const suffix = String(instances);
-  return { supply: `hrv-supply-${suffix}`, exhaust: `hrv-exhaust-${suffix}` };
+  return { supply: `hrv-supply-${suffix}`, exhaust: `hrv-exhaust-${suffix}`, rim: `hrv-rim-${suffix}` };
 }
 
 /** The `exchanger_type` option: heat recovery (HRV) or energy recovery (ERV), which also passes moisture. */
@@ -80,11 +85,11 @@ export type ExchangerType = 'hrv' | 'erv';
 
 /** The effectiveness rings (the `show_effectiveness` option). A ring without a figure is empty, with its track. */
 export interface Rings {
-  /** The temperature effectiveness in %. */
-  temperature: number | undefined;
+  /** The total effectiveness in %. */
+  total: number | undefined;
   /** The moisture ring, drawn when set: an ERV with humidity for every stream. Its effectiveness in %. */
   moisture?: { figure: number | undefined };
-  /** The temperature ring's colour: the warm colour in heating, the cold colour in cooling. */
+  /** The total ring's colour: the warm colour in heating, the cold colour in cooling. */
   color: string;
 }
 
@@ -136,15 +141,27 @@ const symbol = (x: number, color: string, shape: string): SVGTemplateResult =>
     <path d=${shape} transform="translate(${String(x - 12)} ${String(100 - 12)})"></path>
   </g>`;
 
-/** A ring and the faint full-length track under it, in the ring's colour. */
-function ring(name: keyof typeof RINGS, color: string, figure: number | undefined): SVGTemplateResult {
-  const { d, width } = RINGS[name];
-  // The dash length is the figure in % of the path's length of 100.
+/**
+ * The moisture ring: a stroke along the rim's midline, clipped to the rim. The empty rim is its track, so there is none.
+ * The dash length is the figure in % of the path's length of 100.
+ */
+function moistureRing(rim: string, figure: number | undefined): SVGTemplateResult {
   const dash = rounded(figure ?? 0, 2);
-  return svg`<path class="ring-track ${name}" d=${d} fill="none" stroke-width=${width}
-      style=${styleMap({ stroke: `color-mix(in srgb, ${color} 25%, var(--secondary-background-color))` })}></path>
-    <path class="ring ${name}" d=${d} fill="none" stroke-width=${width} pathLength="100" stroke-dasharray="${String(dash)} 100"
-      style=${styleMap({ stroke: color })}></path>`;
+  return svg`<path class="ring moisture" d=${MOISTURE_RING.d} fill="none" stroke-width=${MOISTURE_RING.width}
+    pathLength="100" stroke-dasharray="${String(dash)} 100" clip-path="url(#${rim})"
+    style=${styleMap({ stroke: 'var(--erv-ring)' })}></path>`;
+}
+
+/** The total ring on the inner outline and the faint full-length track under it. */
+function totalRing(color: string, figure: number | undefined): SVGTemplateResult {
+  const { d, width } = TOTAL_RING;
+  const dash = rounded(figure ?? 0, 2);
+  // The mode's colour towards the theme's text colour: darker on a light theme, lighter on a dark one.
+  const ringColor = `color-mix(in srgb, ${color} ${String(TOTAL_RING_SHARE)}%, var(--primary-text-color))`;
+  return svg`<path class="ring-track total" d=${d} fill="none" stroke-width=${width}
+      style=${styleMap({ stroke: `color-mix(in srgb, ${ringColor} 25%, var(--secondary-background-color))` })}></path>
+    <path class="ring total" d=${d} fill="none" stroke-width=${width} pathLength="100" stroke-dasharray="${String(dash)} 100"
+      style=${styleMap({ stroke: ringColor })}></path>`;
 }
 
 /** The drawing for the current colours and bypass strength. A path at strength 0 is left out. */
@@ -166,13 +183,15 @@ export function drawing({ ids, exchanger, colors, bypass, speeds, rings }: Drawi
       <linearGradient id=${ids.exhaust} gradientUnits="userSpaceOnUse" x1="314" y1="62" x2="74" y2="138">
         ${stop('0', colors.extract)}${stop('1', colors.exhaust)}
       </linearGradient>
+      <clipPath id=${ids.rim}><path d=${RIM} clip-rule="evenodd"></path></clipPath>
     </defs>
     ${symbol(36, colors.outdoor, CLOUD)}
     ${symbol(364, colors.extract, HOUSE)}
     <polygon class="exchanger ${exchanger}" points=${EXCHANGER}></polygon>
+    ${rings?.moisture ? moistureRing(ids.rim, rings.moisture.figure) : null}
+    <polygon class="outline" points=${EXCHANGER}></polygon>
     <polygon class="exchanger-inner" points=${EXCHANGER_INNER}></polygon>
-    ${rings?.moisture ? ring('moisture', RINGS.moisture.color, rings.moisture.figure) : null}
-    ${rings ? ring('temperature', rings.color, rings.temperature) : null}
+    ${rings ? totalRing(rings.color, rings.total) : null}
     ${streamPath('bypass', supplyStroke, around)}
     ${streamPath('supply', supplyStroke, through)}
     <polygon class="head" points=${HEADS.supply} style=${styleMap({ fill: colors.supply })}></polygon>

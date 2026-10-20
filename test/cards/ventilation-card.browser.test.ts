@@ -506,7 +506,7 @@ describe('effectiveness rings', () => {
           await resize(shown, width);
           const where = `${theme} ${digits} ${String(width)} px`;
           // Both rings are drawn, so the test measures the rings as they are in use.
-          expect(root.querySelectorAll('svg .ring-track.moisture, svg .ring-track.temperature'), where).toHaveLength(2);
+          expect(root.querySelectorAll('svg .ring-track.total'), where).toHaveLength(1);
           const exchanger = root.querySelector<SVGPolygonElement>('svg .exchanger');
           const badge = root.querySelector('.saving .badge');
           const bypass = root.querySelector('.bypass-position .label:not(.hidden)');
@@ -584,7 +584,7 @@ describe('effectiveness rings', () => {
   test('airflow-diagram-card "Both layouts": the rings and their tracks are drawn at 320 px in the compact layout', async () => {
     const { root } = await show(320, 'light', 'auto', VALUES, RINGS);
     expect(root.querySelector('.status')).toBeNull();
-    for (const selector of ['.ring.moisture', '.ring.temperature', '.ring-track.moisture', '.ring-track.temperature']) {
+    for (const selector of ['.ring.moisture', '.ring.total', '.ring-track.total']) {
       const element = root.querySelector(`svg ${selector}`);
       if (!element) throw new Error(`no ${selector}`);
       const rect = element.getBoundingClientRect();

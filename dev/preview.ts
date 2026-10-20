@@ -54,10 +54,10 @@ const SCENARIOS: Readonly<Record<string, Scenario>> = {
     bypass: 50,
     season: 'between',
   },
-  // Outdoor and extract 2 K and 0.7 g/m³ apart: below the effectiveness gradients, so the rings are empty tracks.
+  // Outdoor and extract 2 K and 0.3 g/m³ apart: below the effectiveness gradients, so the rings are empty tracks.
   'small gradient': {
     temperature: { outdoor: 16, supply: 17.4, extract: 18, exhaust: 16.6 },
-    humidity: { outdoor: 58, supply: 55, extract: 56, exhaust: 58 },
+    humidity: { outdoor: 58, supply: 55, extract: 53.5, exhaust: 58 },
     flow: 150,
     bypass: 0,
     season: 'between',

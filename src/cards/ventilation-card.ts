@@ -169,6 +169,7 @@ export class HrvVentilationCard extends HrvCard {
     }
     .drawing {
       --erv-fill: color-mix(in srgb, var(--secondary-background-color) 75%, #4f86b8);
+      --erv-ring: color-mix(in srgb, var(--secondary-background-color) 50%, #4f86b8);
       position: relative;
       aspect-ratio: 2 / 1;
     }
@@ -178,8 +179,12 @@ export class HrvVentilationCard extends HrvCard {
       width: 100%;
       height: 100%;
     }
+    /* The fill only: the outlines are drawn over the moisture ring (see drawing.ts). */
     .exchanger {
       fill: var(--secondary-background-color);
+    }
+    .outline {
+      fill: none;
       stroke: var(--divider-color);
       stroke-width: 2;
     }
@@ -645,7 +650,7 @@ export class HrvVentilationCard extends HrvCard {
       },
       rings: rings
         ? {
-            temperature: result?.effectiveness.total,
+            total: result?.effectiveness.total,
             moisture: rings.moisture ? { figure: result?.effectiveness.moisture } : undefined,
             color: modeColor(result?.mode, settings.colors),
           }

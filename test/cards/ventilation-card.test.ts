@@ -90,7 +90,7 @@ describe('the drawing', () => {
     expect(root.querySelector('svg .bypass')).toBeNull();
   });
 
-  test('two card instances use different gradient IDs, and each stream refers to its own', async () => {
+  test('two card instances use different gradient and clip IDs, and each stream refers to its own', async () => {
     const first = await render(CONFIG, '50');
     const second = await render(CONFIG, '50');
     const ids = (root: ShadowRoot) => [...root.querySelectorAll('linearGradient')].map((gradient) => gradient.id);
@@ -98,6 +98,10 @@ describe('the drawing', () => {
     expect(a).toHaveLength(2);
     expect(b).toHaveLength(2);
     expect(a.filter((id) => b.includes(id))).toEqual([]);
+    const clips = (root: ShadowRoot) => [...root.querySelectorAll('clipPath')].map((clip) => clip.id);
+    expect(clips(first.root)).toHaveLength(1);
+    expect(clips(second.root)).toHaveLength(1);
+    expect(clips(first.root)).not.toEqual(clips(second.root));
     for (const { root } of [first, second]) {
       const [supply, exhaust] = ids(root);
       expect(root.querySelector('svg .supply')?.getAttribute('stroke')).toBe(`url(#${supply ?? ''})`);
@@ -467,7 +471,7 @@ describe('the effectiveness rings', () => {
   const attribute = (root: ShadowRoot, selector: string, name: string): string | null | undefined =>
     root.querySelector(selector)?.getAttribute(name);
   /** The dash of a ring: its length in % and the gap. */
-  const dash = (root: ShadowRoot, name: 'temperature' | 'moisture'): string | null | undefined =>
+  const dash = (root: ShadowRoot, name: 'total' | 'moisture'): string | null | undefined =>
     attribute(root, `svg .ring.${name}`, 'stroke-dasharray');
   const ringClasses = (root: ShadowRoot): string[] =>
     [...root.querySelectorAll('svg .ring, svg .ring-track')]
@@ -493,15 +497,24 @@ describe('the effectiveness rings', () => {
 
   test('airflow-diagram-card "Heating with both figures": the rings run 78.14 and 65 of 100 on pathLength 100', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', EFFECTIVE);
-    expect(dash(root, 'temperature')).toBe('78.14 100');
+    expect(dash(root, 'total')).toBe('78.14 100');
     expect(dash(root, 'moisture')).toBe('65 100');
     for (const ring of root.querySelectorAll('svg .ring')) expect(ring.getAttribute('pathLength')).toBe('100');
-    // Each ring has a full-length track, and the streams are drawn after (over) the rings.
-    expect(root.querySelectorAll('svg .ring-track')).toHaveLength(2);
-    const order = [...root.querySelectorAll('svg path')].map((path) => path.getAttribute('class')?.split(' ')[0]);
+    // The total ring has a full-length track (the empty rim is the moisture ring's), and the streams are drawn after
+    // (over) the rings. The moisture ring is clipped to the rim, between the fill and the outlines.
+    expect(root.querySelectorAll('svg .ring-track')).toHaveLength(1);
+    const order = [...root.querySelectorAll('svg path, svg polygon')].map(
+      (shape) => shape.getAttribute('class')?.split(' ')[0],
+    );
     expect(order.lastIndexOf('ring')).toBeLessThan(order.indexOf('stream'));
-    expect(attribute(root, 'svg .ring.temperature', 'style')).toContain('#db4437');
-    expect(attribute(root, 'svg .ring.moisture', 'style')).toContain('#00897b');
+    expect(order.indexOf('exchanger')).toBeLessThan(order.indexOf('ring'));
+    expect(order.indexOf('ring')).toBeLessThan(order.indexOf('outline'));
+    expect(order.indexOf('exchanger-inner')).toBeLessThan(order.indexOf('ring-track'));
+    const clip = root.querySelector('clipPath');
+    expect(attribute(root, 'svg .ring.moisture', 'clip-path')).toBe(`url(#${clip?.id ?? ''})`);
+    expect(attribute(root, 'svg .ring.moisture', 'style')).toContain('--erv-ring');
+    expect(attribute(root, 'svg .ring.total', 'style')).toContain('#db4437');
+    expect(attribute(root, 'svg .ring.total', 'style')).toContain('--primary-text-color');
   });
 
   test('airflow-diagram-card "Option off": no rings, tracks or box', async () => {
@@ -538,7 +551,7 @@ describe('the effectiveness rings', () => {
 
   test('airflow-diagram-card "HRV with humidity sensors": only the inner ring and its track', async () => {
     const { root } = await renderInputs({ ...ERV_RINGS, exchanger_type: 'hrv' }, '0', EFFECTIVE);
-    expect(ringClasses(root)).toEqual(['ring temperature', 'ring-track temperature']);
+    expect(ringClasses(root)).toEqual(['ring total', 'ring-track total']);
   });
 
   test('airflow-diagram-card "ERV without humidity": only the inner ring and its track', async () => {
@@ -550,9 +563,9 @@ describe('the effectiveness rings', () => {
       smoothing: 0,
     };
     const { root } = await renderInputs(config, '0');
-    expect(ringClasses(root)).toEqual(['ring temperature', 'ring-track temperature']);
+    expect(ringClasses(root)).toEqual(['ring total', 'ring-track total']);
     // Supply 18 degrees, extract 21, outdoor 0: 85.71 %.
-    expect(dash(root, 'temperature')).toBe('85.71 100');
+    expect(dash(root, 'total')).toBe('85.71 100');
   });
 
   test('airflow-diagram-card "Cooling mode": the inner ring takes the configured cold colour', async () => {
@@ -565,7 +578,7 @@ describe('the effectiveness rings', () => {
     ];
     const config = { ...ERV_RINGS, colors: { cold: '#112233', warm: '#aa0000' } };
     const { root } = await renderInputs(config, '0', cooling);
-    const ring = attribute(root, 'svg .ring.temperature', 'style');
+    const ring = attribute(root, 'svg .ring.total', 'style');
     expect(ring).toContain('#112233');
     expect(ring).not.toContain('#aa0000');
   });
@@ -579,16 +592,16 @@ describe('the effectiveness rings', () => {
       state('sensor.hrv_ah_out', '8', 'g/m³'),
       state('sensor.hrv_ah_ext', '8', 'g/m³'),
     ]);
-    expect(dash(root, 'temperature')).toBe('0 100');
-    expect(root.querySelector('svg .ring-track.temperature')).not.toBeNull();
+    expect(dash(root, 'total')).toBe('0 100');
+    expect(root.querySelector('svg .ring-track.total')).not.toBeNull();
     expect(dash(root, 'moisture')).toBe('0 100');
   });
 
   test('airflow-diagram-card "Input unavailable": both rings are empty and their tracks are drawn', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', [...EFFECTIVE, state('sensor.hrv_flow', 'unavailable')]);
-    expect(dash(root, 'temperature')).toBe('0 100');
+    expect(dash(root, 'total')).toBe('0 100');
     expect(dash(root, 'moisture')).toBe('0 100');
-    expect(root.querySelectorAll('svg .ring-track')).toHaveLength(2);
+    expect(root.querySelectorAll('svg .ring-track')).toHaveLength(1);
   });
 
   test('airflow-diagram-card "Bypass closed": the box is an image named by effectivenessLabel', async () => {
