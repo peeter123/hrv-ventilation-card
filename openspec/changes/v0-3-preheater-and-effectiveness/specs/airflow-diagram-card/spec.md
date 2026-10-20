@@ -283,15 +283,16 @@ The ratio is then clamped to 0 %; where it is clamped to 100 %, both values stay
 - **THEN** the tooltip reads "Effectiveness: free cooling 0 % (−120 / 1,000 W), moisture 0 % (−100 / 800 g/h)"
 
 ### Requirement: Pre-heater coil on the drawing
-With `pre_heater.power` configured, the card SHALL draw a heating coil along the outdoor-to-supply stream, between
-the outdoor symbol and the exchanger, in both layouts. The coil SHALL be a smooth, rounded wave that follows the
-stream's centreline and curvature, with three crests on each side, whose first and last points lie on the stream's two
-borders. Without it no coil SHALL be drawn. The coil SHALL NOT overlap a label at any card width from 280 px.
+With `pre_heater.power` configured, the card SHALL draw a heating coil on the outdoor air's straight inlet segment, the part
+the outdoor air shares before the bypass splits off, between the outdoor symbol and the exchanger, in both layouts.
+The coil SHALL be a smooth, rounded wave along the stream's centreline, with three crests on each side, whose first
+and last points lie on the stream's two borders, and it SHALL lie wholly before the point where the bypass splits
+off, whatever the bypass position. Without it no coil SHALL be drawn. The coil SHALL NOT overlap a label at any card width from 280 px.
 
 #### Scenario: Coil drawn
 - **WHEN** `pre_heater.power` is configured
-- **THEN** a coil is drawn on the outdoor stream, left of the exchanger
-- **AND** the coil is a rounded wave that follows the stream's curve
+- **THEN** a coil is drawn on the outdoor stream, left of the exchanger and before the bypass splits off
+- **AND** the coil is a rounded wave along the stream's straight inlet segment, on the stream also with the bypass open
 - **AND** its first point lies on the stream's upper border and its last on the lower border
 
 #### Scenario: No pre-heater

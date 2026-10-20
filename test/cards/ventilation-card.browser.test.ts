@@ -802,12 +802,14 @@ describe('pre-heater coil', () => {
       ['off', VALUES],
       ['on', { ...VALUES, preHeater: 600 }],
     ] as const) {
-      test(`airflow-diagram-card "Narrow card with all outdoor labels", ${layout} layout, ${name}: the coil's box is clear of the outdoor labels, the flow labels and the bypass position, 280 to 600 px`, async () => {
-        const shown = await show(280, 'light', layout, { ...values, bypass: 100 }, HEATER);
+      test(`airflow-diagram-card "Narrow card with all outdoor labels", ${layout} layout, ${name}: the coil's box is clear of the outdoor labels, the flow labels and the bypass position, 280 to 600 px, bypass 0, 50 and 100 %`, async () => {
+        const shown = await show(280, 'light', layout, { ...values, bypass: 0 }, HEATER);
         const { root } = shown;
-        for (const width of WIDTHS) {
+        for (const [bypass, width] of WIDTHS.flatMap((w) => [0, 50, 100].map((b) => [b, w] as const))) {
           await resize(shown, width);
-          const where = `${layout} ${name} ${String(width)} px`;
+          shown.card.hass = new MockHass().build({ ...values, bypass }, false);
+          await shown.card.updateComplete;
+          const where = `${layout} ${name} bypass ${String(bypass)} % ${String(width)} px`;
           const coil = box(root, '.on-drawing.pre-heater');
           const wire = box(root, 'svg path.coil');
           // The coil's state: on draws the wire lit over a glow, off draws the dim wire alone.
@@ -819,13 +821,27 @@ describe('pre-heater coil', () => {
           const glow = new DOMRect(wire.x - reach, wire.y - reach, wire.width + 2 * reach, wire.height + 2 * reach);
           expect(coil.width, where).toBeGreaterThan(0);
           expect(coil.height, where).toBeGreaterThan(0);
+          // The tap box is derived from the coil: it contains the wire, within a few units of it (the glow's reach).
+          const unit = (element(root, 'svg path.coil') as SVGGraphicsElement).getScreenCTM()?.a ?? 1;
+          expect(coil.left, `${where} box left`).toBeLessThanOrEqual(wire.left + 0.5);
+          expect(coil.right, `${where} box right`).toBeGreaterThanOrEqual(wire.right - 0.5);
+          expect(coil.top, `${where} box top`).toBeLessThanOrEqual(wire.top + 0.5);
+          expect(coil.bottom, `${where} box bottom`).toBeGreaterThanOrEqual(wire.bottom - 0.5);
+          expect(wire.left - coil.left, `${where} box margin`).toBeLessThan(8 * unit);
+          // The glow is blurred by an SVG filter of this card instance, not by CSS.
+          if (name === 'on') {
+            const filterId = element(root, 'svg filter').id;
+            expect(element(root, 'svg path.coil-glow').getAttribute('filter'), where).toBe(`url(#${filterId})`);
+            expect(root.querySelectorAll(`svg filter#${filterId} feGaussianBlur`).length, where).toBe(1);
+          }
           // The outdoor stack is the corner's labels; the flow labels and the bypass position have their own boxes.
           const outdoor = [...root.querySelectorAll('.corner .label:not(.hidden)')];
           expect(outdoor.length, where).toBeGreaterThan(0);
           const others = [
             ...root.querySelectorAll('.supply-flow .label, .exhaust-flow .label, .bypass-position .label:not(.hidden)'),
           ];
-          expect(others.length, where).toBeGreaterThan(layout === 'full' ? 1 : 0);
+          // The flow labels (full layout only) and the bypass position (hidden at bypass 0 %).
+          expect(others.length, where).toBe((layout === 'full' ? 2 : 0) + (bypass > 0 ? 1 : 0));
           for (const other of [...outdoor, ...others]) {
             const label = other.getBoundingClientRect();
             const what = `${where} ${other.textContent.trim()}`;
@@ -846,11 +862,11 @@ describe('pre-heater coil', () => {
       const style = getComputedStyle(coil);
       expect(parseFloat(style.opacity)).toBeGreaterThan(0);
       expect(parseFloat(style.opacity)).toBeLessThan(1);
-      // The stream under the coil: the supply gradient (x 86 to 326, y 62 to 138) at the coil's middle (114, 62).
+      // The stream under the coil: the supply gradient (x 86 to 326, y 62 to 138) at the coil's middle (103, 62).
       const [from, to] = [...root.querySelectorAll('svg linearGradient stop')].map((stop) =>
         channels(getComputedStyle(stop).stopColor),
       ) as [[number, number, number], [number, number, number]];
-      const along = ((114 - 86) * 240) / (240 ** 2 + 76 ** 2);
+      const along = ((103 - 86) * 240) / (240 ** 2 + 76 ** 2);
       const stream = from.map((channel, i) => channel + ((to[i] ?? 0) - channel) * along);
       const background = channels(THEMES[theme]['--card-background-color']);
       const wire = channels(style.stroke);

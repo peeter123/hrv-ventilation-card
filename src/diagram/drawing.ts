@@ -16,18 +16,35 @@ import type { Stream } from '../lib/config';
 /** The drawing's coordinate system: 2 by 1, the drawing band's aspect ratio. */
 export const VIEW_BOX = { width: 400, height: 200 };
 
-/** The paths of the streams and the bypass, also used by the animated overlays. */
-export const PATHS = {
-  supply: 'M 86 62 C 160 62 240 138 306 138',
-  exhaust: 'M 314 62 C 240 62 160 138 94 138',
-  // Between the exchanger and the exhaust flow label above the exhaust arrow, then below the exchanger.
-  bypass: 'M 86 62 C 146 62 124 192 200 192 C 272 192 280 138 306 138',
-} as const;
-
 const STROKE = 14;
 
-// The supply path's cubic (x0 y0 x1 y1 x2 y2 x3 y3), which the pre-heater coil follows.
-const SUPPLY_CUBIC = [86, 62, 160, 62, 240, 138, 306, 138] as const;
+// The stream ends: the outdoor stream starts at IN and the supply stream ends at OUT; the extract and exhaust streams
+// mirror them across the middle. Each end has a straight lead of LEAD units: the outdoor air runs straight to the
+// point where the bypass splits off (SPLIT), and the supply air and the bypass run straight from the point where they
+// merge (MERGE) to the arrowhead. The pre-heater coil sits on the outdoor lead, on the air before the split.
+const IN = { x: 86, y: 62 } as const;
+const OUT = { x: 306, y: 138 } as const;
+const LEAD = 34;
+const SPLIT = IN.x + LEAD;
+const MERGE = OUT.x - LEAD;
+const mirror = (x: number): number => VIEW_BOX.width - x;
+
+// The supply stream's curve between the leads (control points), and the bypass's two curves around the exchanger.
+const SUPPLY_CURVE = `C ${String(SPLIT + 51)} ${String(IN.y)} ${String(MERGE - 46)} ${String(OUT.y)} ${String(MERGE)} ${String(OUT.y)}`;
+const BYPASS_CURVES =
+  `C ${String(SPLIT + 20)} ${String(IN.y)} ${String(SPLIT + 5)} 192 200 192 ` +
+  `C ${String(MERGE - 23)} 192 ${String(MERGE - 18)} ${String(OUT.y)} ${String(MERGE)} ${String(OUT.y)}`;
+const leads = (curve: string): string =>
+  `M ${String(IN.x)} ${String(IN.y)} L ${String(SPLIT)} ${String(IN.y)} ${curve} L ${String(OUT.x)} ${String(OUT.y)}`;
+
+/** The paths of the streams and the bypass, also used by the animated overlays. */
+export const PATHS = {
+  supply: leads(SUPPLY_CURVE),
+  // The supply stream mirrored: from the extract corner, across the exchanger, to the exhaust arrow.
+  exhaust: `M ${String(mirror(IN.x))} ${String(IN.y)} L ${String(mirror(SPLIT))} ${String(IN.y)} C ${String(mirror(SPLIT + 51))} ${String(IN.y)} ${String(mirror(MERGE - 46))} ${String(OUT.y)} ${String(mirror(MERGE))} ${String(OUT.y)} L ${String(mirror(OUT.x))} ${String(OUT.y)}`,
+  // Between the exchanger and the exhaust flow label above the exhaust arrow, then below the exchanger.
+  bypass: leads(BYPASS_CURVES),
+} as const;
 
 /** Rounded to a number of decimals, so float noise (1 - 0.07 = 0.9299999999999999) stays out of the DOM. */
 const rounded = (value: number, decimals: number): number => Math.round(value * 10 ** decimals) / 10 ** decimals;
@@ -61,54 +78,53 @@ const RIM =
 /** Percent of the mode's colour in the total ring (the rest is the text colour): the largest that keeps 3:1 against the core and the moisture ring. */
 const TOTAL_RING_SHARE = 45;
 
-// The pre-heater coil: a smooth wave wire along the outdoor stream (the supply path's start), right of the outdoor
-// stack (x 70 at most) and left of the bypass path's first bend. Its centreline is the stream's own, its amplitude the
-// stream's half-width, so the first and last points (round caps) sit on the stream's borders. Three crests on each
-// side: from the upper border, down, up, down, up, down to the lower border.
-const COIL_X = { from: 102.8, to: 125.2 } as const;
+// The pre-heater coil: a smooth wave wire on the outdoor lead (the straight start of the outdoor stream, before the
+// bypass splits off), right of the outdoor stack (x 70 at most) and left of the split. Its centreline is the stream's
+// own, its amplitude the stream's half-width, so the first and last points (round caps) sit on the stream's borders.
+// Three crests on each side: from the upper border, down, up, down, up, down to the lower border. It is centred on
+// the lead.
+const COIL_LENGTH = 22.4;
+const COIL_X = { from: IN.x + (LEAD - COIL_LENGTH) / 2, to: SPLIT - (LEAD - COIL_LENGTH) / 2 } as const;
 const COIL_HALF_WAVES = 5;
 const COIL_SAMPLES = 48;
+const COIL_WIDTH = 3;
+/** The coil's glow stroke is half as wide again as the wire; the blur spreads it by about three of its deviations. */
+const GLOW_WIDTH = COIL_WIDTH * 1.5;
+const GLOW_BLUR = 1.5;
 
-/** A point of the supply stream's cubic centreline and its unit normal (pointing down, to the lower border). */
-function streamPoint(t: number): { x: number; y: number; nx: number; ny: number } {
-  const [x0, y0, x1, y1, x2, y2, x3, y3] = SUPPLY_CUBIC;
-  const u = 1 - t;
-  const b = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t] as const;
-  const d = [3 * u * u, 6 * u * t, 3 * t * t] as const;
-  const x = b[0] * x0 + b[1] * x1 + b[2] * x2 + b[3] * x3;
-  const y = b[0] * y0 + b[1] * y1 + b[2] * y2 + b[3] * y3;
-  const dx = d[0] * (x1 - x0) + d[1] * (x2 - x1) + d[2] * (x3 - x2);
-  const dy = d[0] * (y1 - y0) + d[1] * (y2 - y1) + d[2] * (y3 - y2);
-  const length = Math.hypot(dx, dy);
-  return { x, y, nx: -dy / length, ny: dx / length };
-}
-
-/** The parameter of the supply cubic at an x (x grows monotonically along it). */
-function parameterAt(x: number): number {
-  let [low, high] = [0, 1];
-  for (let i = 0; i < 40; i++) {
-    const mid = (low + high) / 2;
-    if (streamPoint(mid).x < x) low = mid;
-    else high = mid;
-  }
-  return (low + high) / 2;
-}
-
-/** The coil's wire as points: the stream's centreline moved along its normal by the half-width times a cosine. */
+/** The coil's wire as points: the lead's centreline (y constant) moved down by the half-width times a cosine. */
 export function coilPoints(): { x: number; y: number }[] {
-  const [t0, t1] = [parameterAt(COIL_X.from), parameterAt(COIL_X.to)];
   return Array.from({ length: COIL_SAMPLES + 1 }, (_, i) => {
     const s = i / COIL_SAMPLES;
-    const p = streamPoint(t0 + (t1 - t0) * s);
     const offset = (STROKE / 2) * -Math.cos(COIL_HALF_WAVES * Math.PI * s);
-    return { x: rounded(p.x + p.nx * offset, 2), y: rounded(p.y + p.ny * offset, 2) };
+    return { x: rounded(COIL_X.from + (COIL_X.to - COIL_X.from) * s, 2), y: rounded(IN.y + offset, 2) };
   });
 }
 
 const COIL = coilPoints()
   .map(({ x, y }, i) => `${i === 0 ? 'M' : 'L'} ${String(x)} ${String(y)}`)
   .join(' ');
-const COIL_WIDTH = 3;
+
+/** The coil's area in user units: the wire's bounds grown by the glow's half stroke and blur. */
+function coilArea(): { x: number; y: number; width: number; height: number } {
+  const points = coilPoints();
+  const [xs, ys] = [points.map((p) => p.x), points.map((p) => p.y)];
+  const reach = GLOW_WIDTH / 2 + 3 * GLOW_BLUR;
+  const [left, top] = [Math.min(...xs) - reach, Math.min(...ys) - reach];
+  return { x: left, y: top, width: Math.max(...xs) + reach - left, height: Math.max(...ys) + reach - top };
+}
+
+/** The coil's tap box as CSS percentages of the drawing band, from the coil's bounds (the wire and its glow). */
+export function coilBox(): { left: string; top: string; width: string; height: string } {
+  const area = coilArea();
+  const percent = (value: number, of: number): string => `${String(rounded((value / of) * 100, 2))}%`;
+  return {
+    left: percent(area.x, VIEW_BOX.width),
+    top: percent(area.y, VIEW_BOX.height),
+    width: percent(area.width, VIEW_BOX.width),
+    height: percent(area.height, VIEW_BOX.height),
+  };
+}
 
 /** Percent of white in the wire at full level; it falls linearly to 0 at level 0. */
 const CORE_WHITE = 45;
@@ -117,21 +133,28 @@ const CORE_WHITE = 45;
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
 const HOUSE = 'M 12 4 L 21 12 L 18 12 L 18 20 L 14 20 L 14 15 L 10 15 L 10 20 L 6 20 L 6 12 L 3 12 Z';
 
-/** The IDs one card instance gives its gradients and clip path: unique per instance, as several cards share a page's IDs. */
+/** The IDs one card instance gives its gradients, clip path and filter: unique per instance, as several cards share a page's IDs. */
 export interface DrawingIds {
   supply: string;
   exhaust: string;
   /** The clip path of the exchanger's rim, which the moisture ring is clipped to. */
   rim: string;
+  /** The blur filter of the pre-heater coil's glow. */
+  blur: string;
 }
 
 let instances = 0;
 
-/** New gradient and clip IDs for a card instance. */
+/** New gradient, clip and filter IDs for a card instance. */
 export function drawingIds(): DrawingIds {
   instances += 1;
   const suffix = String(instances);
-  return { supply: `hrv-supply-${suffix}`, exhaust: `hrv-exhaust-${suffix}`, rim: `hrv-rim-${suffix}` };
+  return {
+    supply: `hrv-supply-${suffix}`,
+    exhaust: `hrv-exhaust-${suffix}`,
+    rim: `hrv-rim-${suffix}`,
+    blur: `hrv-blur-${suffix}`,
+  };
 }
 
 /** The `exchanger_type` option: heat recovery (HRV) or energy recovery (ERV), which also passes moisture. */
@@ -229,19 +252,29 @@ function totalRing(color: string, figure: number | undefined): SVGTemplateResult
 export const glowShare = (level: number): number => 30 + 70 * level;
 
 /** The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. */
-function coilWire({ level, color }: Coil): SVGTemplateResult {
+function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
   if (level <= 0) {
     return svg`<path class="coil off" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>`;
   }
+  const share = glowShare(level);
   // A filament: the wire is the glow colour towards the text colour, then lightened towards white as the level rises
   // (up to 45 % at full), so the core reads hotter and lighter than the halo of the pure glow colour behind it.
-  const heated = `color-mix(in srgb, ${color} ${String(rounded(glowShare(level), 1))}%, var(--secondary-text-color))`;
+  const heated = `color-mix(in srgb, ${color} ${String(rounded(share, 1))}%, var(--secondary-text-color))`;
   const stroke = `color-mix(in srgb, ${heated} ${String(rounded(100 - CORE_WHITE * level, 1))}%, white)`;
-  return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${COIL_WIDTH * 1.5} stroke-linejoin="round"
-      opacity=${rounded(glowShare(level) / 100, 3)}
-      style=${styleMap({ stroke: color, '--glow-opacity': String(rounded(glowShare(level) / 100, 3)) })}></path>
+  const glow = String(rounded(share / 100, 3));
+  return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${GLOW_WIDTH} stroke-linejoin="round"
+      filter="url(#${blur})" opacity=${glow}
+      style=${styleMap({ stroke: color, '--glow-opacity': glow })}></path>
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>`;
+}
+
+/** The blur of the coil's glow, over the coil's area (the default filter region is too small for a thin wave). */
+function blurFilter(id: string): SVGTemplateResult {
+  const { x, y, width, height } = coilArea();
+  return svg`<filter id=${id} filterUnits="userSpaceOnUse" x=${x} y=${y} width=${width} height=${height}>
+    <feGaussianBlur stdDeviation=${GLOW_BLUR}></feGaussianBlur>
+  </filter>`;
 }
 
 /** The drawing for the current colours and bypass strength. A path at strength 0 is left out. */
@@ -264,6 +297,7 @@ export function drawing({ ids, exchanger, colors, bypass, speeds, rings, coil }:
         ${stop('0', colors.extract)}${stop('1', colors.exhaust)}
       </linearGradient>
       <clipPath id=${ids.rim}><path d=${RIM} clip-rule="evenodd"></path></clipPath>
+      ${coil ? blurFilter(ids.blur) : null}
     </defs>
     ${symbol(36, colors.outdoor, CLOUD)}
     ${symbol(364, colors.extract, HOUSE)}
@@ -274,7 +308,7 @@ export function drawing({ ids, exchanger, colors, bypass, speeds, rings, coil }:
     ${rings ? totalRing(rings.color, rings.total) : null}
     ${streamPath('bypass', supplyStroke, around)}
     ${streamPath('supply', supplyStroke, through)}
-    ${coil ? coilWire(coil) : null}
+    ${coil ? coilWire(coil, ids.blur) : null}
     <polygon class="head" points=${HEADS.supply} style=${styleMap({ fill: colors.supply })}></polygon>
     ${streamPath('exhaust', exhaustStroke, 1)}
     <polygon class="head" points=${HEADS.exhaust} style=${styleMap({ fill: colors.exhaust })}></polygon>

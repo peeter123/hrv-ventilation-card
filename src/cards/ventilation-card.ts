@@ -18,7 +18,7 @@ import {
   type Badge,
   type MoistureFigure,
 } from '../diagram/badge';
-import { drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
+import { coilBox, drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
 import { flowSpeed } from '../diagram/flow';
 import {
   COMPACT_BELOW,
@@ -245,13 +245,7 @@ export class HrvVentilationCard extends HrvCard {
       height: 74%;
       clip-path: polygon(28% 0, 72% 0, 100% 50%, 72% 100%, 28% 100%, 0 50%);
     }
-    /* Over the pre-heater coil (x 102 to 125, y 53 to 77 of 400 by 200: the wave is x 104 to 123 and y 56 to 75, plus its glow). */
-    .pre-heater {
-      top: 26.5%;
-      left: 25.5%;
-      width: 5.75%;
-      height: 12%;
-    }
+    /* The pre-heater coil's tap box: its position and size are set inline from the coil's bounds (see coilBox in drawing.ts). */
     .coil {
       stroke-linecap: round;
     }
@@ -260,7 +254,6 @@ export class HrvVentilationCard extends HrvCard {
       opacity: 0.5;
     }
     .coil-glow {
-      filter: blur(1.5px);
       animation: hrv-glow 2.5s ease-in-out infinite;
     }
     /* A gentle pulse of the glow around its level (--glow-opacity), between 60 % and 100 % of it. */
@@ -319,7 +312,7 @@ export class HrvVentilationCard extends HrvCard {
     }
     /*
      * Below the arrowheads (bottom at y 152), from y 158: the supply flow ends at x 340, under its head (x 306 to 326)
-     * and right of the bypass path (about x 285 there, with its stroke), clear of the corner labels (from x 346); the
+     * and right of the bypass path (left of x 280 there, with its stroke), clear of the corner labels (from x 346); the
      * exhaust flow starts under its head (x 74). Clear of the wedge with the moisture figure; a little smaller.
      */
     .exhaust-flow,
@@ -679,6 +672,7 @@ export class HrvVentilationCard extends HrvCard {
       aria-label=${title}
       title=${title}
       data-entity=${ifDefined(tap.entity)}
+      style=${styleMap(coilBox())}
     ></div>`;
   }
 

@@ -90,9 +90,9 @@ function applyScenario(scenario: Scenario): void {
   values.flow = scenario.flow;
   values.bypass = scenario.bypass;
   values.season = scenario.season;
-  // Only the frost scenario sets the pre-heater; the others leave the control alone.
+  // The pre-heater is off unless the scenario heats (frost); the chosen kind stays, like the other card options.
+  values.preHeater = scenario.preHeater ?? 0;
   if (scenario.preHeater !== undefined) {
-    values.preHeater = scenario.preHeater;
     // The coil needs the role: switch a "none" kind to the power sensor, and keep any other kind as chosen.
     if (options.preHeaterKind === 'none') {
       options.preHeaterKind = 'power sensor';

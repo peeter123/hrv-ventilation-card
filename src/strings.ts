@@ -125,6 +125,7 @@ export const EDITOR = {
     heating_saving: 'Saved heating power',
     cooling_saving: 'Saved cooling power',
     moisture_recovery: 'Moisture recovery rate',
+    energy: 'Energy',
     max_power: 'Maximum power (W)',
     glow_color: 'Glow colour',
     heating: 'Heating season',

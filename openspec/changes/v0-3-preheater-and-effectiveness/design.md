@@ -165,19 +165,38 @@ exactly as v0.2 did. The user accepted that with the move.
 
 ### The pre-heater coil: SVG for the look, an HTML box for the tap
 
-The coil is a smooth wave wire along the outdoor stream over about x 102.8 to 125.2 (20 % shorter along the stream than the first draft's 100 to 128; user's feedback, round 2). Its shape is computed from the
-stream's own geometry (user's feedback, 2026-10-20: rounder, one turn fewer, following the stream's curve, ends on the
-stream's borders): `coilPoints()` in `drawing.ts` samples the supply path's cubic centreline 48 times and moves each
-sample along the path's normal by the stream's half-width (7) times `-cos(5 pi s)`, so the wire follows the curve,
-has three crests on each side (the same as the first zigzag; two crests did not read as a coil) and its first and last points, with round caps, sit on the upper
-and the lower border. The extent is about x 104 to 123 and y 56 to 75, right of the outdoor stack at every width
-(x 70 at most) and left of the bypass path's first bend. A pure `preHeaterLevel(state, maxPower)` gives 0 to 1:
+The coil is a smooth wave wire, 22.4 units long (the length of round 2's x 102.8 to 125.2, 20 % shorter than the first
+draft's 100 to 128), on the outdoor stream's straight lead, the part the outdoor air shares before the bypass splits
+off. That is where a pre-heater physically sits, at the outdoor inlet, before the air splits between the exchanger and
+the bypass. It used to follow the supply cubic past the bypass's start, so with the bypass open the coil hung beside
+the bypass stream over empty background (review of group 5, user decision: move it onto the shared segment and
+lengthen the segments).
+
+*The four leads.* Each of the four streams' ends now has a straight lead of 34 units (`LEAD` in `drawing.ts`), built
+from the constants `IN` (86, 62), `OUT` (306, 138), `SPLIT = IN.x + LEAD` (120) and `MERGE = OUT.x - LEAD` (272); the
+extract and exhaust ends mirror them across x 200. The outdoor lead (86 to 120 at y 62) is the start of both the
+supply path and the bypass, so they share it; the supply stream and the bypass end in a shared lead into the supply
+arrow (272 to 306 at y 138); the extract stream starts with the mirrored lead (314 to 280) and the exhaust stream ends
+with one (126 to 94). The stream ends, the arrowheads, the gradients' endpoints and the labels did not move; the
+curves between the leads were reshaped to fit in 34 units less x per curve (supply `C 171 62 226 138 272 138` from
+120 62, exhaust its mirror, bypass `C 140 62 125 192 200 192 C 249 192 254 138 272 138`). The bypass's first curve
+was chosen to keep the old clearance from the exchanger (at least 10.5 units from its outline, as before) and to
+stay right of x 147 below y 152, so it stays clear of the exhaust flow label (a browser test measures it). The
+supply and the bypass overlap on the lead, so with a half-open bypass the lead is drawn twice at half strength each
+(75 % opaque), as the start was before.
+
+*The coil.* `coilPoints()` has no cubic to sample any more: the lead is a straight line at y 62, so the wire is
+`y = 62 - 7 cos(5 pi s)` over x 91.8 to 114.2 (the lead's middle, 5.8 units clear of both ends), 48 samples, `s` 0 to
+1 (derived from `IN`, `LEAD` and `COIL_LENGTH`, so the coil and the path cannot drift apart). It has three crests on
+each side (the same as the first zigzag; two crests did not read as a coil) and its first and last points, with round
+caps, sit on the upper and the lower border. It is right of the outdoor stack at every width (x 70 at most) and left
+of the split. A pure `preHeaterLevel(state, maxPower)` gives 0 to 1:
 
 - numeric (converted to W): 0 at or below 0 W; with a maximum, `max(power / max, 0.1)` capped at 1; without one, 1;
 - `on`: 1, `off`: 0; anything else (unavailable, unknown, text): 0.
 
 The coil's stroke is `color-mix(in srgb, <glow colour> <share>%, var(--secondary-text-color))` with
-`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow, which pulses gently (below) (stroke 4.5 against the wire's 3, blur 1.5 px: half the first draft's spread). At 0 it is the secondary text colour at reduced opacity: visible as a coil
+`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow, which pulses gently (below) (stroke 4.5 against the wire's 3, blur 1.5: half the first draft's spread; the blur is an SVG `<filter>` with `feGaussianBlur`, id `hrv-blur-N` per card instance like the gradients, over the coil's area in user units, not a CSS `filter`, which some WebKit versions, e.g. Home Assistant's iOS app, do not apply to SVG children). At 0 it is the secondary text colour at reduced opacity: visible as a coil
 in both themes, clearly off.
 
 - *Why not black for off?* It disappears on a dark theme. The secondary text colour follows the theme.
@@ -198,7 +217,7 @@ in both themes, clearly off.
   under `.still` and `prefers-reduced-motion: reduce`, exactly as the flow animation does. Off has no glow copy.
 - *Why a minimum of 0.1?* A modulating heater at a few percent would otherwise look off.
 
-An HTML box `.on-drawing.pre-heater` over the coil carries `title` and `aria-label` ("Pre-heater: " plus the state
+An HTML box `.on-drawing.pre-heater` over the coil (its left, top, width and height in percent come from the bounds of `coilPoints()` plus the glow's reach, `coilBox()` in `drawing.ts`, set inline, so they follow the coil) carries `title` and `aria-label` ("Pre-heater: " plus the state
 as Home Assistant formats it) and, through `this.tap()`, `data-entity` for `pre_heater.power`. So the tap, the
 focus and sample mode work as for every other label.
 
