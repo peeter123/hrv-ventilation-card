@@ -161,7 +161,7 @@
   physically possible values in every frame (user, 2026-10-20: the exhaust is now hotter than the extract while the
   outdoor air is much colder; each frame's exhaust must lie between outdoor and extract, and the supply likewise);
   verify every image the README links exists and shows the v0.3 behaviour, and the GIF's frames pass that check
-- [ ] 7.2 Set the version to `0.3.0` in `package.json`, run `npm run release` and commit `dist/`; verify
+- [x] 7.2 Set the version to `0.3.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
 - [ ] 7.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
   Playwright (service workers blocked) on both dashboards that the existing cards render as in v0.2, apart from the moved moisture figure and flow
