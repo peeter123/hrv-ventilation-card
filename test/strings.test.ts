@@ -155,7 +155,7 @@ describe('texts', () => {
   });
 
   test('every role label is plain lower-case text', () => {
-    for (const label of Object.values(ROLE_LABELS)) expect(label).toMatch(/^[a-z ]+$/);
+    for (const label of Object.values(ROLE_LABELS)) expect(label).toMatch(/^[a-z -]+$/);
   });
 
   test('recovery-balance-card "Positive potential" header', () => {

@@ -26,6 +26,8 @@ export const DIAGRAM_OPTIONS = {
   showEffectiveness: { kind: 'boolean', path: 'show_effectiveness', default: false },
   // In the unit of the flow entities; without it every stream moves at the same speed.
   nominalFlow: { kind: 'number', path: 'animation.nominal_flow', min: 1, max: 100_000, default: undefined },
+  // The pre-heater's rated power in W: the coil's glow is the power as a share of it; without it the glow is full.
+  preHeaterMaxPower: { kind: 'number', path: 'pre_heater.max_power', min: 1, max: 4000, default: undefined },
   layout: { kind: 'choice', path: 'layout', choices: LAYOUTS, default: 'auto' },
   showUnavailable: { kind: 'boolean', path: 'show_unavailable', default: false },
 } as const satisfies Record<string, NumberOption | ColorOption | BooleanOption | ChoiceOption>;

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { checkDiagramConfig, HrvVentilationCard } from '../../src/cards/ventilation-card';
 import type { CardHass } from '../../src/cards/base-card';
-import type { CardConfig } from '../../src/lib/config';
+import { entityAt, type CardConfig } from '../../src/lib/config';
 import type { HassEntityState } from '../../src/lib/hass';
 import { nb } from '../nbsp';
 
@@ -672,6 +672,22 @@ describe('checkDiagramConfig', () => {
     );
     expect(check({ ...CONFIG, show_unavailable: 1 })).toThrow('Invalid option show_unavailable');
     expect(check({ ...CONFIG, colors: 'blue' })).toThrow('Invalid option colors: expected a group of options');
+  });
+
+  test('airflow-diagram-card "Pre-heater roles": both roles are optional and map to their entities', () => {
+    expect(check(CONFIG)).not.toThrow();
+    const pre = { power: 'sensor.pre_heater_power', energy: 'sensor.pre_heater_energy' };
+    expect(check({ ...CONFIG, pre_heater: pre })).not.toThrow();
+    expect(entityAt({ ...CONFIG, pre_heater: pre }, 'pre_heater.power')).toBe('sensor.pre_heater_power');
+    expect(entityAt({ ...CONFIG, pre_heater: pre }, 'pre_heater.energy')).toBe('sensor.pre_heater_energy');
+  });
+
+  test('airflow-diagram-card "Invalid maximum": pre_heater.max_power outside 1 to 4000 is a configuration error', () => {
+    expect(check({ ...CONFIG, pre_heater: { max_power: 0 } })).toThrow(
+      'Invalid option pre_heater.max_power: expected a number from 1 to 4000',
+    );
+    expect(check({ ...CONFIG, pre_heater: { max_power: 4001 } })).toThrow('Invalid option pre_heater.max_power');
+    expect(check({ ...CONFIG, pre_heater: { max_power: 4000 } })).not.toThrow();
   });
 
   test('card-bundle "Option left out": every option may be left out or empty', () => {

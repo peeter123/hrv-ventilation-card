@@ -23,6 +23,7 @@ export type RolePath =
   | `fans.${'level' | 'supply_flow' | 'exhaust_flow'}`
   | `bypass.${'position' | 'mode' | 'next_change'}`
   | `status.${'operating_mode' | 'target_temperature' | 'temperature_profile' | 'next_fan_change' | 'filter_days' | 'power' | 'rmot' | 'heating_saving' | 'cooling_saving' | 'moisture_recovery'}`
+  | `pre_heater.${'power' | 'energy'}`
   | `seasons.${'heating' | 'cooling'}`;
 
 /**

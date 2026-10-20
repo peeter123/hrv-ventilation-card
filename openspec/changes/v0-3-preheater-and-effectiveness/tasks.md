@@ -102,7 +102,7 @@
 
 ## 5. Pre-heater coil
 
-- [ ] 5.1 Add the `pre_heater` group to `RolePath` (`power`, `energy`), `ROLE_LABELS` and the `pre_heater.max_power`
+- [x] 5.1 Add the `pre_heater` group to `RolePath` (`power`, `energy`), `ROLE_LABELS` and the `pre_heater.max_power`
   option (1 to 4000 W, no default); verify config tests that both roles are optional, "Pre-heater roles" maps
   them, and `pre_heater.max_power: 0` is a configuration error naming the option ("Invalid maximum")
 - [ ] 5.2 Add `preHeaterLevel(state, maxPower)` (design: "The pre-heater coil"); verify unit tests for "Modulating

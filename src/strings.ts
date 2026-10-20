@@ -44,6 +44,8 @@ export const ROLE_LABELS: Readonly<Record<RolePath, string>> = {
   'status.heating_saving': 'saved heating power',
   'status.cooling_saving': 'saved cooling power',
   'status.moisture_recovery': 'moisture recovery rate',
+  'pre_heater.power': 'pre-heater',
+  'pre_heater.energy': 'pre-heater energy',
   'seasons.heating': 'heating season',
   'seasons.cooling': 'cooling season',
 };
