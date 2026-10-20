@@ -120,7 +120,7 @@
 - [x] 5.6 Document the coil in `README.md` (the two roles, `pre_heater.max_power`, how the glow reads) and the
   diagram section of `docs/hrv-ventilation.md` (position, colours, the 0.1 minimum, the tap box); verify the README
   tests pass
-- [ ] 5.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
+- [x] 5.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
   250 of 1000 W, without a maximum and as an on/off entity; the frost scenario; both layouts; 280, 400 and 600 px;
   light and dark) inspected by an agent, and apply the user's feedback; verify the user approves before the review
 - [ ] 5.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
