@@ -77,7 +77,7 @@
   `src/strings.ts` (NBSP before the units); verify unit tests for "Bypass closed", "Bypass modulating", "Figure not
   measurable" and "Moisture kept out of the house", and the strings and NBSP tests
 - [x] 4.4 Move the moisture figure right of the exchanger, centred at y 100 between the exchanger and the house
-  symbol, with `mdi:water-plus` while recovering and `mdi:water-minus` while keeping moisture out, and the magnitude
+  symbol, with `mdi:water-sync` while recovering and `mdi:water-remove` while keeping moisture out, and the magnitude
   without a sign (the unit on a second line where it does not fit); remove the halo (`HALO_SHADOW`, its padding, and
   the `rings` class if nothing else uses it); move both flow labels below their arrowheads (design: "Moisture figure
   and flow labels"); verify unit tests for "Moisture recovered", "Moisture kept out", "Input unavailable" and "HRV",

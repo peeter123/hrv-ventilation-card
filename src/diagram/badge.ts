@@ -82,7 +82,7 @@ export interface MoistureFigure {
   text: string;
   /** The unit after the number ("g/h"); none for "n/a". */
   unit?: string;
-  /** The direction as an icon: water-plus while moisture is recovered, water-minus while it is kept out; none for "n/a". */
+  /** The direction as an icon: water-sync while moisture is recovered, water-remove while it is kept out; none for "n/a". */
   icon?: string;
   /** The tooltip, with the direction in words, e.g. "Moisture kept out: 418 g/h". */
   title: string;

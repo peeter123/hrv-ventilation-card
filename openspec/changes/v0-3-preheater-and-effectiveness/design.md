@@ -135,10 +135,11 @@ exchanger, centred at y 100, the height of the exchanger's centre and the house 
 between the exchanger's right vertex (x 255) and the house symbol's circle (x 344). The streams leave a wedge there,
 from the exhaust stream (bottom edge about y 76 at x 275) to the supply stream (top edge about y 126).
 
-- It shows the rate's magnitude after an icon, `mdi:water-plus` while moisture is recovered (0 or more) and
-  `mdi:water-minus` while it is kept out, so it needs no minus sign. The icon is drawn like the top row's icons, as
+- It shows the rate's magnitude after an icon, `mdi:water-sync` while moisture is recovered (0 or more) and
+  `mdi:water-remove` while it is kept out, so it needs no minus sign. The icon is drawn like the top row's icons, as
   high as the text and centred on it. The tooltip keeps its words ("Moisture recovered: 120 g/h", "Moisture kept out:
   418 g/h") and the tap keeps opening `status.moisture_recovery`.
+- Icon choice (user's decision, 2026-10-20): the first draft used a water drop with a plus and a minus, which is not  clear on a figure that shows no sign. `mdi:water-sync` (moisture is exchanged back into the house) and  `mdi:water-remove` (moisture is kept out) say what happens.
 - At 280 px the gap is about 55 px; a four-digit figure with its icon needs about 65 px at the 11 px minimum. Where it
   does not fit, the unit goes to a second line under the number (the wedge is about 31 px high at 280 px, room for
   two 11 px lines). The browser test measures it at 280 to 600 px in both layouts with three and four digits.

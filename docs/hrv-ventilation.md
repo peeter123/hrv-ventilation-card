@@ -209,8 +209,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   house symbol's) and halfway between the exchanger's right vertex (x 255) and the house symbol's circle (x 344), in
   the wedge the streams leave there, in both layouts. It sits outside the exchanger because inside the rings' slanted
   sides crossed it on narrow cards. It shows the magnitude of the
-  calculation's recovered moisture rate after an icon: `mdi:water-plus` while moisture is recovered (0 or more),
-  `mdi:water-minus` while it is kept out, so no sign is shown. The icon is drawn like the top row's, as high as the
+  calculation's recovered moisture rate after an icon: `mdi:water-sync` while moisture is recovered (0 or more),
+  `mdi:water-remove` while it is kept out, so no sign is shown. The icon is drawn like the top row's, as high as the
   text and centred on it. The tooltip names the direction with the magnitude ("Moisture recovered: 120 g/h",
   "Moisture kept out: 418 g/h"). At a card width of 400 px or less (`MOISTURE_TWO_LINES`) the unit goes on a second
   line under the number, as a four-digit figure with its icon needs about 65 px at the 11 px minimum and the gap is

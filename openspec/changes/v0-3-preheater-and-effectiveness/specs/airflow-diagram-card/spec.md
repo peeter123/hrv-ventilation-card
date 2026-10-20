@@ -134,18 +134,18 @@ card width from 280 px.
 With `exchanger_type: erv` and the badge's inputs configured, the card SHALL show the calculated moisture recovery
 rate in g/h right of the exchanger, centred at the height of the exchanger's centre and the house symbol's, between
 the two and clear of the streams. The figure SHALL show the rate's magnitude without a sign, after an icon that
-gives the direction: `mdi:water-plus` while moisture is recovered (a rate of 0 or more) and `mdi:water-minus` while
+gives the direction: `mdi:water-sync` while moisture is recovered (a rate of 0 or more) and `mdi:water-remove` while
 it is kept out. The tooltip SHALL name the direction with the magnitude. Where the figure does not fit on one line,
 its unit SHALL go to a second line.
 
 #### Scenario: Moisture recovered
 - **WHEN** the type is ERV and the calculated moisture recovery rate is 120 g/h
-- **THEN** right of the exchanger a water-plus icon is followed by "120 g/h", with the tooltip "Moisture recovered:
+- **THEN** right of the exchanger a water-sync icon is followed by "120 g/h", with the tooltip "Moisture recovered:
   120 g/h"
 
 #### Scenario: Moisture kept out
 - **WHEN** the type is ERV and the calculated moisture recovery rate is -418 g/h
-- **THEN** right of the exchanger a water-minus icon is followed by "418 g/h", without a minus sign, with the
+- **THEN** right of the exchanger a water-remove icon is followed by "418 g/h", without a minus sign, with the
   tooltip "Moisture kept out: 418 g/h"
 
 #### Scenario: Four-digit rate on a narrow card

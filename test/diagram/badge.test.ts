@@ -85,20 +85,20 @@ describe('moistureFigure', () => {
     moisture: { extracted: 500, recovered, outside: 500 - recovered },
   });
 
-  test('airflow-diagram-card "Moisture recovered": water-plus and "120 g/h"', () => {
+  test('airflow-diagram-card "Moisture recovered": water-sync and "120 g/h"', () => {
     expect(moistureFigure(withMoisture(120.3), ERV, LOCALE)).toEqual({
       text: '120',
       unit: 'g/h',
-      icon: 'mdi:water-plus',
+      icon: 'mdi:water-sync',
       title: nb('Moisture recovered: 120 g/h'),
     });
   });
 
-  test('airflow-diagram-card "Moisture kept out": water-minus and "418 g/h" without a sign, the tooltip with the magnitude', () => {
+  test('airflow-diagram-card "Moisture kept out": water-remove and "418 g/h" without a sign, the tooltip with the magnitude', () => {
     expect(moistureFigure(withMoisture(-418), ERV, LOCALE)).toEqual({
       text: '418',
       unit: 'g/h',
-      icon: 'mdi:water-minus',
+      icon: 'mdi:water-remove',
       title: nb('Moisture kept out: 418 g/h'),
     });
   });
@@ -107,7 +107,7 @@ describe('moistureFigure', () => {
     expect(moistureFigure(withMoisture(-0.4), ERV, LOCALE)).toEqual({
       text: '0',
       unit: 'g/h',
-      icon: 'mdi:water-plus',
+      icon: 'mdi:water-sync',
       title: nb('Moisture recovered: 0 g/h'),
     });
   });

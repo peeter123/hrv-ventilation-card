@@ -224,12 +224,12 @@ With only one of them set, a reading that is not a number or equal readings, it 
 **Exchanger type.** `hrv` (heat recovery, the default) draws the exchanger grey. `erv` (energy recovery, an enthalpy
 exchanger that also passes moisture) draws it blue-grey, derived from the theme so it stays legible in light and
 dark themes, and shows the moisture recovery figure right of the exchanger: the moisture the exchanger hands back to the
-supply air, in g/h, from the same calculation and sensors as the badge. An icon says which way it goes, water-plus
-while moisture is recovered and water-minus while the exchanger keeps moisture out (the outdoor air is more humid
-than the indoor air); the number is the size of the rate, without a sign, and the tooltip says which. On narrow
-cards the unit moves to a second line under the number. It is hidden or "n/a" like the badge, is shown in both
-layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. The type changes only the
-drawing: the calculation and the bar cards are the same for both.
+supply air, in g/h, from the same calculation and sensors as the badge. An icon says which way it goes: water-sync
+while moisture is recovered (the exchanger hands it back) and water-remove while the exchanger keeps moisture out
+(the outdoor air is more humid than the indoor air). The number is the size of the rate, without a sign, and the
+tooltip says which. On narrow cards the unit moves to a second line under the number. It is hidden or "n/a" like the
+badge, is shown in both layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. The type
+changes only the drawing: the calculation and the bar cards are the same for both.
 
 **Effectiveness rings.** With `show_effectiveness: true` the exchanger gets progress rings that start at its top
 centre and run clockwise; a full ring is 100 %. The thin inner ring, on the inner outline, is the total

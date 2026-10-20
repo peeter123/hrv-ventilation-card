@@ -226,8 +226,8 @@ export const DIAGRAM = {
   /** The ERV's moisture recovery rate with its unit (the tooltips); the figure shows the magnitude after an icon. */
   moisture: (gramsPerHour: string): string => `${gramsPerHour}${NBSP}g/h`,
   moistureUnit: 'g/h',
-  moistureRecoveredIcon: 'mdi:water-plus',
-  moistureKeptOutIcon: 'mdi:water-minus',
+  moistureRecoveredIcon: 'mdi:water-sync',
+  moistureKeptOutIcon: 'mdi:water-remove',
   /** The moisture figure's tooltips; `figure` is the rate's magnitude, e.g. "418 g/h". */
   moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,

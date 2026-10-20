@@ -270,7 +270,7 @@ describe('the labels', () => {
       // 200 m³/h * (6 - 4) g/m³ recovered.
       expect(erv.figure().textContent.trim()).toBe(nb('400 g/h'));
       expect(erv.figure().title).toBe(nb('Moisture recovered: 400 g/h'));
-      expect(erv.figure().querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-plus');
+      expect(erv.figure().querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-sync');
       for (const config of [CALCULATION, { ...CALCULATION, exchanger_type: 'hrv' }]) {
         const { root } = await renderCalculation(config);
         expect(root.querySelector('.moisture-recovery')).toBeNull();

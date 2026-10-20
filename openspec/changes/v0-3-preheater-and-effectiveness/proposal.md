@@ -24,7 +24,7 @@ shows the defaults of unset options without writing them, and no spec describes 
   vectors are extended from the macro's `eff_moisture` kind; the total figure is checked against the macro's
   recovered and lost power.
 - **Moisture figure and flow labels (airflow card).** The ERV's moisture recovery figure moves out of the exchanger
-  to its right, at the height of the house symbol, with a water-plus or water-minus icon instead of a sign. The flow
+  to its right, at the height of the house symbol, with a water-sync or water-remove icon instead of a sign. The flow
   labels move below their arrowheads to make room. This changes the look of existing configs.
 - **Pre-heater on the drawing.** A new optional role `pre_heater.power` takes a power sensor or an on/off entity.
   A heating coil drawn on the outdoor stream, between the outdoor symbol and the exchanger, glows by the power:
