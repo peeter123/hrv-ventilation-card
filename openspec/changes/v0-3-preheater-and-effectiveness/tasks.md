@@ -123,7 +123,7 @@
 - [x] 5.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
   250 of 1000 W, without a maximum and as an on/off entity; the frost scenario; both layouts; 280, 400 and 600 px;
   light and dark) inspected by an agent, and apply the user's feedback; verify the user approves before the review
-- [ ] 5.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 5.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 6. Pre-heater in the top row, the status grid and the editor
