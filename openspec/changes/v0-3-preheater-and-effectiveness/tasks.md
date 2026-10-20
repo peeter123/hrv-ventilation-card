@@ -7,7 +7,7 @@
   already set) to a test in `test/editor/`, naming the scenario in the test title as the other spec tests do, and
   add the missing ones (at least "Typing the default into an unset field" through the editor element, not only
   `withoutShownDefaults`); verify `npm run check` passes and each scenario name occurs in a test title
-- [ ] 1.2 Describe the shown defaults in the editor part of `README.md` (an unset option shows its default and stays
+- [x] 1.2 Describe the shown defaults in the editor part of `README.md` (an unset option shows its default and stays
   unset) and in `docs/hrv-ventilation.md` (points that matter when changing the editor); verify the README tests
   pass
 - [ ] 1.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify

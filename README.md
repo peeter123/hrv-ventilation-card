@@ -84,8 +84,12 @@ helps a browser that still shows it.
 4. Turn on **Advanced settings** for the less common options, marked "Advanced" in [Options](#options): for
    example the absolute humidity sensors on the bars, smoothing, air density, scale, colours and the diagram's
    layout. The switch only changes what the editor shows; it is not saved, and it starts on for a card that has an
-   advanced option set. Options you have not set show their default (for example "Heat recovery (HRV)" as the
-   exchanger type); the default is not written to the YAML until you pick another value.
+   advanced option set.
+
+   An option you have not set shows its default (for example "Heat recovery (HRV)" as the exchanger type, and
+   with the advanced settings on, the layout "Automatic") and stays unset: the YAML changes only at the field you
+   edit, and a section that is in the YAML stays there, also when it ends up empty. Typing the default into an
+   unset field leaves it unset; to pin a default, set it in the YAML (a default the YAML already sets stays).
 5. Save. **Show code editor** shows the same config as YAML; see [Options](#options) and [Examples](#examples).
 
 ![The visual editor of the airflow diagram card, with the exchanger type first, its groups collapsed and the live sample preview](docs/images/editor.png)

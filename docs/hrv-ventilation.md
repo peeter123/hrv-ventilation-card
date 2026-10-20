@@ -167,6 +167,18 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the supply air
   temperature: a dialog unrelated to the figure tapped, which is why there is no fallback. The pointer cursor follows
   `data-entity`, so only what opens a dialog shows it.
+- **Editor and shown defaults.** The visual editor (`src/editor/`) shows every option the config leaves unset at its
+  default, because `ha-form` draws no `default` of a selector for missing data, and writes none of them. The default
+  of a field is the `default` in its schema entry (`src/editor/*-schema.ts`); a new option with a fallback in the
+  card must declare it there too, or the editor shows it blank and a non-default advanced value does not turn the
+  advanced switch on (an entity picker has no default). `withShownDefaults` fills the defaults into the config only
+  for `ha-form`'s data, over the fields currently visible, so an advanced default appears once the switch is on.
+  `withoutShownDefaults` runs on every `value-changed`: it takes out a value that equals the default of a field the
+  saved config did not set, which is why typing the default (or clearing the field) into an unset field leaves it
+  unset. It compares numbers as numbers and text without case, and a section that was in the config stays, also when
+  its last field is removed (`withValueAt` removes only parents it created). A default the config sets is never
+  touched. To pin a default, the user sets it in YAML. Do not change the config anywhere else than at the edited
+  field, and keep the editor's tests for these cases (`test/editor/`) passing.
 - **Sample mode.** A card whose config sets no entity role at all (only `type`, optionally options) renders the
   built-in sample values of `src/lib/sample.ts`: a heating day (outdoor 2 °C, supply 18.5 °C, extract 21.5 °C,
   exhaust 5.5 °C, 200 m³/h, bypass closed, house drying) on made-up IDs in the non-HA domain `hrv_sample.*`, so
