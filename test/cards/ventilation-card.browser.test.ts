@@ -218,6 +218,55 @@ describe('airflow diagram layout', () => {
     });
   }
 
+  // The pre-heater on: its power label joins the top row and its energy cell the status grid.
+  const PRE_HEATER = { pre_heater: { power: id.preHeater, energy: id.preHeaterEnergy } };
+
+  test('airflow-diagram-card "Narrow card": the top row with power 1032 W, pre-heater 1000 W and RMOT -3.5 °C has no overlaps at 280 px', async () => {
+    const { card, root } = await show(280, 'light', 'auto', { ...VALUES, preHeater: 1000 }, PRE_HEATER);
+    const hass = card.hass;
+    const [power, rmot] = [hass?.states[id.power], hass?.states[id.rmot]];
+    if (!hass || !power || !rmot) throw new Error('no hass');
+    card.hass = {
+      ...hass,
+      states: {
+        ...hass.states,
+        [id.power]: { ...power, state: '1032' },
+        [id.rmot]: { ...rmot, state: '-3.5' },
+      },
+    };
+    await card.updateComplete;
+    // The pre-heater label follows power in the centre cell, and both have the class `power`.
+    const heater = '.top .centre .label:nth-child(2)';
+    const parts = ['ha-icon.season', '.top .centre .label:nth-child(1)', heater, '.top .rmot'].map((selector) => ({
+      name: selector,
+      box: box(root, selector),
+    }));
+    expect(root.querySelector(heater)?.textContent).toContain('1,000');
+    const row = box(root, '.top');
+    for (const { name, box: rect } of parts) {
+      expect(rect.left, name).toBeGreaterThanOrEqual(row.left - 0.5);
+      expect(rect.right, name).toBeLessThanOrEqual(row.right + 0.5);
+    }
+    const overlapping = parts.flatMap((a, i) =>
+      parts.slice(i + 1).flatMap((b) => (overlap(a.box, b.box) ? [`${a.name} / ${b.name}`] : [])),
+    );
+    expect(overlapping).toEqual([]);
+  });
+
+  for (const width of [400, 600]) {
+    test(`airflow-diagram-card "Icon centred on its text": the pre-heater icons at ${String(width)} px`, async () => {
+      const { root } = await show(width, 'light', 'auto', { ...VALUES, preHeater: 1000 }, PRE_HEATER);
+      for (const selector of ['.top .centre .label:nth-child(2)', '.status .label.energy']) {
+        const label = element(root, selector);
+        const icon = drawnIcon(label.querySelector('ha-icon'));
+        const value = label.querySelector('.value')?.getBoundingClientRect();
+        if (!value) throw new Error(`no value in ${selector}`);
+        expect(icon.height, selector).toBeGreaterThan(10);
+        expect(Math.abs(middle(icon) - middle(value)), selector).toBeLessThanOrEqual(1);
+      }
+    });
+  }
+
   test('a status value too long for its cell ends in an ellipsis, with its full text in the tooltip', async () => {
     const { card, root } = await show(400, 'light');
     const hass = card.hass;
