@@ -16,6 +16,9 @@ const CP_AIR = 1006; // J/(kg K)
 const LATENT_HEAT = 2501; // J/g, water vapour at 0 °C
 const CP_VAPOUR = 1.86; // J/(g K)
 const SECONDS_PER_HOUR = 3600;
+// The smallest extract-outdoor differences at which an effectiveness ratio is still meaningful.
+const MIN_TEMPERATURE_GRADIENT = 3; // K
+const MIN_HUMIDITY_GRADIENT = 1.5; // g/m³
 
 /** A value per air stream. */
 export interface Streams<T> {
@@ -56,6 +59,13 @@ export interface MoistureRates {
   outside: number;
 }
 
+/** Supply-side effectiveness in %, capped to 0-100; a figure is left out below its gradient. */
+export interface Effectiveness {
+  temperature?: number;
+  /** Only with humidity for the three streams */
+  moisture?: number;
+}
+
 export interface RecoveryResult {
   mode: 'heating' | 'cooling';
   /**
@@ -73,7 +83,19 @@ export interface RecoveryResult {
   latentKnown: boolean;
   /** g/h, only with humidity */
   moisture?: MoistureRates;
+  /** Of the unit as a whole, at any bypass position: (supply - outdoor) / (extract - outdoor) */
+  effectiveness: Effectiveness;
 }
+
+/** The supply-side ratio (supply - outdoor) / (extract - outdoor) in %, capped to 0-100; undefined below the gradient. */
+const effectivenessRatio = (
+  [outdoor, supply, extract]: [number, number, number],
+  minGradient: number,
+): number | undefined => {
+  const gradient = extract - outdoor;
+  if (Math.abs(gradient) < minGradient) return undefined;
+  return Math.min(Math.max(((supply - outdoor) / gradient) * 100, 0), 100);
+};
 
 const known = (value: number | undefined): value is number => value !== undefined && Number.isFinite(value);
 
@@ -129,7 +151,14 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
     recovered: { sensible: (recovered.total - recovered.latent) * toWatts, latent: recovered.latent * toWatts },
     lost: { sensible: (lost.total - lost.latent) * toWatts, latent: lost.latent * toWatts },
     latentKnown: AH !== undefined,
+    effectiveness: {},
   };
+  const temperatureRatio = effectivenessRatio(T as [number, number, number], MIN_TEMPERATURE_GRADIENT);
+  if (temperatureRatio !== undefined) result.effectiveness.temperature = temperatureRatio;
+  if (AH !== undefined) {
+    const moisture = effectivenessRatio(AH as [number, number, number], MIN_HUMIDITY_GRADIENT);
+    if (moisture !== undefined) result.effectiveness.moisture = moisture;
+  }
   if (absoluteHumidity !== undefined) {
     const moisture = calculateMoisture(absoluteHumidity, supplyFlow);
     if (moisture !== undefined) result.moisture = moisture;

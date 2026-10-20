@@ -214,4 +214,56 @@ describe('recovery-calculation scenarios', () => {
     expect(result.saving).toBe(0);
     expect(result.recovered.sensible + result.recovered.latent).toBeLessThan(0);
   });
+
+  describe('effectiveness', () => {
+    const temperatureEffectiveness = (outdoor: number, supply: number, extract: number, bypass = 0) =>
+      calculate({ ...winter, temperature: { outdoor, supply, extract }, bypass }).effectiveness.temperature;
+    const moistureEffectiveness = (outdoor: number, supply: number, extract: number) =>
+      calculate({ ...winter, absoluteHumidity: { outdoor, supply, extract } }).effectiveness.moisture;
+
+    test('"Winter heating": 0 °C / 4.0 g/m³, 17 °C / 6.5 g/m³, 21 °C / 7.5 g/m³ gives 81 % and 71 % within 1 %', () => {
+      const { effectiveness } = calculate(winter);
+      near(effectiveness.temperature, 81, 1);
+      near(effectiveness.moisture, 71, 1);
+    });
+
+    test('"Bypass modulating": at 40 % bypass, outdoor 12 °C, supply 17 °C, extract 22 °C is 50 %', () => {
+      expect(temperatureEffectiveness(12, 17, 22, 40)).toBeCloseTo(50, 9);
+    });
+
+    test('"Outdoor air more humid": 14.0, 13.0 and 12.0 g/m³ give a positive 50 %', () => {
+      expect(moistureEffectiveness(14.0, 13.0, 12.0)).toBeCloseTo(50, 9);
+    });
+
+    test('"Ratio below 0": outdoor 10.0 °C, supply 9.5 °C, extract 20.0 °C gives 0 %', () => {
+      expect(temperatureEffectiveness(10.0, 9.5, 20.0)).toBe(0);
+    });
+
+    test('"Ratio above 100": outdoor 5 °C, supply 21.5 °C, extract 21 °C gives 100 %', () => {
+      expect(temperatureEffectiveness(5, 21.5, 21)).toBe(100);
+    });
+
+    test('"Small temperature gradient": extract 22 °C and outdoor 20 °C give no temperature effectiveness', () => {
+      expect(temperatureEffectiveness(20, 21, 22)).toBeUndefined();
+      // Exactly at the gate it is given.
+      expect(temperatureEffectiveness(19, 21, 22)).toBeCloseTo(66.67, 2);
+    });
+
+    test('"One figure gated": 8 K and 0.7 g/m³ apart give the temperature effectiveness only', () => {
+      const result = calculate({
+        ...winter,
+        temperature: { outdoor: 12, supply: 19, extract: 20 },
+        absoluteHumidity: { outdoor: 6.0, supply: 6.4, extract: 6.7 },
+      });
+      expect(result.effectiveness.temperature).toBeCloseTo(87.5, 9);
+      expect(result.effectiveness.moisture).toBeUndefined();
+    });
+
+    test('"No humidity configured": temperatures 10 K apart give the temperature effectiveness only', () => {
+      const { absoluteHumidity: _humidity, ...temperaturesOnly } = winter;
+      const result = calculate({ ...temperaturesOnly, temperature: { outdoor: 10, supply: 17, extract: 20 } });
+      expect(result.effectiveness.temperature).toBeCloseTo(70, 9);
+      expect(result.effectiveness.moisture).toBeUndefined();
+    });
+  });
 });

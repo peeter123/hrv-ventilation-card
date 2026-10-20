@@ -15,7 +15,7 @@
 
 ## 2. Effectiveness in the calculation
 
-- [ ] 2.1 Add `effectiveness` to `RecoveryResult` in `src/calc/recovery.ts` (design: "Effectiveness is part of the
+- [x] 2.1 Add `effectiveness` to `RecoveryResult` in `src/calc/recovery.ts` (design: "Effectiveness is part of the
   recovery result"): both ratios, capped to 0-100, gated at 3 K and 1.5 g/m³, moisture absent without humidity, no
   bypass gate; verify unit tests for every recovery-calculation scenario in the change ("Winter heating", "Bypass
   modulating", "Outdoor air more humid", "Ratio below 0", "Ratio above 100", "Small temperature gradient", "One
