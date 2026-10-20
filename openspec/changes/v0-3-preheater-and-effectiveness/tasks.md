@@ -150,8 +150,10 @@
 ## 7. Release and live migration
 
 - [ ] 7.1 Retake the README images with `npm run capture`, adding an ERV image with the rings and an image of the
-  frost scenario with the coil glowing and the pre-heater figure in the top row; verify every image the README
-  links exists and shows the v0.3 behaviour
+  frost scenario with the coil glowing and the pre-heater figure in the top row, and retake the README GIF with
+  physically possible values in every frame (user, 2026-10-20: the exhaust is now hotter than the extract while the
+  outdoor air is much colder; each frame's exhaust must lie between outdoor and extract, and the supply likewise);
+  verify every image the README links exists and shows the v0.3 behaviour, and the GIF's frames pass that check
 - [ ] 7.2 Set the version to `0.3.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
 - [ ] 7.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
