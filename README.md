@@ -146,6 +146,7 @@ the status grid while one of its roles is; a row does not come and go with the s
 | `fans` | object | | | Fan level and flows, see [Fans](#fans-object). |
 | `bypass` | object | | | Bypass position, mode and next change, see [Bypass](#bypass-object). |
 | `status` | object | | | The unit's status, see [Status](#status-object). |
+| `pre_heater` | object | | | The pre-heater's power and energy, see [Pre-heater](#pre-heater-object). |
 | `seasons` | object | | | Heating and cooling season, see [Seasons](#seasons-object). |
 | `animation` | object | | | Moving air along the streams, see [Animation](#animation-object). |
 | `show_effectiveness` | boolean | `false` | | Draw rings on the exchanger: the total effectiveness (thin inner ring) and, on an ERV with humidity for every stream, the moisture effectiveness (wide ring in the rim); see below. |
@@ -171,6 +172,14 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 | `heating_saving` | entity | | yes | Saved heating power sensor, opened by tapping the saving badge when it reads more than the cooling saving, or by default in heating mode. Not shown as a label. |
 | `cooling_saving` | entity | | yes | Saved cooling power sensor, opened by tapping the saving badge when it reads more than the heating saving, or by default in cooling mode. Not shown as a label. |
 | `moisture_recovery` | entity | | yes | Moisture recovery rate sensor, opened by tapping the ERV's moisture figure. Not shown as a label. |
+
+#### Pre-heater object
+
+| Name | Type | Default | Advanced | Description |
+|---|---|---|---|---|
+| `power` | entity | | | Pre-heater power (a sensor in W or kW), or an on/off entity (sensor, binary sensor or switch). |
+| `energy` | entity | | | Pre-heater energy use (status grid). |
+| `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000). |
 
 #### Seasons object
 
@@ -444,6 +453,10 @@ status:
   heating_saving: sensor.hrv_saved_heating_power
   cooling_saving: sensor.hrv_saved_cooling_power
   moisture_recovery: sensor.hrv_moisture_recovery
+pre_heater:
+  power: sensor.hrv_pre_heater_power
+  energy: sensor.hrv_pre_heater_energy
+  max_power: 1500
 seasons:
   heating: binary_sensor.hrv_heating_season
   cooling: binary_sensor.hrv_cooling_season

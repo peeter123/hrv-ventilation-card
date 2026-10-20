@@ -13,6 +13,7 @@ import {
   numberField,
   sensorField,
   streamSection,
+  switchableField,
 } from './fields';
 import type { EditorSchema } from './schema';
 
@@ -48,6 +49,15 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
       sensorField('heating_saving', ADVANCED),
       sensorField('cooling_saving', ADVANCED),
       sensorField('moisture_recovery', ADVANCED),
+    ],
+  },
+  {
+    type: 'expandable',
+    name: 'pre_heater',
+    schema: [
+      switchableField('power'),
+      sensorField('energy'),
+      numberField('max_power', DIAGRAM_OPTIONS.preHeaterMaxPower, 1, 'W'),
     ],
   },
   { type: 'expandable', name: 'seasons', schema: [binarySensorField('heating'), binarySensorField('cooling')] },

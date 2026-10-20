@@ -23,6 +23,7 @@ describe('README: airflow diagram card', () => {
     fans: shared.get('Fans object'),
     bypass: shared.get('Bypass object'),
     status: diagram.get('Status object'),
+    pre_heater: diagram.get('Pre-heater object'),
     seasons: diagram.get('Seasons object'),
     colors: diagram.get('Colours object'),
     animation: diagram.get('Animation object'),

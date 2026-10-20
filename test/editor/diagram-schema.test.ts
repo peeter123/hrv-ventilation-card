@@ -39,6 +39,7 @@ describe('DIAGRAM_SCHEMA', () => {
       'fans',
       'bypass',
       'status',
+      'pre_heater',
       'seasons',
       'animation',
       'show_effectiveness',
@@ -49,6 +50,7 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('fans')).toEqual(['level', 'supply_flow', 'exhaust_flow']);
     expect(named.get('bypass')).toEqual(['position', 'mode']);
     expect(named.get('status')).toEqual(['operating_mode', 'filter_days', 'power', 'rmot']);
+    expect(named.get('pre_heater')).toEqual(['power', 'energy']);
     expect(named.get('seasons')).toEqual(['heating', 'cooling']);
     expect(named.get('animation')).toEqual(['enabled']);
   });
@@ -84,7 +86,12 @@ describe('DIAGRAM_SCHEMA', () => {
       'exhaust.temperature',
     ]);
     for (const { field, path } of fields.filter(({ field }) => 'entity' in field.selector)) {
-      const domain = path.startsWith('seasons.') ? 'binary_sensor' : 'sensor';
+      const domain =
+        path === 'pre_heater.power'
+          ? ['sensor', 'binary_sensor', 'switch']
+          : path.startsWith('seasons.')
+            ? 'binary_sensor'
+            : 'sensor';
       expect(field.selector, path).toEqual({ entity: { domain } });
     }
   });

@@ -22,6 +22,12 @@ export const binarySensorField = (name: string): EditorField => ({
   selector: { entity: { domain: 'binary_sensor' } },
 });
 
+/** A picker for an entity that is a sensor, a binary sensor or a switch (a power reading or an on/off state). */
+export const switchableField = (name: string): EditorField => ({
+  name,
+  selector: { entity: { domain: ['sensor', 'binary_sensor', 'switch'] } },
+});
+
 /**
  * A stream section: temperature, relative humidity and absolute humidity. The bar cards keep the absolute humidity
  * advanced (relative humidity with the temperature is enough); the diagram shows it as a label, so there it is basic.
