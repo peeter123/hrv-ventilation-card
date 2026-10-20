@@ -148,7 +148,7 @@ the status grid while one of its roles is; a row does not come and go with the s
 | `status` | object | | | The unit's status, see [Status](#status-object). |
 | `seasons` | object | | | Heating and cooling season, see [Seasons](#seasons-object). |
 | `animation` | object | | | Moving air along the streams, see [Animation](#animation-object). |
-| `show_effectiveness` | boolean | `false` | | Draw two rings on the exchanger with the unit's temperature effectiveness (inner ring) and, on an ERV with humidity for every stream, moisture effectiveness (outer ring). |
+| `show_effectiveness` | boolean | `false` | | Draw rings on the exchanger with the unit's temperature effectiveness (thin inner ring) and, on an ERV with humidity for every stream, moisture effectiveness (thick outer ring); see below. |
 | `smoothing` | number | `10` | yes | Minutes over which absolute humidity is averaged for the badge (0 to 1440, 0 = off). |
 | `air_density` | number | `1.2` | yes | Air density in kg/m³ for the badge (0.5 to 1.5); about 1.0 at 1500 m altitude. |
 | `colors` | object | | yes | Cold and warm colour, see [Colours](#colours-object). |
@@ -229,6 +229,24 @@ While the exchanger keeps moisture out (the outdoor air is more humid than the i
 for example "−418 g/h"; its tooltip says which. It is hidden or "n/a" like the badge, is shown in both
 layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. The type changes only the
 drawing: the calculation and the bar cards are the same for both.
+
+**Effectiveness rings.** With `show_effectiveness: true` the exchanger gets progress rings that start at its top
+centre and run clockwise; a full ring is 100 %. The thin inner ring is the temperature effectiveness, in the warm
+colour in heating mode and the cold colour in cooling mode. The thick outer ring, in the rim of the exchanger and
+teal, is the moisture effectiveness; it is drawn on an ERV (`exchanger_type: erv`) with a humidity for the outdoor,
+supply and extract stream, and never on an HRV, which gets the temperature ring only. The figures are those of the
+calculation described in [docs/hrv-ventilation.md](docs/hrv-ventilation.md#formulas): supply side, limited to 0 to
+100 %, and from the same sensors as the badge, so the rings need the same inputs. The air streams are drawn over the
+rings, so a stream covers part of each slanted side; the top and bottom edges stay visible. The exact figures are in
+the tooltip of the exchanger and in its accessible name: "Effectiveness: temperature 85 %, moisture 62 %", with "not
+measurable" for a ring without a value and, while the bypass is above 0 %, its position.
+
+A ring shows only its faint track, with no progress, while its figure is left out: below a gate (the extract and
+outdoor air differ by less than 3 K, or by less than 1.5 g/m³ of absolute humidity), because the ratio is noise there,
+or while an input has no value. There is no gate on the bypass, so with the bypass open the rings describe the unit as
+a whole: they fall as the bypass opens, because the supply air is then partly outdoor air. Read them together with the
+bypass position. With the rings on, the moisture figure gets a halo in the exchanger colour, so a ring does not run
+through its digits on a narrow card.
 
 **Layout.** With `layout: auto` the card switches to a compact layout below 340 px card width: only the four
 temperatures and relative humidities, the badge, the bypass position, the moisture figure (ERV) and the top row,
