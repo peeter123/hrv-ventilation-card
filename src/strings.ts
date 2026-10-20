@@ -5,7 +5,7 @@
 import type { RolePath } from './lib/config';
 
 /** A no-break space: keeps a number on one line with its unit, in every text below. */
-const NBSP = ' ';
+export const NBSP = ' ';
 
 /** Shown for a figure whose inputs have no value. */
 export const NO_VALUE = 'n/a';
@@ -223,8 +223,11 @@ export const DIAGRAM = {
     between: 'Between seasons',
   },
   saving: (watts: string): string => `${watts}${NBSP}W`,
-  /** The ERV's moisture recovery figure: a signed rate, negative while moisture is kept out. */
+  /** The ERV's moisture recovery rate with its unit (the tooltips); the figure shows the magnitude after an icon. */
   moisture: (gramsPerHour: string): string => `${gramsPerHour}${NBSP}g/h`,
+  moistureUnit: 'g/h',
+  moistureRecoveredIcon: 'mdi:water-plus',
+  moistureKeptOutIcon: 'mdi:water-minus',
   /** The moisture figure's tooltips; `figure` is the rate's magnitude, e.g. "418 g/h". */
   moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,

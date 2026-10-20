@@ -150,7 +150,7 @@ describe('airflow diagram layout', () => {
     expect(wide.root.querySelectorAll('.corner .label')).toHaveLength(12);
   });
 
-  test('power is centred on the card; each flow label sits above the tip of its arrow', async () => {
+  test('power is centred on the card; each flow label sits below the tip of its arrow', async () => {
     for (const width of [320, 350, 400, 600]) {
       const { root } = await show(width, 'light');
       const box = (selector: string): DOMRect => {
@@ -174,7 +174,7 @@ describe('airflow diagram layout', () => {
         [box('.exhaust-flow .label'), exhaustHead],
       ] as const) {
         if (!head) throw new Error('no arrowhead');
-        expect(label.bottom).toBeLessThanOrEqual(head.top);
+        expect(label.top).toBeGreaterThanOrEqual(head.bottom);
         expect(label.left < head.right && label.right > head.left).toBe(true);
       }
       document.body.innerHTML = '';
@@ -318,43 +318,62 @@ describe('exchanger type', () => {
     return found;
   };
 
-  test('airflow-diagram-card "ERV at the narrowest width": bypass position, badge and figure inside the exchanger', async () => {
+  /** The screen x of the exchanger's right vertex and of the house symbol's left edge, the figure's room. */
+  const figureRoom = (root: ShadowRoot): { left: number; right: number } => {
+    const exchanger = box(root, 'svg .exchanger');
+    const house = root.querySelectorAll('svg .symbol circle')[1]?.getBoundingClientRect();
+    if (!house) throw new Error('no house symbol');
+    return { left: exchanger.right, right: house.left };
+  };
+
+  test('airflow-diagram-card "ERV at the narrowest width": bypass position and badge inside the exchanger, the figure right of it', async () => {
     const { root } = await show(280, 'light', 'auto', { ...VALUES, bypass: 50 }, { exchanger_type: 'erv' });
     const inside = inExchanger(root);
-    const [bypass, badge, figure] = ['.bypass-position .label', '.saving .badge', '.moisture-recovery .figure'].map(
-      (selector) => {
-        const rect = box(root, selector);
-        for (const [x, y] of [
-          [rect.left, rect.top],
-          [rect.right, rect.top],
-          [rect.left, rect.bottom],
-          [rect.right, rect.bottom],
-        ] as const) {
-          expect(inside(x, y), `${selector} corner ${String(x)}, ${String(y)}`).toBe(true);
-        }
-        return rect;
-      },
-    ) as [DOMRect, DOMRect, DOMRect];
+    const [bypass, badge] = ['.bypass-position .label', '.saving .badge'].map((selector) => {
+      const rect = box(root, selector);
+      for (const [x, y] of [
+        [rect.left, rect.top],
+        [rect.right, rect.top],
+        [rect.left, rect.bottom],
+        [rect.right, rect.bottom],
+      ] as const) {
+        expect(inside(x, y), `${selector} corner ${String(x)}, ${String(y)}`).toBe(true);
+      }
+      return rect;
+    }) as [DOMRect, DOMRect];
+    const figure = box(root, '.moisture-recovery .figure');
+    const room = figureRoom(root);
+    expect(figure.left).toBeGreaterThan(room.left);
+    expect(figure.right).toBeLessThan(room.right);
+    expect(streamCrossing(root)(figure)).toBe(false);
     expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/^\s*\d{3}\sg\/h\s*$/);
     expect(overlap(bypass, badge)).toBe(false);
     expect(overlap(badge, figure)).toBe(false);
     expect(overlap(bypass, figure)).toBe(false);
   });
 
-  test('a four-digit kept-out figure stays between the slanted sides, clear of the streams and the badge', async () => {
+  test('a four-digit kept-out figure stays between the exchanger and the house symbol, clear of the streams and the corner labels', async () => {
     // No smoothing: the humidity history of the other tests would average this day away.
     const shown = await show(280, 'light', 'auto', KEPT_OUT, { exchanger_type: 'erv', smoothing: 0 });
     const { root } = shown;
     for (const width of [280, 320, COMPACT_BELOW, 400, 600]) {
       await resize(shown, width);
-      const text = box(root, '.moisture-recovery .value');
-      expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/−\d,\d{3}/);
-      // The text's middle row lies in the hexagon; only the empty corners of its line box may reach past the sides.
-      const inside = inExchanger(root);
-      const middle = text.top + text.height / 2;
-      expect(inside(text.left, middle) && inside(text.right, middle), `${String(width)} px`).toBe(true);
-      expect(streamCrossing(root)(text), `${String(width)} px`).toBe(false);
-      expect(overlap(box(root, '.saving .badge'), text)).toBe(false);
+      const figure = box(root, '.moisture-recovery .figure');
+      expect(root.querySelector('.moisture-recovery')?.textContent, `${String(width)} px`).toMatch(/\d,\d{3}/);
+      expect(root.querySelector('.moisture-recovery')?.textContent).not.toContain('−');
+      expect(root.querySelector<HTMLElement & { icon?: string }>('.moisture-recovery ha-icon')?.icon).toBe(
+        'mdi:water-minus',
+      );
+      const room = figureRoom(root);
+      expect(figure.left, `${String(width)} px`).toBeGreaterThan(room.left);
+      expect(figure.right, `${String(width)} px`).toBeLessThan(room.right);
+      expect(streamCrossing(root)(figure), `${String(width)} px`).toBe(false);
+      expect(overlap(box(root, '.saving .badge'), figure)).toBe(false);
+      for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
+        expect(overlap(corner.getBoundingClientRect(), figure), `${String(width)} px`).toBe(false);
+      const value = root.querySelector('.moisture-recovery .value');
+      if (!value) throw new Error('no figure value');
+      expect(parseFloat(getComputedStyle(value).fontSize)).toBeGreaterThanOrEqual(11);
     }
   });
 
@@ -469,26 +488,6 @@ describe('effectiveness rings', () => {
     return nearest - half;
   }
 
-  /** The halo of a text: the colours and the largest reach of its text shadows, and their largest blur. */
-  function haloOf(element: Element): { colors: string[]; radius: number; blur: number } {
-    const shadows = [
-      ...getComputedStyle(element).textShadow.matchAll(
-        /(rgba?\([^)]*\)|color\([^)]*\))\s+(-?[\d.]+)px\s+(-?[\d.]+)px\s+(-?[\d.]+)px/g,
-      ),
-    ].map(([, color = '', x = '0', y = '0', blur = '0']) => ({
-      color,
-      radius: Math.hypot(parseFloat(x), parseFloat(y)),
-      blur: parseFloat(blur),
-    }));
-    return {
-      colors: shadows.map((shadow) => shadow.color),
-      radius: Math.max(0, ...shadows.map((shadow) => shadow.radius)),
-      blur: Math.max(0, ...shadows.map((shadow) => shadow.blur)),
-    };
-  }
-
-  // The most, in px, by which the figure's halo may reach into a stream beside the glyphs' boxes (see the test).
-  const STREAM_NOTCH = 1.5;
   const WIDTHS = [280, 320, COMPACT_BELOW, 360, 400, 500, 600];
 
   for (const theme of ['light', 'dark'] as const) {
@@ -496,12 +495,9 @@ describe('effectiveness rings', () => {
       ['three digits', VALUES],
       ['four digits', KEPT_OUT],
     ] as const) {
-      test(`airflow-diagram-card "Text on the exchanger", ${theme}, ${digits}: the badge and bypass position keep 4.5:1 and no ring covers them, and the moisture figure has a halo, 280 to 600 px`, async () => {
+      test(`airflow-diagram-card "Text on the exchanger", ${theme}, ${digits}: the badge and bypass position keep 4.5:1 and no ring covers them, 280 to 600 px`, async () => {
         const shown = await show(WIDTHS[0] ?? 280, theme, 'auto', values, RINGS);
         const { root } = shown;
-        // How far a ring reaches into the figure's glyphs, in px, over the widths; the halo has to cover it.
-        let deepest = 0;
-        let smallestHalo = Infinity;
         for (const width of WIDTHS) {
           await resize(shown, width);
           const where = `${theme} ${digits} ${String(width)} px`;
@@ -511,8 +507,7 @@ describe('effectiveness rings', () => {
           const badge = root.querySelector('.saving .badge');
           const bypass = root.querySelector('.bypass-position .label:not(.hidden)');
           const figure = root.querySelector('.moisture-recovery .figure');
-          const value = figure?.querySelector('.value');
-          if (!exchanger || !badge || !figure || !value) throw new Error(`a text is missing at ${where}`);
+          if (!exchanger || !badge || !figure) throw new Error(`a text is missing at ${where}`);
           if (digits === 'three digits') {
             expect(bypass, where).not.toBeNull();
             for (const ring of root.querySelectorAll('svg .ring')) {
@@ -524,62 +519,29 @@ describe('effectiveness rings', () => {
           }
           // Each text measured once, each track sampled once.
           const tracks = sampleTracks(root);
-          const ink = { badge: inkBoxes(badge), bypass: bypass ? inkBoxes(bypass) : [], figure: inkBoxes(figure) };
+          const ink = { badge: inkBoxes(badge), bypass: bypass ? inkBoxes(bypass) : [] };
           for (const track of tracks) {
             for (const name of ['badge', 'bypass'] as const) {
               if (ink[name].length > 0)
                 expect(clearance(track, ink[name]), `${name} / ${track.name}, ${where}`).toBeGreaterThan(0);
             }
-            deepest = Math.max(deepest, -clearance(track, ink.figure));
           }
-          // What is behind the text: the exchanger's fill for the bypass position and the figure, the badge's own fill.
+          // What is behind the text: the exchanger's fill for the bypass position, the badge's own fill.
           const fill = getComputedStyle(exchanger).fill;
           if (bypass) {
             expect(contrast(fill, getComputedStyle(bypass).color), `bypass, ${where}`).toBeGreaterThanOrEqual(4.5);
           }
-          expect(contrast(fill, getComputedStyle(figure).color), `figure, ${where}`).toBeGreaterThanOrEqual(4.5);
           const badgeFill = getComputedStyle(badge, '::before').backgroundColor;
           expect(contrast(badgeFill, getComputedStyle(badge).color), `badge, ${where}`).toBeGreaterThanOrEqual(4.5);
-          // The figure keeps its size, 11 px at least, and a halo in the exchanger's colour (solid text shadows, painted
-          // behind the glyphs) masks a ring where it meets a glyph; the text keeps 4.5:1 against the halo as against
-          // the fill.
-          expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
-          const halo = haloOf(value);
-          expect(halo.colors.length, where).toBeGreaterThan(0);
-          expect(halo.blur, where).toBe(0);
-          for (const color of halo.colors) {
-            expect(channels(color), where).toEqual(channels(fill));
-            expect(contrast(color, getComputedStyle(figure).color), `halo, ${where}`).toBeGreaterThanOrEqual(4.5);
-          }
-          smallestHalo = Math.min(smallestHalo, halo.radius);
-          // The streams cross the badge, which hides them with its fill; they stay clear of the bypass position and
-          // of the figure with its halo.
+          // The figure keeps its size, 11 px at least; it sits right of the exchanger, clear of the rings.
+          expect(parseFloat(getComputedStyle(figure).fontSize), where).toBeGreaterThanOrEqual(11);
+          // The streams cross the badge, which hides them with its fill; they stay clear of the bypass position.
           const crossed = streamCrossing(root);
           for (const glyph of ink.bypass) expect(crossed(glyph), `bypass ${where}`).toBe(false);
-          // The glyphs' boxes grown by the halo, less STREAM_NOTCH, stay clear of the streams: the boxes' corners are
-          // empty and the halo is round, so it may notch a stream's edge there by that much and no more.
-          const reach = halo.radius - STREAM_NOTCH;
-          for (const glyph of ink.figure) {
-            const grown = new DOMRect(
-              glyph.left - reach,
-              glyph.top - reach,
-              glyph.width + 2 * reach,
-              glyph.height + 2 * reach,
-            );
-            expect(crossed(grown), `figure halo ${where}`).toBe(false);
-          }
         }
-        expect(smallestHalo, `halo radius for ${digits}`).toBeGreaterThanOrEqual(deepest + 0.5);
       });
     }
   }
-
-  test('without the rings the moisture figure has no halo', async () => {
-    const { root } = await show(280, 'light', 'auto', VALUES, { exchanger_type: 'erv' });
-    const value = root.querySelector('.moisture-recovery .figure .value');
-    if (!value) throw new Error('no moisture figure');
-    expect(getComputedStyle(value).textShadow).toBe('none');
-  });
 
   test('airflow-diagram-card "Both layouts": the rings and their tracks are drawn at 320 px in the compact layout', async () => {
     const { root } = await show(320, 'light', 'auto', VALUES, RINGS);

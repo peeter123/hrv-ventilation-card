@@ -265,12 +265,12 @@ describe('the labels', () => {
       expect(opened).toEqual(['binary_sensor.hrv_heating']);
     });
 
-    test('airflow-diagram-card "Moisture recovery figure on ERV": at the bottom of an ERV, not on an HRV', async () => {
+    test('airflow-diagram-card "Moisture recovery figure on ERV": right of the exchanger of an ERV, not on an HRV', async () => {
       const erv = await renderCalculation({ ...CALCULATION, exchanger_type: 'erv' });
       // 200 m³/h * (6 - 4) g/m³ recovered.
       expect(erv.figure().textContent.trim()).toBe(nb('400 g/h'));
       expect(erv.figure().title).toBe(nb('Moisture recovered: 400 g/h'));
-      expect(erv.figure().querySelector('ha-icon')).toBeNull();
+      expect(erv.figure().querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-plus');
       for (const config of [CALCULATION, { ...CALCULATION, exchanger_type: 'hrv' }]) {
         const { root } = await renderCalculation(config);
         expect(root.querySelector('.moisture-recovery')).toBeNull();

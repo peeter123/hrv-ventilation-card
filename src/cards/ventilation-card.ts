@@ -2,7 +2,7 @@
 // drawing band with the stream labels, the saving badge and on an ERV the moisture figure over the drawing, and a
 // status grid of fixed cells. What
 // to show comes from the pure functions in src/diagram/; this element only renders it.
-import { css, html, nothing, unsafeCSS, type TemplateResult } from 'lit';
+import { css, html, nothing, type TemplateResult } from 'lit';
 import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -39,7 +39,7 @@ import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { formatState, stateOf } from '../lib/hass';
 import { optionValue } from '../lib/options';
-import { DIAGRAM, ROLE_LABELS } from '../strings';
+import { DIAGRAM, NBSP, ROLE_LABELS } from '../strings';
 import { checkConfig, HrvCard, sampleStyles } from './base-card';
 
 export const DIAGRAM_CARD_TAG = 'hrv-ventilation-card';
@@ -74,33 +74,8 @@ interface DiagramSettings {
   nominalFlow?: number;
 }
 
-/** The radius of the moisture figure's halo (see the styles), in px. */
-const HALO_RADIUS = 4.5;
-const HALO_PX = unsafeCSS(`${String(HALO_RADIUS)}px`);
-
-/**
- * The halo's text shadows, zero-blur copies of the glyphs in the exchanger's colour: every offset of a 0.75 px grid
- * within the radius, so that even a thin stroke (the minus sign) leaves no gaps, and 32 directions at the radius
- * itself for a round edge.
- */
-const HALO_SHADOW = unsafeCSS(
-  (() => {
-    const offsets = new Set<string>();
-    const add = (x: number, y: number): void => {
-      offsets.add(`${x.toFixed(2)}px ${y.toFixed(2)}px 0 var(--erv-fill)`);
-    };
-    const step = 0.75;
-    const reach = Math.floor(HALO_RADIUS / step);
-    for (let i = -reach; i <= reach; i++) {
-      for (let j = -reach; j <= reach; j++) {
-        if (Math.hypot(i * step, j * step) <= HALO_RADIUS) add(i * step, j * step);
-      }
-    }
-    for (let k = 0; k < 32; k++)
-      add(HALO_RADIUS * Math.cos((k * Math.PI) / 16), HALO_RADIUS * Math.sin((k * Math.PI) / 16));
-    return [...offsets].join(', ');
-  })(),
-);
+/** The card width, in px, up to which the moisture figure's unit goes under its number (see the styles). */
+const MOISTURE_TWO_LINES = 400;
 
 /** A label's tooltip: what it is and its state, e.g. "Next bypass change: 01:30". */
 const roleTitle = (role: RolePath, text: string): string => {
@@ -242,8 +217,7 @@ export class HrvVentilationCard extends HrvCard {
       flex-direction: column;
       line-height: 1.3;
     }
-    .bypass-position,
-    .moisture-recovery {
+    .bypass-position {
       left: 50%;
       transform: translateX(-50%);
     }
@@ -263,23 +237,29 @@ export class HrvVentilationCard extends HrvCard {
       top: 21.5%;
     }
     /*
-     * Low in the exchanger, under the crossing streams (bottom edge at y 152 of 200): high enough that a four-digit
-     * rate fits between the slanted sides on narrow cards, low enough to stay clear of the streams and the badge.
+     * Right of the exchanger, centred at y 100 (the height of the exchanger's centre and the house symbol's) and at
+     * x 299.5, halfway between the exchanger's right vertex (x 255) and the house symbol (x 344), in the wedge the
+     * streams leave there. Where the number and its unit do not fit one line, the unit goes under the number.
      */
     .moisture-recovery {
-      bottom: 24%;
+      top: 50%;
+      left: 74.9%;
+      transform: translate(-50%, -50%);
+      /* Two lines of 11 px have to fit the wedge at 280 px (about 40 units high at its left end). */
+      line-height: 1.1;
     }
-    /*
-     * With the rings, a halo in the exchanger's colour around the figure's glyphs: zero-blur text shadows on a fine
-     * grid within the radius (HALO_SHADOW), painted behind the glyphs, so the glyph shapes stay as they are and a ring
-     * that meets a glyph on a narrow card is masked around it. The halo reaches 4.5 px: a four-digit figure meets the
-     * rings 3.9 px deep (a three-digit one 2.1 px) with digits as wide as Roboto's. The value clips its overflow for
-     * the ellipsis, so its padding (undone by the margin) keeps the halo of the first and last glyph from being cut.
-     */
-    .rings .moisture-recovery .value {
-      text-shadow: ${HALO_SHADOW};
-      padding: ${HALO_PX};
-      margin: -${HALO_PX};
+    .moisture-recovery .value {
+      overflow: visible;
+      text-align: center;
+    }
+    @container (max-width: ${MOISTURE_TWO_LINES}px) {
+      .moisture-recovery .figure .value {
+        display: flex;
+        flex-direction: column;
+      }
+      .moisture-recovery .gap {
+        display: none;
+      }
     }
     /* On the exchanger's centre. */
     .saving {
@@ -287,17 +267,21 @@ export class HrvVentilationCard extends HrvCard {
       left: 50%;
       transform: translate(-50%, -50%);
     }
-    /* Above the arrow tips (y 124), clear of the symbols (x 56 and 344) and of the bypass path; a little smaller. */
+    /*
+     * Below the arrowheads (bottom at y 152), from y 158: the supply flow ends at x 340, under its head (x 306 to 326)
+     * and right of the bypass path (about x 285 there, with its stroke), clear of the corner labels (from x 346); the
+     * exhaust flow starts under its head (x 74). Clear of the wedge with the moisture figure; a little smaller.
+     */
     .exhaust-flow,
     .supply-flow {
-      bottom: 39%;
+      top: 79%;
       font-size: max(11px, 0.9em);
     }
     .exhaust-flow {
-      left: 15.5%;
+      left: 18.5%;
     }
     .supply-flow {
-      right: 15.5%;
+      right: 15%;
     }
     .corner.outdoor {
       top: 0;
@@ -595,7 +579,7 @@ export class HrvVentilationCard extends HrvCard {
   }
 
   /**
-   * The ERV's moisture recovery figure: the signed rate, styled as a label, with the direction in words in its
+   * The ERV's moisture recovery figure: the rate's magnitude after a direction icon, styled as a label, with the direction in words in its
    * tooltip.
    * Tapping it opens the moisture recovery entity (status.moisture_recovery); without one it is not tappable, and an
    * image, so its label (with the direction in words) is still read out.
@@ -611,7 +595,13 @@ export class HrvVentilationCard extends HrvCard {
         role=${ifDefined(tap.role)}
         tabindex=${ifDefined(tap.tabindex)}
         data-entity=${ifDefined(tap.entity)}
-        ><span class="value">${figure.text}</span></span
+        >${figure.icon ? html`<ha-icon .icon=${figure.icon} aria-hidden="true"></ha-icon>` : nothing}<span class="value"
+          ><span class="number">${figure.text}</span>${
+            figure.unit
+              ? html`<span class="gap" aria-hidden="true">${NBSP}</span><span class="unit">${figure.unit}</span>`
+              : nothing
+          }</span
+        ></span
       >
     </div>`;
   }
@@ -659,7 +649,7 @@ export class HrvVentilationCard extends HrvCard {
 
     return html`<ha-card @click=${this.activate} @keydown=${this.activate}>
       ${model.top ? this.topRow(model.top, season) : nothing}
-      <div class="drawing ${settings.animate ? '' : 'still'} ${rings ? 'rings' : ''}">
+      <div class="drawing ${settings.animate ? '' : 'still'}">
         ${art}
         ${STREAMS.map(
           (stream) =>

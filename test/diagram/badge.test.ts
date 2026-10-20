@@ -85,29 +85,35 @@ describe('moistureFigure', () => {
     moisture: { extracted: 500, recovered, outside: 500 - recovered },
   });
 
-  test('airflow-diagram-card "Moisture recovered": "120 g/h"', () => {
+  test('airflow-diagram-card "Moisture recovered": water-plus and "120 g/h"', () => {
     expect(moistureFigure(withMoisture(120.3), ERV, LOCALE)).toEqual({
-      text: nb('120 g/h'),
+      text: '120',
+      unit: 'g/h',
+      icon: 'mdi:water-plus',
       title: nb('Moisture recovered: 120 g/h'),
     });
   });
 
-  test('airflow-diagram-card "Moisture kept out": "−418 g/h", the tooltip with the magnitude', () => {
+  test('airflow-diagram-card "Moisture kept out": water-minus and "418 g/h" without a sign, the tooltip with the magnitude', () => {
     expect(moistureFigure(withMoisture(-418), ERV, LOCALE)).toEqual({
-      text: nb('−418 g/h'),
+      text: '418',
+      unit: 'g/h',
+      icon: 'mdi:water-minus',
       title: nb('Moisture kept out: 418 g/h'),
     });
   });
 
-  test('a rate that shows as 0 g/h has no sign and counts as recovered', () => {
+  test('a rate that shows as 0 g/h counts as recovered', () => {
     expect(moistureFigure(withMoisture(-0.4), ERV, LOCALE)).toEqual({
-      text: nb('0 g/h'),
+      text: '0',
+      unit: 'g/h',
+      icon: 'mdi:water-plus',
       title: nb('Moisture recovered: 0 g/h'),
     });
   });
 
   test('the rate is formatted with the locale', () => {
-    expect(moistureFigure(withMoisture(-1234), ERV, { language: 'de' })?.text).toBe(nb('−1.234 g/h'));
+    expect(moistureFigure(withMoisture(-1234), ERV, { language: 'de' })?.text).toBe('1.234');
   });
 
   test('airflow-diagram-card "Input unavailable": hidden, or "n/a" with show_unavailable, like the badge', () => {

@@ -1,5 +1,5 @@
 // The saving badge in the centre of the airflow diagram: the saving of the shared recovery calculation, in W; and on
-// an ERV the moisture recovery figure at the bottom of the exchanger, in g/h. Pure: the Lit element renders the result.
+// an ERV the moisture recovery figure right of the exchanger, in g/h. Pure: the Lit element renders the result.
 import { recoveryTotals, type RecoveryResult } from '../calc/recovery';
 import { missingRoles, type CardConfig, type Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
@@ -78,16 +78,20 @@ export function savingTarget(
 }
 
 export interface MoistureFigure {
-  /** The signed rate, e.g. "120 g/h", or "−418 g/h" while moisture is kept out; or "n/a". */
+  /** The rate's magnitude without unit or sign, e.g. "418", or "n/a". */
   text: string;
+  /** The unit after the number ("g/h"); none for "n/a". */
+  unit?: string;
+  /** The direction as an icon: water-plus while moisture is recovered, water-minus while it is kept out; none for "n/a". */
+  icon?: string;
   /** The tooltip, with the direction in words, e.g. "Moisture kept out: 418 g/h". */
   title: string;
 }
 
 /**
- * The moisture recovery figure of an ERV for a calculation result: the recovered moisture rate, negative while the
- * exchanger keeps moisture out. None for an HRV or without the badge's inputs (`badge`). Without a moisture rate (an
- * input has no value) it is hidden like the badge, or "n/a" with `showUnavailable`.
+ * The moisture recovery figure of an ERV for a calculation result: the magnitude of the recovered moisture rate, with
+ * an icon for the direction (no sign). None for an HRV or without the badge's inputs (`badge`). Without a moisture rate
+ * (an input has no value) it is hidden like the badge, or "n/a" with `showUnavailable`.
  */
 export function moistureFigure(
   result: RecoveryResult | undefined,
@@ -98,12 +102,15 @@ export function moistureFigure(
   const rate = result?.moisture?.recovered;
   if (rate === undefined)
     return options.showUnavailable ? { text: NO_VALUE, title: DIAGRAM.moistureNoValue } : undefined;
-  const text = DIAGRAM.moisture(formatNumber(rate, locale));
-  const magnitude = DIAGRAM.moisture(formatNumber(Math.abs(rate), locale));
-  // Kept out only when the sign shows: a rate that rounds to 0 is written "0 g/h", without one.
+  const text = formatNumber(Math.abs(rate), locale);
+  // Kept out only when the rate shows with a sign: a rate that rounds to 0 counts as recovered.
+  const keptOut = formatNumber(rate, locale) !== text;
+  const magnitude = DIAGRAM.moisture(text);
   return {
     text,
-    title: text === magnitude ? DIAGRAM.moistureRecovered(magnitude) : DIAGRAM.moistureKeptOut(magnitude),
+    unit: DIAGRAM.moistureUnit,
+    icon: keptOut ? DIAGRAM.moistureKeptOutIcon : DIAGRAM.moistureRecoveredIcon,
+    title: keptOut ? DIAGRAM.moistureKeptOut(magnitude) : DIAGRAM.moistureRecovered(magnitude),
   };
 }
 
