@@ -815,7 +815,7 @@ describe('pre-heater coil', () => {
           expect(root.querySelector('svg path.coil.off') !== null, `${where} dim`).toBe(name === 'off');
           expect(root.querySelector('svg path.coil-glow') !== null, `${where} glow`).toBe(name === 'on');
           // The glow is a wider, blurred stroke: its box is the wire's, grown by half the stroke and one blur radius.
-          const reach = (3 + 3) * (element(root, 'svg path.coil') as SVGGraphicsElement).getScreenCTM()!.a;
+          const reach = (3 + 3) * ((element(root, 'svg path.coil') as SVGGraphicsElement).getScreenCTM()?.a ?? 1);
           const glow = new DOMRect(wire.x - reach, wire.y - reach, wire.width + 2 * reach, wire.height + 2 * reach);
           expect(coil.width, where).toBeGreaterThan(0);
           expect(coil.height, where).toBeGreaterThan(0);
