@@ -89,7 +89,7 @@
   four digits) clear of the exchanger, the house symbol, the streams and the corner stacks, and the flow labels clear
   of the arrowheads, the bypass path at 100 % and the corner stacks ("Flow labels", "ERV at the narrowest width",
   "Four-digit rate on a narrow card", "Text on the exchanger"); verify the tests pass
-- [ ] 4.6 Update `README.md` (options table, rings and their tooltip, moisture figure, flow labels; the images are
+- [x] 4.6 Update `README.md` (options table, rings and their tooltip, moisture figure, flow labels; the images are
   retaken in group 7) and `docs/hrv-ventilation.md` ("Formulas": the total effectiveness, the enthalpy gate, why lost
   latent heat counts; diagram: the rim geometry and clip, the colours and contrast rule, the tooltip's absolute
   values, the figure's place and icons, the flow labels); verify the README tests pass and no doc still mentions the
