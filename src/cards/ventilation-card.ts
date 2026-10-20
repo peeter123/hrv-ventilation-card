@@ -71,7 +71,7 @@ interface DiagramSettings {
   savings: Record<RecoveryResult['mode'], string | undefined>;
   moistureRecovery?: string;
   /** The `pre_heater.power` entity, which draws the coil, and the rated power its glow is a share of. */
-  preHeater?: { entityId: string; maxPower: number | undefined };
+  preHeater?: { entityId: string; maxPower: number | undefined; glowColor: string };
   /**
    * The effectiveness rings are drawn: the option is on and the config has the inputs of the sensible calculation.
    * `moisture`: the moisture ring too, on an ERV with humidity for every stream.
@@ -245,9 +245,9 @@ export class HrvVentilationCard extends HrvCard {
       height: 74%;
       clip-path: polygon(28% 0, 72% 0, 100% 50%, 72% 100%, 28% 100%, 0 50%);
     }
-    /* Over the pre-heater coil (x 100 to 128, y 50 to 74 of 400 by 200). */
+    /* Over the pre-heater coil (x 100 to 128, y 53 to 77 of 400 by 200: the wave is y 56 to 76, plus its glow). */
     .pre-heater {
-      top: 25%;
+      top: 26.5%;
       left: 25%;
       width: 7%;
       height: 12%;
@@ -468,7 +468,11 @@ export class HrvVentilationCard extends HrvCard {
       },
       moistureRecovery: entityAt(config, 'status.moisture_recovery'),
       preHeater: preHeaterEntity
-        ? { entityId: preHeaterEntity, maxPower: optionValue(config, DIAGRAM_OPTIONS.preHeaterMaxPower) }
+        ? {
+            entityId: preHeaterEntity,
+            maxPower: optionValue(config, DIAGRAM_OPTIONS.preHeaterMaxPower),
+            glowColor: optionValue(config, DIAGRAM_OPTIONS.preHeaterGlowColor),
+          }
         : undefined,
       rings:
         optionValue(config, DIAGRAM_OPTIONS.showEffectiveness) && hasRings(config)
@@ -706,7 +710,7 @@ export class HrvVentilationCard extends HrvCard {
       coil: preHeater
         ? {
             level: preHeaterLevel(stateOf(states, preHeater.entityId), preHeater.maxPower),
-            color: settings.colors.warm,
+            color: preHeater.glowColor,
           }
         : undefined,
     });

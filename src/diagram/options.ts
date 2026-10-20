@@ -28,6 +28,8 @@ export const DIAGRAM_OPTIONS = {
   nominalFlow: { kind: 'number', path: 'animation.nominal_flow', min: 1, max: 100_000, default: undefined },
   // The pre-heater's rated power in W: the coil's glow is the power as a share of it; without it the glow is full.
   preHeaterMaxPower: { kind: 'number', path: 'pre_heater.max_power', min: 1, max: 4000, default: undefined },
+  // The colour the coil glows in while the pre-heater draws power: a warm orange (Home Assistant's orange).
+  preHeaterGlowColor: { kind: 'color', path: 'pre_heater.glow_color', default: '#ff9800' },
   layout: { kind: 'choice', path: 'layout', choices: LAYOUTS, default: 'auto' },
   showUnavailable: { kind: 'boolean', path: 'show_unavailable', default: false },
 } as const satisfies Record<string, NumberOption | ColorOption | BooleanOption | ChoiceOption>;

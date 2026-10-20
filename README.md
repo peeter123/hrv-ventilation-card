@@ -180,15 +180,19 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 | `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
 | `energy` | entity | | | The pre-heater's energy sensor. Reserved for the status grid; the card does not show it yet. |
 | `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000). Without it the coil glows fully at any power above 0. |
+| `glow_color` | color | `#ff9800` | yes | The colour the coil glows in while the heater is on: a CSS colour, by default a warm orange. |
 
-A unit with a pre-heater (a heating coil that warms the outdoor air against frost) gets a coil drawn across the
-outdoor stream, between the outdoor symbol and the bypass bend, when `pre_heater.power` is configured. The coil is
-dim (the secondary text colour) while the heater is off or its entity is unavailable or unknown, and glows in the warm
-colour when it heats:
+A unit with a pre-heater (a heating coil that warms the outdoor air against frost) gets a coil drawn along the
+outdoor stream, between the outdoor symbol and the bypass bend, when `pre_heater.power` is configured. The coil is a
+smooth wave that follows the stream's curve, from one border of the stream to the other. It is dim (the secondary text
+colour) while the heater is off or its entity is unavailable or unknown, and glows in `glow_color` (orange by
+default) when it heats. The glow starts bright: the share of the glow colour is 30 % plus 70 % of the level, so a
+heater at a quarter of its power already glows clearly orange:
 
 - With a power sensor and `max_power`, the glow grows with the power as a share of the maximum. It is at least a tenth
   while the heater draws any power, so a modulating heater at a few percent does not look off, and full at the maximum
-  or above.
+  or above. The level is what the share above is taken from, e.g. 250 of 1,000 W is a level of 0.25, 47.5 % glow
+  colour.
 - With a power sensor and no `max_power`, any power above 0 is full.
 - With an on/off entity, the coil glows fully while it is on and is dim while it is off. `max_power` has no effect.
 
@@ -471,6 +475,7 @@ pre_heater:
   power: sensor.hrv_pre_heater_power
   energy: sensor.hrv_pre_heater_energy
   max_power: 1500
+  glow_color: '#ff9800'
 seasons:
   heating: binary_sensor.hrv_heating_season
   cooling: binary_sensor.hrv_cooling_season

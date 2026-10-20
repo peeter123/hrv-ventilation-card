@@ -648,8 +648,33 @@ describe('the pre-heater coil', () => {
     const { root } = await render(WITH_HEATER, '0', [state(HEATER, '250', 'W')]);
     expect(root.querySelector('svg .coil.on')).not.toBeNull();
     expect(box(root)).not.toBeNull();
-    expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.25');
-    expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain('25%');
+    // A quarter of the power glows brighter than a quarter: 30 + 70 x 0.25 = 47.5 %.
+    expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.475');
+    expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain('47.5%');
+  });
+
+  test('airflow-diagram-card "Partial glow": the warm share is 30 + 70 x level, 100 % at full', async () => {
+    for (const [power, share, opacity] of [
+      ['1000', '100%', '1'],
+      ['100', '37%', '0.37'],
+    ] as const) {
+      const { root } = await render(WITH_HEATER, '0', [state(HEATER, power, 'W')]);
+      expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain(share);
+      expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe(opacity);
+      document.body.innerHTML = '';
+    }
+  });
+
+  test('airflow-diagram-card "Glow colour": a warm orange by default, pre_heater.glow_color when set', async () => {
+    const lit = [state(HEATER, '1000', 'W')];
+    const { root } = await render(WITH_HEATER, '0', lit);
+    expect(root.querySelector('svg .coil-glow')?.getAttribute('style')).toContain('#ff9800');
+    expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain('#ff9800');
+    document.body.innerHTML = '';
+    const custom: CardConfig = { ...CONFIG, pre_heater: { power: HEATER, glow_color: 'rgb(255, 0, 0)' } };
+    const changed = await render(custom, '0', lit);
+    expect(changed.root.querySelector('svg .coil-glow')?.getAttribute('style')).toContain('rgb(255, 0, 0)');
+    expect(changed.root.querySelector('svg .coil.on')?.getAttribute('style')).toContain('rgb(255, 0, 0)');
   });
 
   test('airflow-diagram-card "Off": the coil is drawn dim, without a glow, also while unavailable', async () => {
@@ -741,6 +766,13 @@ describe('checkDiagramConfig', () => {
     );
     expect(check({ ...CONFIG, pre_heater: { max_power: 4001 } })).toThrow('Invalid option pre_heater.max_power');
     expect(check({ ...CONFIG, pre_heater: { max_power: 4000 } })).not.toThrow();
+  });
+
+  test('airflow-diagram-card "Invalid glow colour": pre_heater.glow_color must be a CSS colour', () => {
+    expect(check({ ...CONFIG, pre_heater: { glow_color: 'inherit' } })).toThrow('Invalid option pre_heater.glow_color');
+    expect(check({ ...CONFIG, pre_heater: { glow_color: 5 } })).toThrow('Invalid option pre_heater.glow_color');
+    expect(check({ ...CONFIG, pre_heater: { glow_color: '#ff9800' } })).not.toThrow();
+    expect(check({ ...CONFIG, pre_heater: { glow_color: 'var(--orange-color, orange)' } })).not.toThrow();
   });
 
   test('card-bundle "Option left out": every option may be left out or empty', () => {

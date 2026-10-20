@@ -26,6 +26,9 @@ export const PATHS = {
 
 const STROKE = 14;
 
+// The supply path's cubic (x0 y0 x1 y1 x2 y2 x3 y3), which the pre-heater coil follows.
+const SUPPLY_CUBIC = [86, 62, 160, 62, 240, 138, 306, 138] as const;
+
 /** Rounded to a number of decimals, so float noise (1 - 0.07 = 0.9299999999999999) stays out of the DOM. */
 const rounded = (value: number, decimals: number): number => Math.round(value * 10 ** decimals) / 10 ** decimals;
 
@@ -58,9 +61,53 @@ const RIM =
 /** Percent of the mode's colour in the total ring (the rest is the text colour): the largest that keeps 3:1 against the core and the moisture ring. */
 const TOTAL_RING_SHARE = 45;
 
-// The pre-heater coil: a zigzag wire across the outdoor stream (the stream is y 55 to 69 there), right of the outdoor
-// stack (x 70 at most) and left of the bypass path's first bend.
-const COIL = 'M 100 62 L 104 50 L 108 74 L 112 50 L 116 74 L 120 50 L 124 74 L 128 62';
+// The pre-heater coil: a smooth wave wire along the outdoor stream (the supply path's start), right of the outdoor
+// stack (x 70 at most) and left of the bypass path's first bend. Its centreline is the stream's own, its amplitude the
+// stream's half-width, so the first and last points (round caps) sit on the stream's borders. Half a wave fewer than
+// the old zigzag: from the upper border, down, up, down to the lower border (two crests on each side).
+const COIL_X = { from: 100, to: 128 } as const;
+const COIL_HALF_WAVES = 3;
+const COIL_SAMPLES = 48;
+
+/** A point of the supply stream's cubic centreline and its unit normal (pointing down, to the lower border). */
+function streamPoint(t: number): { x: number; y: number; nx: number; ny: number } {
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = SUPPLY_CUBIC;
+  const u = 1 - t;
+  const b = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t] as const;
+  const d = [3 * u * u, 6 * u * t, 3 * t * t] as const;
+  const x = b[0] * x0 + b[1] * x1 + b[2] * x2 + b[3] * x3;
+  const y = b[0] * y0 + b[1] * y1 + b[2] * y2 + b[3] * y3;
+  const dx = d[0] * (x1 - x0) + d[1] * (x2 - x1) + d[2] * (x3 - x2);
+  const dy = d[0] * (y1 - y0) + d[1] * (y2 - y1) + d[2] * (y3 - y2);
+  const length = Math.hypot(dx, dy);
+  return { x, y, nx: -dy / length, ny: dx / length };
+}
+
+/** The parameter of the supply cubic at an x (x grows monotonically along it). */
+function parameterAt(x: number): number {
+  let [low, high] = [0, 1];
+  for (let i = 0; i < 40; i++) {
+    const mid = (low + high) / 2;
+    if (streamPoint(mid).x < x) low = mid;
+    else high = mid;
+  }
+  return (low + high) / 2;
+}
+
+/** The coil's wire as points: the stream's centreline moved along its normal by the half-width times a cosine. */
+export function coilPoints(): { x: number; y: number }[] {
+  const [t0, t1] = [parameterAt(COIL_X.from), parameterAt(COIL_X.to)];
+  return Array.from({ length: COIL_SAMPLES + 1 }, (_, i) => {
+    const s = i / COIL_SAMPLES;
+    const p = streamPoint(t0 + (t1 - t0) * s);
+    const offset = (STROKE / 2) * -Math.cos(COIL_HALF_WAVES * Math.PI * s);
+    return { x: rounded(p.x + p.nx * offset, 2), y: rounded(p.y + p.ny * offset, 2) };
+  });
+}
+
+const COIL = coilPoints()
+  .map(({ x, y }, i) => `${i === 0 ? 'M' : 'L'} ${String(x)} ${String(y)}`)
+  .join(' ');
 const COIL_WIDTH = 3;
 
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
@@ -101,7 +148,7 @@ export interface Rings {
 export interface Coil {
   /** How hot it glows, 0 (off) to 1; see `preHeaterLevel`. */
   level: number;
-  /** The colour it glows in: the card's warm colour. */
+  /** The colour it glows in: the `pre_heater.glow_color` option (a warm orange by default). */
   color: string;
 }
 
@@ -175,14 +222,17 @@ function totalRing(color: string, figure: number | undefined): SVGTemplateResult
       style=${styleMap({ stroke: ringColor })}></path>`;
 }
 
-/** The pre-heater coil: dim in the secondary text colour while off, else the warm colour over a blurred glow. */
+/** Percent of the glow colour at a level: from 30 % at the lowest level to 100 %, so a partial level visibly glows. */
+export const glowShare = (level: number): number => 30 + 70 * level;
+
+/** The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. */
 function coilWire({ level, color }: Coil): SVGTemplateResult {
   if (level <= 0) {
     return svg`<path class="coil off" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>`;
   }
-  const stroke = `color-mix(in srgb, ${color} ${String(rounded(level * 100, 1))}%, var(--secondary-text-color))`;
+  const stroke = `color-mix(in srgb, ${color} ${String(rounded(glowShare(level), 1))}%, var(--secondary-text-color))`;
   return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${COIL_WIDTH * 2} stroke-linejoin="round"
-      opacity=${rounded(level, 3)} style=${styleMap({ stroke: color })}></path>
+      opacity=${rounded(glowShare(level) / 100, 3)} style=${styleMap({ stroke: color })}></path>
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>`;
 }

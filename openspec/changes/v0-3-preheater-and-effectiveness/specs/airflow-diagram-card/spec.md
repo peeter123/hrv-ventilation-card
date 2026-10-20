@@ -88,7 +88,7 @@ A row with none of its roles configured SHALL NOT be shown.
 The card SHALL offer a visual editor with an exchanger type choice first, then one entity picker per role, grouped
 in collapsible sections per group, with the four temperatures marked as required, an animation switch and an effectiveness switch. Pickers
 SHALL only offer entities of a fitting domain. The smoothing window, air density, cold and warm colours, layout
-choice, show-unavailable switch, nominal flow, pre-heater maximum power and the next fan change, next bypass change, target temperature,
+choice, show-unavailable switch, nominal flow, pre-heater maximum power and glow colour and the next fan change, next bypass change, target temperature,
 temperature profile, saved heating power, saved cooling power and moisture recovery pickers SHALL be advanced settings.
 
 #### Scenario: Editing the card
@@ -99,12 +99,12 @@ temperature profile, saved heating power, saved cooling power and moisture recov
 - **AND** the pre-heater power picker offers sensors, binary sensors and switches, and the energy picker sensors
 - **AND** the status section shows no next fan change, next bypass change, target temperature, temperature
   profile, saved heating power, saved cooling power or moisture recovery picker
-- **AND** the pre-heater section shows no maximum power
+- **AND** the pre-heater section shows no maximum power or glow colour
 
 #### Scenario: Advanced settings on
 - **WHEN** the user turns the advanced settings on
 - **THEN** the niche status pickers, including the two saved power pickers and moisture recovery, appear in the status section,
-  the maximum power appears in the pre-heater section,
+  the maximum power and the glow colour (showing its orange default) appear in the pre-heater section,
   and the colours, layout, unavailable values, nominal flow and a calculation section with smoothing and air
   density appear
 
@@ -283,13 +283,16 @@ The ratio is then clamped to 0 %; where it is clamped to 100 %, both values stay
 - **THEN** the tooltip reads "Effectiveness: free cooling 0 % (−120 / 1,000 W), moisture 0 % (−100 / 800 g/h)"
 
 ### Requirement: Pre-heater coil on the drawing
-With `pre_heater.power` configured, the card SHALL draw a heating coil across the outdoor-to-supply stream, between
-the outdoor symbol and the exchanger, in both layouts. Without it no coil SHALL be drawn. The coil SHALL NOT overlap
-a label at any card width from 280 px.
+With `pre_heater.power` configured, the card SHALL draw a heating coil along the outdoor-to-supply stream, between
+the outdoor symbol and the exchanger, in both layouts. The coil SHALL be a smooth, rounded wave that follows the
+stream's centreline and curvature, with two crests on each side, whose first and last points lie on the stream's two
+borders. Without it no coil SHALL be drawn. The coil SHALL NOT overlap a label at any card width from 280 px.
 
 #### Scenario: Coil drawn
 - **WHEN** `pre_heater.power` is configured
 - **THEN** a coil is drawn on the outdoor stream, left of the exchanger
+- **AND** the coil is a rounded wave that follows the stream's curve
+- **AND** its first point lies on the stream's upper border and its last on the lower border
 
 #### Scenario: No pre-heater
 - **WHEN** no `pre_heater.power` is configured
@@ -303,11 +306,13 @@ a label at any card width from 280 px.
 The coil SHALL be drawn dim while the pre-heater is off and glowing while it is on. A numeric power entity SHALL
 count as on above 0 W, in W or kW. With `pre_heater.max_power` (W) set, the glow SHALL grow with power / maximum,
 capped at full and visibly on above 0 W; without it any power above 0 W SHALL glow fully. An on/off entity SHALL
-glow fully while on.
+glow fully while on. While on, the share of the glow colour SHALL be 30 % + 70 % x the level, so a partial level
+already glows visibly. The glow colour SHALL be the option `pre_heater.glow_color`, a CSS colour that defaults to a
+warm orange (`#ff9800`); an invalid value SHALL be a configuration error that names the option.
 
 #### Scenario: Modulating pre-heater
 - **WHEN** `pre_heater.max_power` is 1000 and the pre-heater power is 250 W
-- **THEN** the coil glows at a quarter between dim and full
+- **THEN** the coil glows with 47.5 % of the glow colour and a glow of the same strength
 
 #### Scenario: No maximum
 - **WHEN** no `pre_heater.max_power` is set and the pre-heater power is 120 W
@@ -324,6 +329,15 @@ glow fully while on.
 #### Scenario: Unavailable
 - **WHEN** the pre-heater power entity is unavailable
 - **THEN** the coil is drawn dim, as off
+
+#### Scenario: Glow colour
+- **WHEN** the pre-heater is on and `pre_heater.glow_color` is not set
+- **THEN** the coil glows in orange (`#ff9800`)
+- **AND** with `pre_heater.glow_color: rgb(255, 0, 0)` it glows in that colour
+
+#### Scenario: Invalid glow colour
+- **WHEN** the config sets `pre_heater.glow_color: inherit`
+- **THEN** the card shows a configuration error that names `pre_heater.glow_color`
 
 #### Scenario: Invalid maximum
 - **WHEN** the config sets `pre_heater.max_power: 0`

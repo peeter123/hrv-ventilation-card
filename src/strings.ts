@@ -126,6 +126,7 @@ export const EDITOR = {
     cooling_saving: 'Saved cooling power',
     moisture_recovery: 'Moisture recovery rate',
     max_power: 'Maximum power (W)',
+    glow_color: 'Glow colour',
     heating: 'Heating season',
     cooling: 'Cooling season',
     smoothing: 'Humidity smoothing (minutes, 0 = off)',

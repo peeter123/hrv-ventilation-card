@@ -58,6 +58,7 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
       switchableField('power'),
       sensorField('energy'),
       numberField('max_power', DIAGRAM_OPTIONS.preHeaterMaxPower, 1, 'W'),
+      colorField('glow_color', DIAGRAM_OPTIONS.preHeaterGlowColor.default),
     ],
   },
   { type: 'expandable', name: 'seasons', schema: [binarySensorField('heating'), binarySensorField('cooling')] },

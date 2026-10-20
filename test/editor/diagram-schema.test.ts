@@ -114,6 +114,14 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('animation')).toEqual(['enabled', 'nominal_flow']);
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('colors')).toEqual(['cold', 'warm']);
+    expect(named.get('pre_heater')).toEqual(['power', 'energy', 'max_power', 'glow_color']);
+    expect(EDITOR.fields.glow_color).toBe('Glow colour');
+    // The glow colour is an advanced text field that shows its default (orange) without the config having it.
+    const glow = fieldsWithPaths(DIAGRAM_SCHEMA).find(({ path }) => path === 'pre_heater.glow_color')?.field;
+    expect(glow).toMatchObject({ advanced: true, default: '#ff9800', selector: { text: {} } });
+    expect(withShownDefaults(visibleSchema(DIAGRAM_SCHEMA, true), {})).toMatchObject({
+      pre_heater: { glow_color: '#ff9800' },
+    });
     const topLevel = visibleSchema(DIAGRAM_SCHEMA, true).filter((item) => !('schema' in item));
     expect(topLevel.map((item) => item.name)).toEqual([
       'exchanger_type',

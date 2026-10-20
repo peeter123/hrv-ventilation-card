@@ -165,20 +165,30 @@ exactly as v0.2 did. The user accepted that with the move.
 
 ### The pre-heater coil: SVG for the look, an HTML box for the tap
 
-The coil is a zigzag wire across the outdoor stream, about x 100 to 128 and y 50 to 74, wider than the stream, so
-the air visibly passes through it. That is right of the outdoor stack at every width (x 70 at most) and left of the
-bypass path's first bend. A pure `preHeaterLevel(state, maxPower)` gives 0 to 1:
+The coil is a smooth wave wire along the outdoor stream over about x 100 to 128. Its shape is computed from the
+stream's own geometry (user's feedback, 2026-10-20: rounder, one turn fewer, following the stream's curve, ends on the
+stream's borders): `coilPoints()` in `drawing.ts` samples the supply path's cubic centreline 48 times and moves each
+sample along the path's normal by the stream's half-width (7) times `-cos(3 pi s)`, so the wire follows the curve,
+has two crests on each side (the zigzag had three) and its first and last points, with round caps, sit on the upper
+and the lower border. The extent is about x 101 to 126 and y 56 to 76, right of the outdoor stack at every width
+(x 70 at most) and left of the bypass path's first bend. A pure `preHeaterLevel(state, maxPower)` gives 0 to 1:
 
 - numeric (converted to W): 0 at or below 0 W; with a maximum, `max(power / max, 0.1)` capped at 1; without one, 1;
 - `on`: 1, `off`: 0; anything else (unavailable, unknown, text): 0.
 
-The coil's stroke is `color-mix(in srgb, <warm colour> <level>%, var(--secondary-text-color))`, with a blurred copy
-behind it at opacity `level` as the glow. At 0 it is the secondary text colour at reduced opacity: visible as a coil
+The coil's stroke is `color-mix(in srgb, <glow colour> <share>%, var(--secondary-text-color))` with
+`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow. At 0 it is the secondary text colour at reduced opacity: visible as a coil
 in both themes, clearly off.
 
 - *Why not black for off?* It disappears on a dark theme. The secondary text colour follows the theme.
-- *Why the warm colour?* It is the card's own "hot" colour and stands out on the outdoor stream, which is cold
-  whenever a pre-heater runs.
+- *Why 30 + 70 x level?* With the share equal to the level, a quarter power was 25 % colour: close to grey, which
+  read as off. Starting at 30 % makes any power visibly warm and 250 of 1,000 W is 47.5 %. It applies only while on
+  (level above 0); off stays the dim secondary colour.
+- *Why orange, and an option?* The warm colour (red) reads as a hot stream, orange as a heating element, and it
+  stands out on the outdoor stream, which is cold whenever a pre-heater runs. `pre_heater.glow_color` (a colour
+  option, default `#ff9800`, validated by the shared validator) lets a theme or taste change it. It is named
+  `glow_color` rather than `color` because editor labels are looked up by field name, and `color` is the recovery
+  cards' "Temperature colour".
 - *Why a minimum of 0.1?* A modulating heater at a few percent would otherwise look off.
 
 An HTML box `.on-drawing.pre-heater` over the coil carries `title` and `aria-label` ("Pre-heater: " plus the state
@@ -203,10 +213,11 @@ the top row ("Rows follow the config").
 ### Options and editor
 
 `DIAGRAM_OPTIONS` gets `showEffectiveness` (boolean, `show_effectiveness`, default false) and `preHeaterMaxPower`
-(number, `pre_heater.max_power`, 1 to 4000, no default), so the shared validator reports bad values. The editor gets
+(number, `pre_heater.max_power`, 1 to 4000, no default) and `preHeaterGlowColor` (colour, `pre_heater.glow_color`,
+default `#ff9800`), so the shared validator reports bad values. The editor gets
 a `pre_heater` section after the status section: a power picker for the `sensor`, `binary_sensor` and `switch`
-domains (a new field helper, as `sensorField` offers sensors only), an energy picker for sensors and the maximum
-power as an advanced number. `show_effectiveness` is a basic switch after the animation section. Both new options
+domains (a new field helper, as `sensorField` offers sensors only), an energy picker for sensors, the maximum
+power as an advanced number and the glow colour as an advanced text field. `show_effectiveness` is a basic switch after the animation section. Both new options
 show their defaults through the existing shown-defaults mechanism, so they fall under the new card-bundle
 requirement without code of their own.
 
