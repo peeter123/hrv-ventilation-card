@@ -46,7 +46,7 @@ import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { formatState, stateOf } from '../lib/hass';
 import { optionValue } from '../lib/options';
-import { DIAGRAM, NBSP, ROLE_LABELS } from '../strings';
+import { DIAGRAM, ROLE_LABELS } from '../strings';
 import { checkConfig, HrvCard, sampleStyles } from './base-card';
 
 export const DIAGRAM_CARD_TAG = 'hrv-ventilation-card';
@@ -174,6 +174,9 @@ export class HrvVentilationCard extends HrvCard {
     .exchanger.erv {
       fill: var(--erv-fill);
     }
+    .ring.moisture {
+      stroke: var(--erv-ring);
+    }
     .exchanger-inner {
       fill: none;
       stroke: var(--divider-color);
@@ -260,13 +263,17 @@ export class HrvVentilationCard extends HrvCard {
       overflow: visible;
       text-align: center;
     }
+    /* The width of a space between the number and its unit; none where the unit goes under the number. */
+    .moisture-recovery .unit {
+      margin-left: 0.25em;
+    }
     @container (max-width: ${MOISTURE_TWO_LINES}px) {
       .moisture-recovery .figure .value {
         display: flex;
         flex-direction: column;
       }
-      .moisture-recovery .gap {
-        display: none;
+      .moisture-recovery .unit {
+        margin-left: 0;
       }
     }
     /* On the exchanger's centre. */
@@ -611,9 +618,7 @@ export class HrvVentilationCard extends HrvCard {
         data-entity=${ifDefined(tap.entity)}
         >${figure.icon ? html`<ha-icon .icon=${figure.icon} aria-hidden="true"></ha-icon>` : nothing}<span class="value"
           ><span class="number">${figure.text}</span>${
-            figure.unit
-              ? html`<span class="gap" aria-hidden="true">${NBSP}</span><span class="unit">${figure.unit}</span>`
-              : nothing
+            figure.unit ? html`<span class="unit">${figure.unit}</span>` : nothing
           }</span
         ></span
       >

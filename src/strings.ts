@@ -2,6 +2,7 @@
 // Texts with values are functions that take the numbers already formatted for the user's locale (lib/format.ts).
 // Plain text only (no emoji). A number and its unit are always joined by NBSP, never a plain space, so a line
 // never breaks between them (a test checks every template).
+import type { RecoveryKind } from './calc/recovery';
 import type { RolePath } from './lib/config';
 
 /** A no-break space: keeps a number on one line with its unit, in every text below. */
@@ -150,11 +151,15 @@ export const EDITOR = {
   },
 } as const;
 
+/** The unit of a moisture rate, defined once. */
+const GRAMS_PER_HOUR = 'g/h';
+
 /** The recovery balance bar. Values are formatted numbers without units. */
 export const RECOVERY = {
-  titleHeating: 'Heat Recovery',
-  titleCooling: 'Cooling Recovery',
-  titleFreeCooling: 'Free Cooling',
+  titles: { heat: 'Heat Recovery', cooling: 'Cooling Recovery', freeCooling: 'Free Cooling' } as Record<
+    RecoveryKind,
+    string
+  >,
   titleNoValue: 'Recovery',
   header: (recovered: string, potential: string, percent: string): string =>
     `Recovered ${recovered}${NBSP}W of ${potential}${NBSP}W (${percent}${NBSP}%)`,
@@ -224,8 +229,9 @@ export const DIAGRAM = {
   },
   saving: (watts: string): string => `${watts}${NBSP}W`,
   /** The ERV's moisture recovery rate with its unit (the tooltips); the figure shows the magnitude after an icon. */
-  moisture: (gramsPerHour: string): string => `${gramsPerHour}${NBSP}g/h`,
-  moistureUnit: 'g/h',
+  moisture: (gramsPerHour: string): string => `${gramsPerHour}${NBSP}${GRAMS_PER_HOUR}`,
+  moistureUnit: GRAMS_PER_HOUR,
+  powerUnit: 'W',
   moistureRecoveredIcon: 'mdi:water-sync',
   moistureKeptOutIcon: 'mdi:water-remove',
   /** The moisture figure's tooltips; `figure` is the rate's magnitude, e.g. "418 g/h". */
@@ -233,21 +239,21 @@ export const DIAGRAM = {
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,
   moistureNoValue: `Moisture recovery: ${NO_VALUE}`,
   /**
-   * The effectiveness rings' tooltip. The total figure is `effectivenessTotal` (named by the mode, or without one while
-   * there is no calculation), the moisture figure `effectivenessMoisture`; each takes a `figure` (`effectivenessPercent`
-   * or `effectivenessNoValue`) and, for one with a value, its absolute values (`effectivenessWatts`, `effectivenessRate`).
+   * The effectiveness rings' tooltip. Each figure is an `effectivenessFigure` (the total named by the kind, or without one while
+   * there is no calculation; the moisture without a name) of a `figure` (`effectivenessPercent` or
+   * `effectivenessNoValue`) and, for one with a value, its absolute values (`effectivenessAbsolute`).
    */
   effectiveness: (total: string, moisture?: string, bypass?: string): string =>
     `Effectiveness: ${total}${moisture === undefined ? '' : `, moisture ${moisture}`}${
       bypass === undefined ? '' : ` (bypass ${bypass}${NBSP}%)`
     }`,
-  effectivenessTotal: (mode: 'heat' | 'cooling' | 'free cooling' | undefined, figure: string, absolute = ''): string =>
-    `${mode === undefined ? '' : `${mode} `}${figure}${absolute}`,
-  effectivenessMoisture: (figure: string, absolute = ''): string => `${figure}${absolute}`,
-  /** The total figure's absolute values: the recovered total of the potential, in W. */
-  effectivenessWatts: (recovered: string, potential: string): string => ` (${recovered} / ${potential}${NBSP}W)`,
-  /** The moisture figure's absolute values: the recovered of the extracted moisture, in g/h. */
-  effectivenessRate: (recovered: string, extracted: string): string => ` (${recovered} / ${extracted}${NBSP}g/h)`,
+  /** The word that names the total figure by the kind of recovery. */
+  effectivenessKinds: { heat: 'heat', cooling: 'cooling', freeCooling: 'free cooling' } as Record<RecoveryKind, string>,
+  effectivenessFigure: (kind: string | undefined, figure: string, absolute = ''): string =>
+    `${kind === undefined ? '' : `${kind} `}${figure}${absolute}`,
+  /** A figure's absolute values: the recovered of the potential (the extracted moisture), with the unit. */
+  effectivenessAbsolute: (recovered: string, potential: string, unit: string): string =>
+    ` (${recovered} / ${potential}${NBSP}${unit})`,
   effectivenessPercent: (percent: string): string => `${percent}${NBSP}%`,
   effectivenessNoValue: 'not measurable',
 } as const;

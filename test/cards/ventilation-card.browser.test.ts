@@ -85,6 +85,15 @@ function shownBoxes(root: ShadowRoot): { name: string; box: DOMRect }[] {
   }));
 }
 
+/** The element a selector finds in a card's shadow root; throws when there is none. */
+const element = (root: ShadowRoot, selector: string): Element => {
+  const found = root.querySelector(selector);
+  if (!found) throw new Error(`no ${selector}`);
+  return found;
+};
+
+const box = (root: ShadowRoot, selector: string): DOMRect => element(root, selector).getBoundingClientRect();
+
 const middle = (rect: DOMRect): number => rect.top + rect.height / 2;
 
 /** The box of the svg an icon draws (inside its shadow root), not of its host. */
@@ -112,29 +121,31 @@ describe('airflow diagram layout', () => {
     // The moisture figure's place does not depend on the theme.
     ['light', 'erv'],
   ] as const) {
-    for (const width of [280, 320, COMPACT_BELOW, 360, 400, 600]) {
-      test(`${theme}, ${type}, ${String(width)} px: no labels overlap or leave the card, text at least 11 px`, async () => {
-        const { root } = await show(width, theme, 'auto', VALUES, { exchanger_type: type });
-        if (type === 'erv') expect(root.querySelector('.moisture-recovery .figure')).not.toBeNull();
+    test(`${theme}, ${type}: no labels overlap or leave the card, text at least 11 px, 280 to 600 px`, async () => {
+      const shown = await show(280, theme, 'auto', VALUES, { exchanger_type: type });
+      const { root } = shown;
+      for (const width of [280, 320, COMPACT_BELOW, 360, 400, 600]) {
+        await resize(shown, width);
+        const where = `${String(width)} px`;
+        if (type === 'erv') expect(root.querySelector('.moisture-recovery .figure'), where).not.toBeNull();
         const boxes = shownBoxes(root);
-        expect(boxes.length).toBeGreaterThan(width < COMPACT_BELOW ? 4 : 20);
-        const card = root.querySelector('ha-card')?.getBoundingClientRect();
-        if (!card) throw new Error('no ha-card');
-        for (const { name, box } of boxes) {
-          expect(box.left, name).toBeGreaterThanOrEqual(card.left);
-          expect(box.right, name).toBeLessThanOrEqual(card.right);
-          expect(box.top, name).toBeGreaterThanOrEqual(card.top);
-          expect(box.bottom, name).toBeLessThanOrEqual(card.bottom);
+        expect(boxes.length, where).toBeGreaterThan(width < COMPACT_BELOW ? 4 : 20);
+        const card = box(root, 'ha-card');
+        for (const { name, box: rect } of boxes) {
+          expect(rect.left, `${where} ${name}`).toBeGreaterThanOrEqual(card.left);
+          expect(rect.right, `${where} ${name}`).toBeLessThanOrEqual(card.right);
+          expect(rect.top, `${where} ${name}`).toBeGreaterThanOrEqual(card.top);
+          expect(rect.bottom, `${where} ${name}`).toBeLessThanOrEqual(card.bottom);
         }
         const overlapping = boxes.flatMap((a, i) =>
           boxes.slice(i + 1).flatMap((b) => (overlap(a.box, b.box) ? [`${a.name} / ${b.name}`] : [])),
         );
-        expect(overlapping).toEqual([]);
+        expect(overlapping, where).toEqual([]);
         for (const label of root.querySelectorAll('.label, .badge')) {
-          expect(parseFloat(getComputedStyle(label).fontSize)).toBeGreaterThanOrEqual(11);
+          expect(parseFloat(getComputedStyle(label).fontSize), where).toBeGreaterThanOrEqual(11);
         }
-      });
-    }
+      }
+    });
   }
 
   test(`airflow-diagram-card "Phone width" and "Desktop width": compact below ${String(COMPACT_BELOW)} px, full from it`, async () => {
@@ -153,25 +164,20 @@ describe('airflow diagram layout', () => {
   test('power is centred on the card; each flow label sits below the tip of its arrow', async () => {
     for (const width of [320, 350, 400, 600]) {
       const { root } = await show(width, 'light');
-      const box = (selector: string): DOMRect => {
-        const element = root.querySelector(selector);
-        if (!element) throw new Error(`no ${selector}`);
-        return element.getBoundingClientRect();
-      };
       const centre = (rect: DOMRect): number => rect.left + rect.width / 2;
-      expect(Math.abs(centre(box('.top .power')) - centre(box('ha-card')))).toBeLessThan(1);
+      expect(Math.abs(centre(box(root, '.top .power')) - centre(box(root, 'ha-card')))).toBeLessThan(1);
       if (width < COMPACT_BELOW) continue; // the compact layout has no flow labels or status grid
       // The status grid: centred on the card; both separators as wide as the corner stacks' outer edges.
-      expect(Math.abs(centre(box('.status .cell:nth-child(2)')) - centre(box('ha-card')))).toBeLessThan(1);
-      const [left, right] = [box('.corner.exhaust'), box('.corner.supply')];
+      expect(Math.abs(centre(box(root, '.status .cell:nth-child(2)')) - centre(box(root, 'ha-card')))).toBeLessThan(1);
+      const [left, right] = [box(root, '.corner.exhaust'), box(root, '.corner.supply')];
       for (const row of ['.top', '.status']) {
-        expect(box(row).left, row).toBeCloseTo(left.left, 0);
-        expect(box(row).right, row).toBeCloseTo(right.right, 0);
+        expect(box(root, row).left, row).toBeCloseTo(left.left, 0);
+        expect(box(root, row).right, row).toBeCloseTo(right.right, 0);
       }
       const [supplyHead, exhaustHead] = [...root.querySelectorAll('svg .head')].map((h) => h.getBoundingClientRect());
       for (const [label, head] of [
-        [box('.supply-flow .label'), supplyHead],
-        [box('.exhaust-flow .label'), exhaustHead],
+        [box(root, '.supply-flow .label'), supplyHead],
+        [box(root, '.exhaust-flow .label'), exhaustHead],
       ] as const) {
         if (!head) throw new Error('no arrowhead');
         expect(label.top).toBeGreaterThanOrEqual(head.bottom);
@@ -359,12 +365,6 @@ describe('exchanger type', () => {
     if (!exchanger || !toDrawing) throw new Error('no exchanger');
     return (x: number, y: number): boolean => exchanger.isPointInFill(new DOMPoint(x, y).matrixTransform(toDrawing));
   };
-  const box = (root: ShadowRoot, selector: string): DOMRect => {
-    const found = root.querySelector(selector)?.getBoundingClientRect();
-    if (!found) throw new Error(`no ${selector}`);
-    return found;
-  };
-
   /** The screen x of the exchanger's right vertex and of the house symbol's left edge, the figure's room. */
   const figureRoom = (root: ShadowRoot): { left: number; right: number } => {
     const exchanger = box(root, 'svg .exchanger');
@@ -393,7 +393,7 @@ describe('exchanger type', () => {
     expect(figure.left).toBeGreaterThan(room.left);
     expect(figure.right).toBeLessThan(room.right);
     expect(streamCrossing(root)(figure)).toBe(false);
-    expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/^\s*\d{3}\sg\/h\s*$/);
+    expect(root.querySelector('.moisture-recovery')?.textContent).toMatch(/^\s*\d{3}g\/h\s*$/);
     expect(overlap(bypass, badge)).toBe(false);
     expect(overlap(badge, figure)).toBe(false);
     expect(overlap(bypass, figure)).toBe(false);
@@ -426,22 +426,21 @@ describe('exchanger type', () => {
           for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
             expect(overlap(corner.getBoundingClientRect(), figure), `${where} ${corner.textContent}`).toBe(false);
           const value = root.querySelector('.moisture-recovery .value');
-          if (!value) throw new Error('no figure value');
+          const unitElement = root.querySelector('.moisture-recovery .unit');
+          if (!value || !unitElement) throw new Error('no figure value');
           expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
           // Never clipped or ellipsized: the label's rule for long values (overflow hidden) must not reach the figure.
           expect(getComputedStyle(value).overflow, where).toBe('visible');
           expect(value.scrollWidth, where).toBeLessThanOrEqual(value.clientWidth);
           // The unit under the number at a container width of 400 px or less, on the number's line above it.
-          const gap = root.querySelector('.moisture-recovery .gap');
-          if (!gap) throw new Error('no gap');
           if (width <= 400) {
             expect(unit.top, where).toBeGreaterThanOrEqual(number.bottom - 0.5);
             expect(Math.abs(unit.left + unit.width / 2 - (number.left + number.width / 2)), where).toBeLessThan(
               number.width,
             );
-            expect(getComputedStyle(gap).display, where).toBe('none');
+            expect(getComputedStyle(unitElement).marginLeft, where).toBe('0px');
           } else {
-            expect(unit.left, where).toBeGreaterThanOrEqual(number.right - 0.5);
+            expect(unit.left, where).toBeGreaterThan(number.right + 1);
             expect(Math.abs(middle(unit) - middle(number)), where).toBeLessThan(2);
           }
         }
@@ -608,31 +607,29 @@ describe('ring colours and coverage', () => {
     bypass: 0,
   };
 
-  const element = (root: ShadowRoot, selector: string): Element => {
-    const found = root.querySelector(selector);
-    if (!found) throw new Error(`no ${selector}`);
-    return found;
-  };
   const stroke = (root: ShadowRoot, selector: string): string => getComputedStyle(element(root, selector)).stroke;
 
-  for (const theme of ['light', 'dark'] as const) {
-    for (const [mode, values] of Object.entries(MODES)) {
-      for (const type of ['hrv', 'erv']) {
-        test(`airflow-diagram-card "Cooling mode", ${theme}, ${mode}, ${type}: the total ring keeps 3:1 against the core fill${type === 'erv' ? ' and the moisture ring' : ''}`, async () => {
-          const { root } = await show(400, theme, 'auto', values, { ...RINGS, exchanger_type: type });
-          const total = stroke(root, 'svg .ring.total');
-          const fill = getComputedStyle(element(root, 'svg .exchanger')).fill;
-          expect(contrast(total, fill), `${theme} ${mode} ${type} fill`).toBeGreaterThanOrEqual(3);
-          if (type === 'erv') {
-            const moisture = stroke(root, 'svg .ring.moisture');
-            expect(contrast(total, moisture), `${theme} ${mode} ${type} moisture ring`).toBeGreaterThanOrEqual(3);
-          } else {
-            expect(root.querySelector('svg .ring.moisture')).toBeNull();
-          }
-        });
-      }
-    }
+  const COLOUR_CASES = (['light', 'dark'] as const).flatMap((theme) =>
+    (['heating', 'cooling'] as const).flatMap((mode) =>
+      (['hrv', 'erv'] as const).map((type) => ({ theme, mode, type })),
+    ),
+  );
 
+  for (const { theme, mode, type } of COLOUR_CASES) {
+    test(`airflow-diagram-card "Ring colours", ${theme}, ${mode}, ${type}: the total ring keeps 3:1 against the core fill${type === 'erv' ? ' and the moisture ring' : ''}`, async () => {
+      const { root } = await show(400, theme, 'auto', MODES[mode], { ...RINGS, exchanger_type: type });
+      const total = stroke(root, 'svg .ring.total');
+      const fill = getComputedStyle(element(root, 'svg .exchanger')).fill;
+      expect(contrast(total, fill), 'fill').toBeGreaterThanOrEqual(3);
+      if (type === 'erv') {
+        expect(contrast(total, stroke(root, 'svg .ring.moisture')), 'moisture ring').toBeGreaterThanOrEqual(3);
+      } else {
+        expect(root.querySelector('svg .ring.moisture')).toBeNull();
+      }
+    });
+  }
+
+  for (const theme of ['light', 'dark'] as const) {
     test(`airflow-diagram-card "Moisture ring in both themes", ${theme}: the filled rim is at least ${theme === 'light' ? '1.5' : '1.3'}:1 against the empty rim`, async () => {
       const { root } = await show(400, theme, 'auto', VALUES, { ...RINGS, exchanger_type: 'erv' });
       const filled = stroke(root, 'svg .ring.moisture');
@@ -683,27 +680,14 @@ describe('ring colours and coverage', () => {
     };
   }
 
-  // The exchanger's outer and inner hexagon, in drawing units (see drawing.ts), vertex for vertex.
-  const OUTER: [number, number][] = [
-    [175.8, 26],
-    [224.2, 26],
-    [255, 100],
-    [224.2, 174],
-    [175.8, 174],
-    [145, 100],
-  ];
-  const INNER: [number, number][] = [
-    [181.3, 38],
-    [218.7, 38],
-    [240.7, 100],
-    [218.7, 162],
-    [181.3, 162],
-    [159.3, 100],
-  ];
+  /** A rendered polygon's vertices in drawing units (the exchanger's outer and inner hexagon, vertex for vertex). */
+  const vertices = (root: ShadowRoot, selector: string): [number, number][] =>
+    [...(element(root, selector) as SVGPolygonElement).points].map((point) => [point.x, point.y]);
 
   for (const theme of ['light', 'dark'] as const) {
     test(`airflow-diagram-card "Full moisture ring", ${theme}: the whole rim is filled from outline to outline and nothing outside or inside it is`, async () => {
       const { root } = await show(900, theme, 'auto', FULL, { ...RINGS, exchanger_type: 'erv' });
+      const [OUTER, INNER] = [vertices(root, 'svg .exchanger'), vertices(root, 'svg .exchanger-inner')];
       const ring = element(root, 'svg .ring.moisture');
       expect(ring.getAttribute('stroke-dasharray')).toBe('100 100');
       const ringColor = channels(stroke(root, 'svg .ring.moisture'));
@@ -760,11 +744,6 @@ describe('ring colours and coverage', () => {
 
 describe('flow labels', () => {
   const FULL_BYPASS: MockValues = { ...VALUES, bypass: 100 };
-  const element = (root: ShadowRoot, selector: string): Element => {
-    const found = root.querySelector(selector);
-    if (!found) throw new Error(`no ${selector}`);
-    return found;
-  };
   const WIDTHS = [280, 300, 320, COMPACT_BELOW, 360, 400, 500, 600];
 
   for (const type of ['hrv', 'erv']) {

@@ -1,6 +1,6 @@
 // What the recovery balance card shows, as a pure function of the calculation, the options and the locale. The Lit
 // element only renders this.
-import { recoveryTotals, type RecoveryResult } from '../calc/recovery';
+import { recoveryKind, recoveryTotals, type RecoveryResult } from '../calc/recovery';
 import { barScale, layoutSegments } from '../lib/bar';
 import type { Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
@@ -108,11 +108,7 @@ export function recoveryView(
   legend.push({ kind: 'text', text: RECOVERY.scale(watts(scale)) });
 
   return {
-    title: result.freeCooling
-      ? RECOVERY.titleFreeCooling
-      : result.mode === 'heating'
-        ? RECOVERY.titleHeating
-        : RECOVERY.titleCooling,
+    title: RECOVERY.titles[recoveryKind(result)],
     header,
     headerColor: color,
     lanes,

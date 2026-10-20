@@ -268,7 +268,7 @@ describe('the labels', () => {
     test('airflow-diagram-card "Moisture recovery figure on ERV": right of the exchanger of an ERV, not on an HRV', async () => {
       const erv = await renderCalculation({ ...CALCULATION, exchanger_type: 'erv' });
       // 200 m³/h * (6 - 4) g/m³ recovered.
-      expect(erv.figure().textContent.trim()).toBe(nb('400 g/h'));
+      expect(erv.figure().textContent.trim()).toBe('400g/h');
       expect(erv.figure().title).toBe(nb('Moisture recovered: 400 g/h'));
       expect(erv.figure().querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:water-sync');
       for (const config of [CALCULATION, { ...CALCULATION, exchanger_type: 'hrv' }]) {
@@ -493,7 +493,6 @@ describe('the effectiveness rings', () => {
     expect(order.indexOf('exchanger-inner')).toBeLessThan(order.indexOf('ring-track'));
     const clip = root.querySelector('clipPath');
     expect(attribute(root, 'svg .ring.moisture', 'clip-path')).toBe(`url(#${clip?.id ?? ''})`);
-    expect(attribute(root, 'svg .ring.moisture', 'style')).toContain('--erv-ring');
     expect(attribute(root, 'svg .ring.total', 'style')).toContain('#db4437');
     expect(attribute(root, 'svg .ring.total', 'style')).toContain('--primary-text-color');
   });

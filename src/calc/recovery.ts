@@ -17,8 +17,8 @@ const LATENT_HEAT = 2501; // J/g, water vapour at 0 °C
 const CP_VAPOUR = 1.86; // J/(g K)
 const SECONDS_PER_HOUR = 3600;
 // The smallest extract-outdoor differences at which an effectiveness ratio is still meaningful.
-const MIN_TEMPERATURE_GRADIENT = 3; // K, of dry air for the total: an enthalpy difference of rho * 1006 * 3 J/m³
-const MIN_HUMIDITY_GRADIENT = 1.5; // g/m³
+const MIN_TOTAL_GRADIENT_K = 3; // K of dry air: for the total, an enthalpy difference of rho * 1006 * 3 J/m³
+const MIN_HUMIDITY_GRADIENT = 1.5; // g/m³, for the moisture
 
 /** A value per air stream. */
 export interface Streams<T> {
@@ -88,6 +88,13 @@ export interface RecoveryResult {
   effectiveness: Effectiveness;
 }
 
+/** What the figures describe: heat recovered, cooling recovered, or the free cooling of the open bypass. */
+export type RecoveryKind = 'heat' | 'cooling' | 'freeCooling';
+
+/** The kind of a result, for the words that name it (titles, tooltip). */
+export const recoveryKind = (result: Pick<RecoveryResult, 'mode' | 'freeCooling'>): RecoveryKind =>
+  result.freeCooling ? 'freeCooling' : result.mode === 'cooling' ? 'cooling' : 'heat';
+
 /**
  * The recovered total and the potential in W (sensible plus latent, each part first rounded to whole W as the legend shows it): the figures of the
  * recovery card's header and the effectiveness tooltip. Signed as the parts are.
@@ -107,19 +114,35 @@ export function recoveryTotals(result: RecoveryResult): {
   return { recovered, potential: recovered + parts.lost.sensible + parts.lost.latent, parts };
 }
 
+/** Whether a gradient reaches its gate; a relative epsilon keeps a gradient of exactly the gate inside it despite float rounding (9.6 - 8.1 is 1.4999999999999991). */
+const reaches = (gradient: number, gate: number): boolean => gradient >= gate * (1 - 1e-9);
+
+const percentOf = (part: number, whole: number): number => Math.min(Math.max((part / whole) * 100, 0), 100);
+
 /**
- * The supply-side ratio (supply - outdoor) / (extract - outdoor) in %, capped to 0-100; undefined below the gradient.
+ * The total: recovered / (recovered + lost) = recovered / |extract - outdoor| per m³ (J/m³ in, before any rounding), in
+ * % capped to 0-100. Undefined below the enthalpy gate of MIN_TOTAL_GRADIENT_K of dry air, or without a potential: when
+ * the potential rounds to 0 W (a supply flow of 0) there is nothing to recover or lose, as the recovery card's header,
+ * which shows no percentage then.
  */
-const effectivenessRatio = ({ outdoor, supply, extract }: Streams<number>, minGradient: number): number | undefined => {
-  const gradient = extract - outdoor;
-  // A relative epsilon keeps a gradient of exactly the gate inside it despite float rounding (9.6 - 8.1 is 1.4999999999999991).
-  if (Math.abs(gradient) < minGradient * (1 - 1e-9)) return undefined;
-  return Math.min(Math.max(((supply - outdoor) / gradient) * 100, 0), 100);
+const totalEffectiveness = (recovered: number, gradient: number, rho: number, toWatts: number): number | undefined => {
+  const size = Math.abs(gradient);
+  if (Math.round(size * toWatts) <= 0 || !reaches(size, rho * CP_AIR * MIN_TOTAL_GRADIENT_K)) return undefined;
+  return percentOf(recovered, size);
 };
 
-/** The moisture figure only with humidity for the three streams. */
-const moistureEffectiveness = (absoluteHumidity: Streams<number> | undefined): number | undefined =>
-  absoluteHumidity && effectivenessRatio(absoluteHumidity, MIN_HUMIDITY_GRADIENT);
+/**
+ * The moisture ratio (supply - outdoor) / (extract - outdoor) of the absolute humidities in %, capped to 0-100.
+ * Undefined below the humidity gate, or while the extracted moisture rate (g/h) rounds to 0.
+ */
+const moistureEffectiveness = (
+  { outdoor, supply, extract }: Streams<number>,
+  extractedRate: number,
+): number | undefined => {
+  const gradient = extract - outdoor;
+  if (Math.round(Math.abs(extractedRate)) <= 0 || !reaches(Math.abs(gradient), MIN_HUMIDITY_GRADIENT)) return undefined;
+  return percentOf(supply - outdoor, gradient);
+};
 
 const known = (value: number | undefined): value is number => value !== undefined && Number.isFinite(value);
 
@@ -168,34 +191,22 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
     lost = diff(extract, supply);
   }
 
-  const result: RecoveryResult = {
+  const moisture = absoluteHumidity && calculateMoisture(absoluteHumidity, supplyFlow);
+  const total = totalEffectiveness(recovered.total, extract.h - outdoor.h, rho, toWatts);
+  const moistureRatio = moisture && moistureEffectiveness(absoluteHumidity as Streams<number>, moisture.extracted);
+  return {
     mode: cooling ? 'cooling' : 'heating',
     freeCooling: bypass > 0 && extractIsReference,
     saving: Math.max(recovered.total, 0) * toWatts,
     recovered: { sensible: (recovered.total - recovered.latent) * toWatts, latent: recovered.latent * toWatts },
     lost: { sensible: (lost.total - lost.latent) * toWatts, latent: lost.latent * toWatts },
     latentKnown: AH !== undefined,
-    effectiveness: {},
+    ...(moisture ? { moisture } : {}),
+    effectiveness: {
+      ...(total === undefined ? {} : { total }),
+      ...(moistureRatio === undefined ? {} : { moisture: moistureRatio }),
+    },
   };
-  // The total: recovered / (recovered + lost) = recovered / |extract - outdoor| per m³, before any rounding, capped to
-  // 0-100 and left out below the enthalpy gradient of MIN_TEMPERATURE_GRADIENT K of dry air.
-  const gradient = Math.abs(extract.h - outdoor.h);
-  // Not measurable without a potential: at a supply flow of 0 (or a potential that rounds to 0 W) there is nothing to
-  // recover or lose, as the recovery card's header shows no percentage at a potential of 0.
-  const hasPotential = Math.round(gradient * toWatts) > 0;
-  // A relative epsilon keeps a gradient of exactly 3 K inside the gate despite float rounding.
-  if (hasPotential && gradient >= rho * CP_AIR * MIN_TEMPERATURE_GRADIENT * (1 - 1e-9)) {
-    result.effectiveness.total = Math.min(Math.max((recovered.total / gradient) * 100, 0), 100);
-  }
-  if (absoluteHumidity !== undefined) {
-    const moisture = calculateMoisture(absoluteHumidity, supplyFlow);
-    if (moisture !== undefined) result.moisture = moisture;
-    const ratio = moistureEffectiveness(absoluteHumidity as Streams<number>);
-    // Likewise not measurable while the extracted moisture rounds to 0 g/h.
-    if (ratio !== undefined && Math.round(Math.abs(moisture?.extracted ?? 0)) > 0)
-      result.effectiveness.moisture = ratio;
-  }
-  return result;
 }
 
 /**

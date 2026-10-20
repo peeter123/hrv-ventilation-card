@@ -39,10 +39,9 @@ const HEADS = {
 const EXCHANGER = '175.8,26 224.2,26 255,100 224.2,174 175.8,174 145,100';
 const EXCHANGER_INNER = '181.3,38 218.7,38 240.7,100 218.7,162 181.3,162 159.3,100';
 
-// The effectiveness rings start at the top centre and run clockwise, so a dash of the figure's length (the paths have
-// pathLength 100) is the figure in %. The moisture ring runs along the rim's midline (the midpoints of the outer and
-// inner vertices) with a stroke wider than the rim anywhere, clipped to the rim (RIM), so it fills the rim from outline
-// to outline; the empty rim is its track. The total ring runs along the inner outline over a faint track.
+// The effectiveness rings start at the top centre and run clockwise. The moisture ring is a stroke along the rim's
+// midline, wider than the rim and clipped to it (RIM), so it fills the rim from outline to outline; the empty rim is
+// its track. The total ring runs along the inner outline over a faint track.
 const MOISTURE_RING = {
   d: 'M 200 32 L 221.45 32 L 247.85 100 L 221.45 168 L 178.55 168 L 152.15 100 L 178.55 32 Z',
   width: 14,
@@ -56,7 +55,7 @@ const RIM =
   'M 175.8 26 L 224.2 26 L 255 100 L 224.2 174 L 175.8 174 L 145 100 Z ' +
   'M 181.3 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 Z';
 
-/** Share of the mode's colour in the total ring, the rest being the theme's text colour: the largest that keeps 3:1 against the moisture ring in both preview themes (measured by the browser test). */
+/** Percent of the mode's colour in the total ring (the rest is the text colour): the largest that keeps 3:1 against the core and the moisture ring. */
 const TOTAL_RING_SHARE = 45;
 
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
@@ -141,26 +140,23 @@ const symbol = (x: number, color: string, shape: string): SVGTemplateResult =>
     <path d=${shape} transform="translate(${String(x - 12)} ${String(100 - 12)})"></path>
   </g>`;
 
-/**
- * The moisture ring: a stroke along the rim's midline, clipped to the rim. The empty rim is its track, so there is none.
- * The dash length is the figure in % of the path's length of 100.
- */
+/** A ring's dash: its paths have pathLength 100, so a dash of the figure's length is the figure in %. */
+const dash = (figure: number | undefined): string => `${String(rounded(figure ?? 0, 2))} 100`;
+
+/** The moisture ring, clipped to the rim; its colour is the `.ring.moisture` rule of the card. */
 function moistureRing(rim: string, figure: number | undefined): SVGTemplateResult {
-  const dash = rounded(figure ?? 0, 2);
   return svg`<path class="ring moisture" d=${MOISTURE_RING.d} fill="none" stroke-width=${MOISTURE_RING.width}
-    pathLength="100" stroke-dasharray="${String(dash)} 100" clip-path="url(#${rim})"
-    style=${styleMap({ stroke: 'var(--erv-ring)' })}></path>`;
+    pathLength="100" stroke-dasharray=${dash(figure)} clip-path="url(#${rim})"></path>`;
 }
 
 /** The total ring on the inner outline and the faint full-length track under it. */
 function totalRing(color: string, figure: number | undefined): SVGTemplateResult {
   const { d, width } = TOTAL_RING;
-  const dash = rounded(figure ?? 0, 2);
   // The mode's colour towards the theme's text colour: darker on a light theme, lighter on a dark one.
   const ringColor = `color-mix(in srgb, ${color} ${String(TOTAL_RING_SHARE)}%, var(--primary-text-color))`;
   return svg`<path class="ring-track total" d=${d} fill="none" stroke-width=${width}
       style=${styleMap({ stroke: `color-mix(in srgb, ${ringColor} 25%, var(--secondary-background-color))` })}></path>
-    <path class="ring total" d=${d} fill="none" stroke-width=${width} pathLength="100" stroke-dasharray="${String(dash)} 100"
+    <path class="ring total" d=${d} fill="none" stroke-width=${width} pathLength="100" stroke-dasharray=${dash(figure)}
       style=${styleMap({ stroke: ringColor })}></path>`;
 }
 

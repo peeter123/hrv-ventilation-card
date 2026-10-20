@@ -1,6 +1,6 @@
 // The saving badge in the centre of the airflow diagram: the saving of the shared recovery calculation, in W; and on
 // an ERV the moisture recovery figure right of the exchanger, in g/h. Pure: the Lit element renders the result.
-import { recoveryTotals, type RecoveryResult } from '../calc/recovery';
+import { recoveryKind, recoveryTotals, type RecoveryResult } from '../calc/recovery';
 import { missingRoles, type CardConfig, type Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
 import type { EntityStateLike } from '../lib/hass';
@@ -104,7 +104,7 @@ export function moistureFigure(
     return options.showUnavailable ? { text: NO_VALUE, title: DIAGRAM.moistureNoValue } : undefined;
   const text = formatNumber(Math.abs(rate), locale);
   // Kept out only when the rate shows with a sign: a rate that rounds to 0 counts as recovered.
-  const keptOut = formatNumber(rate, locale) !== text;
+  const keptOut = Math.round(rate) < 0;
   const magnitude = DIAGRAM.moisture(text);
   return {
     text,
@@ -137,30 +137,29 @@ export function effectivenessLabel(
   const total = result?.effectiveness.total;
   const totals = result && total !== undefined ? recoveryTotals(result) : undefined;
   const rates = result?.effectiveness.moisture === undefined ? undefined : result.moisture;
-  const mode =
-    result === undefined
-      ? undefined
-      : result.freeCooling
-        ? 'free cooling'
-        : result.mode === 'cooling'
-          ? 'cooling'
-          : 'heat';
+  const kind = result && DIAGRAM.effectivenessKinds[recoveryKind(result)];
   // Any position above 0 turns the ring cold, so it is named; below 1 % with a decimal, never as "0".
   const open = bypass !== undefined && bypass > 0;
   return DIAGRAM.effectiveness(
-    DIAGRAM.effectivenessTotal(
-      mode,
+    DIAGRAM.effectivenessFigure(
+      kind,
       figure(total),
       totals &&
-        DIAGRAM.effectivenessWatts(absolute(totals.recovered, totals.recovered < 0), absolute(totals.potential)),
+        DIAGRAM.effectivenessAbsolute(
+          absolute(totals.recovered, totals.recovered < 0),
+          absolute(totals.potential),
+          DIAGRAM.powerUnit,
+        ),
     ),
     moisture
-      ? DIAGRAM.effectivenessMoisture(
+      ? DIAGRAM.effectivenessFigure(
+          undefined,
           figure(result?.effectiveness.moisture),
           rates &&
-            DIAGRAM.effectivenessRate(
+            DIAGRAM.effectivenessAbsolute(
               absolute(rates.recovered, rates.recovered * rates.extracted < 0),
               absolute(rates.extracted),
+              DIAGRAM.moistureUnit,
             ),
         )
       : undefined,
