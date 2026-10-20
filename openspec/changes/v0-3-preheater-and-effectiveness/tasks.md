@@ -120,7 +120,10 @@
 - [ ] 5.6 Document the coil in `README.md` (the two roles, `pre_heater.max_power`, how the glow reads) and the
   diagram section of `docs/hrv-ventilation.md` (position, colours, the 0.1 minimum, the tap box); verify the README
   tests pass
-- [ ] 5.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [ ] 5.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
+  250 of 1000 W, without a maximum and as an on/off entity; the frost scenario; both layouts; 280, 400 and 600 px;
+  light and dark) inspected by an agent, and apply the user's feedback; verify the user approves before the review
+- [ ] 5.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 6. Pre-heater in the top row, the status grid and the editor
@@ -144,7 +147,11 @@
 - [ ] 6.6 Document the top row figure, the energy cell and the editor section in `README.md` and the top row and
   status grid points in `docs/hrv-ventilation.md` (why the figure is left out rather than kept invisible, why no
   sum or share); verify the README tests pass
-- [ ] 6.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [ ] 6.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the top row with
+  the pre-heater on and off, the pre-heater energy cell, the editor's pre-heater section with advanced settings off
+  and on; 280, 400 and 600 px; light and dark) inspected by an agent, and apply the user's feedback; verify the user
+  approves before the review
+- [ ] 6.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 7. Release and live migration
@@ -171,9 +178,11 @@
   they have never been above 0, the rollback to v0.2.0) and the release line in `BACKLOG.md`; verify no tracked
   file holds an entity ID with the device serial, a helper or a dashboard ID (`npm run check:ids` and a `git grep`
   for the serial prefix)
-- [ ] 7.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [ ] 7.6 Feedback round: show screenshots of both live dashboards after the migration (desktop and phone width,
+  light and dark) inspected by an agent, and apply the user's feedback; verify the user approves before the review
+- [ ] 7.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
-- [ ] 7.7 With the user's confirmation before each outward step, push `main` and the tag `v0.3.0` to
+- [ ] 7.8 With the user's confirmation before each outward step, push `main` and the tag `v0.3.0` to
   `peeter123/hrv-ventilation-card` (never `private/history`); the user publishes the release from the tag in the
   GitHub UI; verify the remote `main` equals the local one, no pushed commit holds an installation identifier, and
   `v0.3.0` is the latest release
