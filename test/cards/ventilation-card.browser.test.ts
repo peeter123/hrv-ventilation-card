@@ -809,7 +809,14 @@ describe('pre-heater coil', () => {
           await resize(shown, width);
           const where = `${layout} ${name} ${String(width)} px`;
           const coil = box(root, '.on-drawing.pre-heater');
-          const wire = box(root, 'svg .coil');
+          const wire = box(root, 'svg path.coil');
+          // The coil's state: on draws the wire lit over a glow, off draws the dim wire alone.
+          expect(root.querySelector('svg path.coil.on') !== null, `${where} lit`).toBe(name === 'on');
+          expect(root.querySelector('svg path.coil.off') !== null, `${where} dim`).toBe(name === 'off');
+          expect(root.querySelector('svg path.coil-glow') !== null, `${where} glow`).toBe(name === 'on');
+          // The glow is a wider, blurred stroke: its box is the wire's, grown by half the stroke and one blur radius.
+          const reach = (3 + 3) * (element(root, 'svg path.coil') as SVGGraphicsElement).getScreenCTM()!.a;
+          const glow = new DOMRect(wire.x - reach, wire.y - reach, wire.width + 2 * reach, wire.height + 2 * reach);
           expect(coil.width, where).toBeGreaterThan(0);
           expect(coil.height, where).toBeGreaterThan(0);
           // The outdoor stack is the corner's labels; the flow labels and the bypass position have their own boxes.
@@ -824,6 +831,7 @@ describe('pre-heater coil', () => {
             const what = `${where} ${other.textContent.trim()}`;
             expect(overlap(coil, label), `${what} / box`).toBe(false);
             expect(overlap(wire, label), `${what} / wire`).toBe(false);
+            if (name === 'on') expect(overlap(glow, label), `${what} / glow`).toBe(false);
           }
         }
       });
@@ -838,14 +846,21 @@ describe('pre-heater coil', () => {
       const style = getComputedStyle(coil);
       expect(parseFloat(style.opacity)).toBeGreaterThan(0);
       expect(parseFloat(style.opacity)).toBeLessThan(1);
-      // The outdoor stream's colour is the first stop of the supply gradient; the dim wire is drawn over the stream.
-      const stream = getComputedStyle(element(root, 'svg linearGradient stop')).stopColor;
-      const [wire, back] = [channels(style.stroke), channels(stream)];
+      // The stream under the coil: the supply gradient (x 86 to 326, y 62 to 138) at the coil's middle (114, 62).
+      const [from, to] = [...root.querySelectorAll('svg linearGradient stop')].map((stop) =>
+        channels(getComputedStyle(stop).stopColor),
+      ) as [[number, number, number], [number, number, number]];
+      const along = ((114 - 86) * 240) / (240 ** 2 + 76 ** 2);
+      const stream = from.map((channel, i) => channel + ((to[i] ?? 0) - channel) * along);
+      const background = channels(THEMES[theme]['--card-background-color']);
+      const wire = channels(style.stroke);
       const opacity = parseFloat(style.opacity);
-      const shown = wire.map((channel, i) => channel * opacity + (back[i] ?? 0) * (1 - opacity));
-      // Luminance contrast cannot tell a grey from a blue of the same lightness, so the colours' distance is measured.
-      const distance = Math.hypot(...shown.map((channel, i) => channel - (back[i] ?? 0)));
-      expect(distance).toBeGreaterThan(30);
+      // Luminance contrast cannot tell a grey from a blue of the same lightness, so the colours' distance is measured:
+      // the dim wire as it shows over the stream, and over the card where it leaves the stream (y 50 to 74).
+      const distanceOver = (under: number[]): number =>
+        Math.hypot(...wire.map((channel, i) => (channel - (under[i] ?? 0)) * opacity));
+      expect(distanceOver(stream), 'over the stream').toBeGreaterThan(30);
+      expect(distanceOver(background), 'over the card').toBeGreaterThan(30);
     });
   }
 });
