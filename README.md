@@ -132,6 +132,10 @@ switch is on.
 
 ![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture recovery right of it](docs/images/diagram-erv.png)
 
+| With effectiveness rings (`show_effectiveness`) | Frost: pre-heater coil glowing, its power in the top row |
+|---|---|
+| ![Energy recovery unit with the two effectiveness rings on the exchanger outline: outer ring the moisture, inner ring the total recovery](docs/images/diagram-erv-rings.png) | ![Frost day: the coil on the outdoor stream glows orange and the top row shows the pre-heater power](docs/images/diagram-frost.png) |
+
 Only the four stream temperatures are required. Every other role is optional and leaves its label out when not
 configured. The top row is shown while power, the pre-heater power, the running mean outdoor temperature or a season sensor is configured,
 the status grid while one of its roles is; a row does not come and go with the states, so the card keeps its height.
@@ -179,7 +183,7 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 |---|---|---|---|---|
 | `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
 | `energy` | entity | | | The pre-heater's energy sensor. Shown in the status grid (second column, bottom cell, heat wave icon). |
-| `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000). Without it the coil glows fully at any power above 0. |
+| `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000); e.g. Zehnder ComfoAir Q450: 1740 W. It differs per unit, so take it from the unit's documentation. Without it the coil glows fully at any power above 0. |
 | `glow_color` | color | `#ff9800` | yes | The colour the coil glows in while the heater is on: a CSS colour, by default a warm orange. |
 
 A unit with a pre-heater (a heating coil that warms the outdoor air against frost) gets a coil drawn along the
@@ -645,9 +649,10 @@ npm run capture                  # README images of the three cards from the pre
 ```
 
 **README images:** `npm run capture` (`scripts/capture.mjs`) starts its own Vite server, drives the preview page
-with Playwright and writes the diagram in light and dark theme, the compact layout and on an ERV, the recovery bar,
+with Playwright and writes the diagram in light and dark theme, the compact layout, on an ERV (plain and with the effectiveness rings) and in frost (coil glowing), the recovery bar,
 the moisture bar and the animated GIF of the bypass opening and closing (encoded in Node with `gifenc`, at most
-3 MB). The mock states keep installation identifiers out of view. Two images are taken by hand from a live
+3 MB). Every GIF frame is checked while capturing: the supply and exhaust temperatures must lie between the
+outdoor and the extract temperature (heating or cooling), or the script fails. The mock states keep installation identifiers out of view. Two images are taken by hand from a live
 dashboard: `editor.png` (the diagram card's visual editor, opened from the card picker so no sensor is chosen) and
 `card-picker.png`; check them for entity IDs with a device serial and for host names before committing.
 

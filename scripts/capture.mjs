@@ -1,6 +1,7 @@
 // `npm run capture`: takes the README images of the three cards from the preview page (dev/, mock states, so no
-// installation identifiers can be in view) into docs/images/: the diagram in light, dark, compact and ERV, the bypass
-// GIF, the recovery bar and the moisture bar. It starts its own Vite server, drives the page's controls with
+// installation identifiers can be in view) into docs/images/: the diagram in light, dark, compact, ERV (plain and with
+// the effectiveness rings) and in frost (pre-heater coil glowing), the bypass GIF (every frame is checked to be
+// physically possible: exhaust and supply between outdoor and extract), the recovery bar and the moisture bar. It starts its own Vite server, drives the page's controls with
 // Playwright and encodes the animated GIF in Node, so it needs no system tools. The visual editor (editor.png) and the
 // card picker preview are taken from a live installation by hand (see README.md, "Development").
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -33,7 +34,9 @@ const HOLD = 6;
  */
 const AIR = {
   supply: { closed: { t: 22, rh: 51 }, open: { t: 16.5, rh: 68 } },
-  exhaust: { closed: { t: 17, rh: 68 }, open: { t: 23.3, rh: 49 } },
+  // Open: the exhaust air no longer passes the heat exchanger against the outdoor air, so it leaves almost as warm as
+  // the extract air, never warmer (a plain air path cannot heat the air above the extract).
+  exhaust: { closed: { t: 17, rh: 68 }, open: { t: 22.8, rh: 50 } },
 };
 const GIF_LIMIT = 3 * 1024 * 1024;
 
@@ -65,13 +68,47 @@ try {
     await page.getByRole('button', { name }).click();
     await page.waitForTimeout(300);
   };
+  /** @param {string} stream @param {'T' | 'RH'} field */
+  const inputOf = (stream, field) =>
+    page
+      .locator('fieldset')
+      .filter({ has: page.locator('legend', { hasText: new RegExp(`^${stream}$`) }) })
+      .getByLabel(field, { exact: true });
   /** @param {string} name @param {import('playwright').Locator} card */
   const still = async (name, card) => {
     await card.screenshot({ path: join(OUT, name), animations: 'disabled' });
     console.log(`capture: ${name}`);
   };
 
+  /** The four air temperatures now in the preview page's controls. */
+  const temperatures = async () => {
+    /** @type {Record<'outdoor' | 'supply' | 'extract' | 'exhaust', number>} */
+    const t = { outdoor: 0, supply: 0, extract: 0, exhaust: 0 };
+    for (const stream of /** @type {const} */ (['outdoor', 'supply', 'extract', 'exhaust'])) {
+      t[stream] = Number(await inputOf(stream, 'T').inputValue());
+    }
+    return t;
+  };
+  /**
+   * Throws unless the supply and exhaust air lie between the outdoor and the extract air (either orientation:
+   * heating or cooling), and returns the readings for the log. @param {string} label
+   */
+  const checkPhysical = async (label) => {
+    const t = await temperatures();
+    const lo = Math.min(t.outdoor, t.extract);
+    const hi = Math.max(t.outdoor, t.extract);
+    for (const stream of /** @type {const} */ (['supply', 'exhaust'])) {
+      if (t[stream] < lo || t[stream] > hi) {
+        throw new Error(
+          `${label}: ${stream} ${String(t[stream])} C lies outside outdoor ${String(t.outdoor)} .. extract ${String(t.extract)} C`,
+        );
+      }
+    }
+    return t;
+  };
+
   await scenario('heating (winter)');
+  await checkPhysical('heating (winter)');
   await still('diagram-light.png', diagram('light', WIDTH_FULL));
   await still('diagram-dark.png', diagram('dark', WIDTH_FULL));
   await still('diagram-compact.png', diagram('light', WIDTH_COMPACT));
@@ -81,7 +118,23 @@ try {
   await exchanger.selectOption('erv');
   await page.waitForTimeout(300);
   await still('diagram-erv.png', diagram('light', WIDTH_FULL));
+  // The same unit with the effectiveness rings on the exchanger outline.
+  const rings = page.getByLabel('show effectiveness');
+  await rings.check();
+  await page.waitForTimeout(300);
+  await still('diagram-erv-rings.png', diagram('light', WIDTH_FULL));
+  await rings.uncheck();
   await exchanger.selectOption('hrv');
+
+  // Frost: the pre-heater (a power sensor, rated 1000 W) runs at 600 W, the coil glows and its power is in the top row.
+  await page.locator('label', { hasText: 'kind' }).locator('select').selectOption('power sensor');
+  await page.getByLabel('max W (0 = none)').fill('1000');
+  await scenario('frost (pre-heater on)');
+  await checkPhysical('frost (pre-heater on)');
+  await still('diagram-frost.png', diagram('light', WIDTH_FULL));
+  await page.locator('label', { hasText: 'kind' }).locator('select').selectOption('none');
+  await page.getByLabel('max W (0 = none)').fill('0');
+  await scenario('heating (winter)');
   await page.waitForTimeout(300); // let the cards redraw before the next shots
 
   // The bar cards: the heating scenario (the most used mode) is still on for the recovery bar; a drying house with
@@ -94,11 +147,7 @@ try {
   // the air moving and the supply and exhaust air following the bypass.
   const bypass = page.locator('label', { hasText: 'bypass %' }).locator('input');
   /** @param {'supply' | 'exhaust'} stream @param {'T' | 'RH'} field */
-  const input = (stream, field) =>
-    page
-      .locator('fieldset')
-      .filter({ has: page.locator('legend', { hasText: new RegExp(`^${stream}$`) }) })
-      .getByLabel(field, { exact: true });
+  const input = inputOf;
   /** Sets the bypass and the supply and exhaust air that go with it. @param {number} position */
   const setBypass = async (position) => {
     const share = position / 100;
@@ -120,7 +169,12 @@ try {
   const frames = [];
   for (const position of positions) {
     await setBypass(position);
+    // Every frame must be physically possible: supply and exhaust between outdoor and extract.
+    const t = await checkPhysical(`GIF frame ${String(frames.length)} (bypass ${String(position)} %)`);
     frames.push({ png: await card.screenshot(), at: Date.now() });
+    console.log(
+      `check: frame ${String(frames.length - 1).padStart(2)} bypass ${String(position).padStart(3)} %: outdoor ${String(t.outdoor)} <= exhaust ${String(t.exhaust)} <= extract ${String(t.extract)}, supply ${String(t.supply)} ok`,
+    );
   }
 
   const gif = GIFEncoder();
