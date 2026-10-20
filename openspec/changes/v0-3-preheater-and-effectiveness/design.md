@@ -224,7 +224,7 @@ focus and sample mode work as for every other label.
 ### Pre-heater in the top row and the status grid
 
 `pre_heater.power` and `pre_heater.energy` join `RolePath` (group `pre_heater`), `ROLE_LABELS` ("pre-heater",
-"pre-heater energy") and `ICONS` (`mdi:heating-coil` for both). `pre_heater.energy` joins `STATUS_ROLES` with the
+"pre-heater energy") and `ICONS` (`mdi:heat-wave` for both). `pre_heater.energy` joins `STATUS_ROLES` with the
 cell column 2, row 3.
 
 The top row's centre cell holds the power label and, after it, the pre-heater label. The label model gives the

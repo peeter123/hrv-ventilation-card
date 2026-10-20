@@ -31,7 +31,7 @@ label of these two rows SHALL have an icon in front, as high as its text and cen
 `mdi:lightning-bolt`, running mean outdoor temperature `mdi:thermometer-lines`, fan level `mdi:fan`, bypass mode
 `mdi:shuffle-variant`, next bypass change and next fan change `mdi:timer-outline`, operating mode `mdi:cog-outline`,
 profile target temperature `mdi:thermometer`, temperature profile `mdi:thermostat`, filter days
-`mdi:air-filter`, and pre-heater power and pre-heater energy `mdi:heating-coil`. Every label SHALL have a tooltip with its name and state, e.g. "Next bypass change: 01:30".
+`mdi:air-filter`, and pre-heater power and pre-heater energy `mdi:heat-wave`. Every label SHALL have a tooltip with its name and state, e.g. "Next bypass change: 01:30".
 
 #### Scenario: Label icons
 - **WHEN** power and the fan level are configured
@@ -48,7 +48,7 @@ profile target temperature `mdi:thermometer`, temperature profile `mdi:thermosta
 
 #### Scenario: Pre-heater energy cell
 - **WHEN** `pre_heater.energy` is configured and reports 12 kWh
-- **THEN** the second column's bottom cell shows a heating coil followed by "12 kWh", with the tooltip
+- **THEN** the second column's bottom cell shows a heat wave icon followed by "12 kWh", with the tooltip
   "Pre-heater energy: 12 kWh"
 
 #### Scenario: Icon centred on its text
@@ -370,16 +370,16 @@ The coil SHALL have a tooltip and accessible name with the pre-heater's state as
 
 ### Requirement: Pre-heater power in the top row
 While the pre-heater is on and its entity available, the top row SHALL show its state after the power label, with a
-`mdi:heating-coil` icon and the tooltip "Pre-heater: " and its state, side by side with power, without a sum or a
+`mdi:heat-wave` icon and the tooltip "Pre-heater: " and its state, side by side with power, without a sum or a
 share. Tapping it SHALL open `pre_heater.power`. While off or unavailable it SHALL NOT be shown.
 
 #### Scenario: Pre-heater on
 - **WHEN** power reads 32 W and the pre-heater power 1000 W
-- **THEN** the top row's centre shows the lightning bolt with "32 W", then the heating coil with "1,000 W"
+- **THEN** the top row's centre shows the lightning bolt with "32 W", then the heat wave icon with "1,000 W"
 
 #### Scenario: On/off entity on
 - **WHEN** `pre_heater.power` is a binary sensor that is on
-- **THEN** the top row shows the heating coil with "On" after the power label
+- **THEN** the top row shows the heat wave icon with "On" after the power label
 
 #### Scenario: Pre-heater off
 - **WHEN** the pre-heater power is 0 W

@@ -274,7 +274,7 @@ describe('labelModel', () => {
     const config: CardConfig = { ...FULL, pre_heater: { energy: 'sensor.hrv_heater_energy' } };
     const states = { ...allStates(), 'sensor.hrv_heater_energy': { state: '12' } };
     const label = labelModel(config, states, FULL_LAYOUT).status?.find((item) => item.role === 'pre_heater.energy');
-    expect(label).toMatchObject({ entityId: 'sensor.hrv_heater_energy', icon: 'mdi:heating-coil', visible: true });
+    expect(label).toMatchObject({ entityId: 'sensor.hrv_heater_energy', icon: 'mdi:heat-wave', visible: true });
     expect(STATUS_CELLS['pre_heater.energy']).toEqual({ column: 2, row: 3 });
   });
 
@@ -290,10 +290,10 @@ describe('labelModel', () => {
         FULL_LAYOUT,
       );
 
-    test('airflow-diagram-card "Pre-heater on": its label follows power, with the heating coil icon', () => {
+    test('airflow-diagram-card "Pre-heater on": its label follows power, with the heat wave icon', () => {
       const top = model(WITH_HEATER, { state: '1000', unit: 'W' }).top;
       expect(roles(top)).toEqual(['status.power', 'pre_heater.power', 'status.rmot']);
-      expect(top?.[1]).toMatchObject({ entityId: 'sensor.hrv_heater', icon: 'mdi:heating-coil', visible: true });
+      expect(top?.[1]).toMatchObject({ entityId: 'sensor.hrv_heater', icon: 'mdi:heat-wave', visible: true });
     });
 
     test('airflow-diagram-card "On/off entity on": a binary sensor that is on gives the label', () => {

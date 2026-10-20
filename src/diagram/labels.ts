@@ -117,8 +117,8 @@ const ICONS: Partial<Record<RolePath, string>> = {
   'status.temperature_profile': 'mdi:thermostat',
   'status.next_fan_change': 'mdi:timer-outline',
   'status.filter_days': 'mdi:air-filter',
-  'pre_heater.power': 'mdi:heating-coil',
-  'pre_heater.energy': 'mdi:heating-coil',
+  'pre_heater.power': 'mdi:heat-wave',
+  'pre_heater.energy': 'mdi:heat-wave',
 };
 
 /** Labels of a planned change: with nothing planned ("n/a" or unknown) they show a dimmed dash, not the state. */

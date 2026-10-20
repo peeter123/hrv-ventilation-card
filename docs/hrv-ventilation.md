@@ -283,14 +283,14 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   icon. The preview's `ha-icon` stub has Home Assistant's structure (an inline host around an inline-flex icon box
   aligned to the middle), and the browser test measures the svg each icon draws, not its host, so it catches an
   offset of the drawn icon.
-  - **Pre-heater figure.** The centre cell holds power and, after it, the pre-heater state with `mdi:heating-coil`
+  - **Pre-heater figure.** The centre cell holds power and, after it, the pre-heater state with `mdi:heat-wave`
     ("Pre-heater: <state>", tap opens `pre_heater.power`), a centred flex box with a gap, so the pair widens around
     the middle. It is given only while the level is above 0 and the entity is available, and otherwise left out of
     the DOM rather than kept invisible like other labels: an invisible label would push power off-centre all summer.
     The top row's height does not depend on it, so leaving it out changes no height. `pre_heater.power` counts for
     showing the top row.
   - **Energy cell.** `pre_heater.energy` is a status role in column 2, row 3 (the cell under the next bypass change;
-    the filter days stay in column 1's bottom cell), with the heating coil icon, the tooltip "Pre-heater energy: <state>" and its tap.
+    the filter days stay in column 1's bottom cell), with the heat wave icon, the tooltip "Pre-heater energy: <state>" and its tap.
   - **No sum, no share.** The figure stands side by side with power. Whether a unit's power reading includes its
     pre-heater differs per unit and could not be confirmed on the live one, so adding the two or showing a share
     could double count or understate. No follow-up is planned (the proposal's "Out of Scope").
