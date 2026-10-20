@@ -151,8 +151,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   - **When drawn:** only with the option. The moisture ring and its track only on an ERV with a humidity for every
     stream (`moistureRing`); an HRV, or an ERV without humidity, has the temperature ring alone. A ring is empty
     below its gate or while the calculation has no result (see Effectiveness under Formulas). No bypass gate.
-  - **Colours:** the temperature ring is the warm colour in heating mode and the cold colour in cooling mode (the
-    badge's rule); the moisture ring is the fixed teal `#00897b`, the colour the author's charts use for recovered
+  - **Colours:** the temperature ring is the cold colour while the calculation's mode is cooling and the warm colour
+    otherwise, also when there is no result; unlike the badge it never turns grey at a low saving. The moisture ring is the fixed teal `#00897b`, the colour the author's charts use for recovered
     moisture, distinct from the default red and blue. Both are set inline on the elements, and the track is mixed
     from them.
   - **Tooltip box.** `.on-drawing.effectiveness` is an HTML box over the exchanger (x 145 to 255, y 26 to 174),
@@ -166,15 +166,17 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     gets a halo: `-webkit-text-stroke: 9px var(--erv-fill)` with `paint-order: stroke fill`, so 4.5 px of the stroke
     shows around the glyphs, in the exchanger's fill (`--erv-fill`, the ERV fill, defined on `.drawing` and used by the
     exchanger polygon too). It masks a ring where it meets the digits on a narrow card: a four-digit rate meets the
-    rings up to about 3.9 px deep, a three-digit one 2.1 px, at 280 to 360 px. It sits inside `@supports (paint-order:
+    rings up to 3.9 px deep, a three-digit one 2.1 px (the largest overlaps measured at 280 to 600 px, with Arial, whose
+    digits are as wide as Roboto's; the test font gives 3.7 and 1 px). It sits inside `@supports (paint-order:
     stroke fill) and (-webkit-text-stroke: 1px red)`: where `paint-order` does not apply to HTML text the stroke
     would be painted over the glyphs, so the figure then has no halo. The value's padding, undone by an equal
     negative margin, keeps its overflow clip (for the ellipsis) from cutting the halo of the first and last glyph.
     The halo may notch a stream's edge by up to 1.5 px on a 280 px card with a four-digit figure. Without the rings
     nothing changes.
   - **Browser tests** (`test/cards/ventilation-card.browser.test.ts`, "effectiveness rings"): at 280 to 600 px in
-    both preview themes, with both rings drawn, the badge and the bypass position must clear every ring strictly and
-    keep 4.5:1 against the fill; the halo must be at least as wide as the overlap measured between the rings and the
+    both preview themes, with both rings drawn, the badge and the bypass position must clear every ring strictly; the
+    bypass position and the moisture figure keep 4.5:1 against the exchanger fill and the badge against its own fill;
+    the halo must be at least as wide as the overlap measured between the rings and the
     glyph boxes of the three and the four-digit figure (plus 0.5 px), and notch no stream by more than 1.5 px;
     without the rings the figure has no halo; the compact layout draws the rings and tracks at 320 px. A change to
     the ring geometry, the figure's position or font size has to keep them passing.
