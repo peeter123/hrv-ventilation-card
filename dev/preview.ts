@@ -205,7 +205,7 @@ const number = (
   value: number,
   set: (value: number) => void,
   step = 1,
-  bounds: { min: number; max: number } | undefined = undefined,
+  bounds?: { min: number; max: number },
 ): TemplateResult =>
   html`<label
     >${label}
