@@ -645,7 +645,7 @@ export class HrvVentilationCard extends HrvCard {
       },
       rings: rings
         ? {
-            temperature: result?.effectiveness.temperature,
+            temperature: result?.effectiveness.total,
             moisture: rings.moisture ? { figure: result?.effectiveness.moisture } : undefined,
             color: modeColor(result?.mode, settings.colors),
           }

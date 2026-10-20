@@ -124,7 +124,7 @@ export function effectivenessLabel(
   // Any position above 0 turns the ring cold, so it is named; below 1 % with a decimal, never as "0".
   const open = bypass !== undefined && bypass > 0;
   return DIAGRAM.effectiveness(
-    figure(result?.effectiveness.temperature),
+    figure(result?.effectiveness.total),
     moisture ? figure(result?.effectiveness.moisture) : undefined,
     open ? (bypass >= 1 ? formatNumber(bypass, locale) : formatNumber(Math.max(bypass, 0.1), locale, 1)) : undefined,
   );

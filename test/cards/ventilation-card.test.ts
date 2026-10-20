@@ -456,7 +456,7 @@ describe('the effectiveness rings', () => {
   // The ERV with every input of the calculation and the rings on. By default the temperatures give 85.71 % and the
   // absolute humidities 50 %.
   const ERV_RINGS: CardConfig = { ...CALCULATION, exchanger_type: 'erv', show_effectiveness: true };
-  // Outdoor 0 and extract 20 degrees, supply 18.4: 92 %. Absolute humidity 2, 12 and 8.5 g/m3: 65 %.
+  // Outdoor 0 and extract 20 degrees, supply 18.4, absolute humidity 2, 12 and 8.5 g/m3: total 78.14 %, moisture 65 %.
   const EFFECTIVE = [
     state('sensor.hrv_supply_t', '18.4', '°C'),
     state('sensor.hrv_extract_t', '20', '°C'),
@@ -491,9 +491,9 @@ describe('the effectiveness rings', () => {
       { language: 'en', number_format: 'language' },
     );
 
-  test('airflow-diagram-card "Heating with both figures": the rings run 92 and 65 of 100 on pathLength 100', async () => {
+  test('airflow-diagram-card "Heating with both figures": the rings run 78.14 and 65 of 100 on pathLength 100', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', EFFECTIVE);
-    expect(dash(root, 'temperature')).toBe('92 100');
+    expect(dash(root, 'temperature')).toBe('78.14 100');
     expect(dash(root, 'moisture')).toBe('65 100');
     for (const ring of root.querySelectorAll('svg .ring')) expect(ring.getAttribute('pathLength')).toBe('100');
     // Each ring has a full-length track, and the streams are drawn after (over) the rings.
@@ -575,11 +575,13 @@ describe('the effectiveness rings', () => {
       ...EFFECTIVE,
       state('sensor.hrv_outdoor_t', '20', '°C'),
       state('sensor.hrv_extract_t', '22', '°C'),
+      // Equal humidities, so the enthalpy gradient is small as well.
+      state('sensor.hrv_ah_out', '8', 'g/m³'),
+      state('sensor.hrv_ah_ext', '8', 'g/m³'),
     ]);
     expect(dash(root, 'temperature')).toBe('0 100');
     expect(root.querySelector('svg .ring-track.temperature')).not.toBeNull();
-    // The moisture gradient is still large.
-    expect(dash(root, 'moisture')).toBe('65 100');
+    expect(dash(root, 'moisture')).toBe('0 100');
   });
 
   test('airflow-diagram-card "Input unavailable": both rings are empty and their tracks are drawn', async () => {
@@ -591,8 +593,8 @@ describe('the effectiveness rings', () => {
 
   test('airflow-diagram-card "Bypass closed": the box is an image named by effectivenessLabel', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', EFFECTIVE);
-    const text = label({ temperature: 92, moisture: 65 }, 0);
-    expect(text).toContain('92');
+    const text = label({ total: 78.14, moisture: 65 }, 0);
+    expect(text).toContain('78');
     expect(box(root)?.getAttribute('role')).toBe('img');
     expect(box(root)?.getAttribute('aria-label')).toBe(text);
     expect(box(root)?.title).toBe(text);
@@ -603,9 +605,10 @@ describe('the effectiveness rings', () => {
       ...EFFECTIVE,
       state('sensor.hrv_supply_t', '12.2', '°C'),
       // No moisture gradient left.
+      state('sensor.hrv_ah_sup', '2', 'g/m³'),
       state('sensor.hrv_ah_ext', '2', 'g/m³'),
     ]);
-    const text = label({ temperature: 61 }, 40);
+    const text = label({ total: 39 }, 40);
     expect(text).toContain('bypass 40');
     expect(box(root)?.title).toBe(text);
   });
@@ -617,7 +620,7 @@ describe('the effectiveness rings', () => {
 
   test('airflow-diagram-card "Rings by exchanger type": an HRV box names the temperature only', async () => {
     const { root } = await renderInputs({ ...ERV_RINGS, exchanger_type: 'hrv' }, '0', EFFECTIVE);
-    expect(box(root)?.title).toBe(label({ temperature: 92 }, 0, false));
+    expect(box(root)?.title).toBe(label({ total: 78.14 }, 0, false));
   });
 
   test('airflow-diagram-card "Rings are labelled": a tap on the box opens nothing, the badge and the figure keep theirs', async () => {

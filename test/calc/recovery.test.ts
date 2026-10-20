@@ -5,6 +5,7 @@ import {
   type RecoveryInputs,
   type RecoveryResult,
 } from '../../src/calc/recovery';
+import { recoveryView } from '../../src/cards/recovery-view';
 import golden from '../vectors.json';
 
 interface Vector {
@@ -22,12 +23,15 @@ interface Vector {
     recovered_w: { sensible: number; latent: number };
     lost_w: { sensible: number; latent: number };
     moisture_gh: { extracted: number; recovered: number; outside: number };
-    /** The macro's whole percentages; null where it gives None (bypass open, or the gradient under its gate) */
-    eff_sensible: number | null;
+    /** The macro's whole percentage; null where it gives None (bypass open, or the gradient under its gate) */
     eff_moisture: number | null;
   };
 }
 
+const COLORS = {
+  heating: { color: '#db4437', latent: '#f4a09a' },
+  cooling: { color: '#039be5', latent: '#8fd3f7' },
+};
 const vectors = golden.vectors as Vector[];
 const { w: TOLERANCE_W, gh: TOLERANCE_GH } = golden.tolerance;
 const TOLERANCE_PCT = 1; // the macro rounds to whole percentages
@@ -82,23 +86,55 @@ describe('golden vectors (recovery-calculation "Golden vectors")', () => {
     near(result.moisture?.outside, expected.moisture_gh.outside, TOLERANCE_GH);
   });
 
-  // The macro rounds to whole percentages, does not cap and has a bypass gate the calculation lacks: compare only
-  // where the macro gives a value from 0 to 100.
+  // The macro rounds eff_moisture to whole percentages, does not cap and has a bypass gate the calculation lacks:
+  // compare only where the macro gives a value from 0 to 100.
   const inRange = (value: number | null): value is number => value !== null && value >= 0 && value <= 100;
+  const enthalpy = (stream: { temperature: number; absolute_humidity: number }): number =>
+    DEFAULT_AIR_DENSITY * 1006 * stream.temperature + stream.absolute_humidity * (2501 + 1.86 * stream.temperature);
+  const aboveGate = ({ inputs }: Vector): boolean =>
+    Math.abs(enthalpy(inputs.extract) - enthalpy(inputs.outdoor)) >= DEFAULT_AIR_DENSITY * 1006 * 3;
+  // The macro's recovered share: recovered total / (recovered + lost total) of the expected power figures.
+  const macroTotal = ({ expected }: Vector): number => {
+    const recovered = expected.recovered_w.sensible + expected.recovered_w.latent;
+    const lost = expected.lost_w.sensible + expected.lost_w.latent;
+    return Math.min(Math.max((recovered / (recovered + lost)) * 100, 0), 100);
+  };
 
   test.each(vectors.map((vector) => [vector.name, vector] as const))('%s: effectiveness', (_name, vector) => {
     const { effectiveness } = calculate(toInputs(vector));
-    const { eff_sensible: sensible, eff_moisture: moisture } = vector.expected;
-    if (inRange(sensible)) near(effectiveness.temperature, sensible, TOLERANCE_PCT);
+    const { eff_moisture: moisture } = vector.expected;
+    // Without flow the macro's powers are all 0, so there is no share to compare.
+    if (!aboveGate(vector)) expect(effectiveness.total).toBeUndefined();
+    else if (vector.inputs.supply_flow > 0) near(effectiveness.total, macroTotal(vector), TOLERANCE_PCT);
+    else expect(effectiveness.total).toBeDefined();
     if (inRange(moisture)) near(effectiveness.moisture, moisture, TOLERANCE_PCT);
     // With the bypass closed the macro's null comes from the gradient gate alone.
-    if (vector.inputs.bypass === 0 && sensible === null) expect(effectiveness.temperature).toBeUndefined();
     if (vector.inputs.bypass === 0 && moisture === null) expect(effectiveness.moisture).toBeUndefined();
   });
 
+  test('the total effectiveness equals the recovery card header percentage within 1 % on every set (recovery-calculation "Matches the recovery card")', () => {
+    let compared = 0;
+    for (const vector of vectors) {
+      const result = calculate(toInputs(vector));
+      const { total } = result.effectiveness;
+      if (total === undefined) continue;
+      const header = recoveryView(
+        result,
+        { colors: COLORS, minScale: 100 },
+        { language: 'en', number_format: 'language' },
+      ).header;
+      const match = /\(([^)]*?)\s%\)/.exec(header); // \s matches the no-break space
+      if (!match?.[1]) continue; // no potential: no percentage in the header
+      const shown = Number(match[1].replace('−', '-').replace(/,/g, ''));
+      near(total, Math.min(Math.max(shown, 0), 100), TOLERANCE_PCT);
+      compared += 1;
+    }
+    expect(compared).toBeGreaterThanOrEqual(10);
+  });
+
   test('the macro gives a value from 0 to 100 on several sets', () => {
-    const compared = vectors.filter((v) => inRange(v.expected.eff_sensible) || inRange(v.expected.eff_moisture));
-    expect(compared.length).toBeGreaterThanOrEqual(10);
+    expect(vectors.filter(aboveGate).length).toBeGreaterThanOrEqual(10);
+    expect(vectors.filter((v) => inRange(v.expected.eff_moisture)).length).toBeGreaterThanOrEqual(10);
   });
 });
 
@@ -239,19 +275,45 @@ describe('recovery-calculation scenarios', () => {
   });
 
   describe('effectiveness', () => {
-    const temperatureEffectiveness = (outdoor: number, supply: number, extract: number, bypass = 0) =>
-      calculate({ ...winter, temperature: { outdoor, supply, extract }, bypass }).effectiveness.temperature;
+    // Without humidity the enthalpies are sensible only: the total is the temperature ratio.
+    const { absoluteHumidity: _humidity, ...temperaturesOnly } = winter;
+    const totalEffectiveness = (outdoor: number, supply: number, extract: number, bypass = 0) =>
+      calculate({ ...temperaturesOnly, temperature: { outdoor, supply, extract }, bypass }).effectiveness.total;
     const moistureEffectiveness = (outdoor: number, supply: number, extract: number) =>
       calculate({ ...winter, absoluteHumidity: { outdoor, supply, extract } }).effectiveness.moisture;
 
-    test('"Winter heating": 0 °C / 4.0 g/m³, 17 °C / 6.5 g/m³, 21 °C / 7.5 g/m³ gives 81 % and 71 % within 1 %', () => {
+    test('"Winter heating": 0 °C / 4.0 g/m³, 17 °C / 6.5 g/m³, 21 °C / 7.5 g/m³ gives 78 % and 71 % within 1 %', () => {
       const { effectiveness } = calculate(winter);
-      near(effectiveness.temperature, 81, 1);
+      near(effectiveness.total, 78, 1);
       near(effectiveness.moisture, 71, 1);
     });
 
+    test('"Latent heat counts": supply at the outdoor humidity (as for an HRV) gives 60 %, below the 81 % of the temperatures', () => {
+      const humidity = { outdoor: 4.0, supply: 4.0, extract: 7.5 };
+      const { effectiveness } = calculate({ ...winter, absoluteHumidity: humidity });
+      near(effectiveness.total, 60, 1);
+    });
+
+    test('"Humid summer day": 24 °C / 14.0, 23.2 °C / 11.0, 23 °C / 10.0 g/m³ gives 76 % with 1 K between the temperatures', () => {
+      const result = calculate({
+        ...winter,
+        temperature: { outdoor: 24, supply: 23.2, extract: 23 },
+        absoluteHumidity: { outdoor: 14.0, supply: 11.0, extract: 10.0 },
+      });
+      near(result.effectiveness.total, 76, 1);
+    });
+
+    test('"Free cooling": at 40 % bypass, no humidity, outdoor 12 °C, supply 14 °C, extract 22 °C gives 80 %', () => {
+      const result = calculate({
+        ...temperaturesOnly,
+        temperature: { outdoor: 12, supply: 14, extract: 22 },
+        bypass: 40,
+      });
+      expect(result.effectiveness.total).toBeCloseTo(80, 9);
+    });
+
     test('"Bypass modulating": at 40 % bypass, outdoor 12 °C, supply 17 °C, extract 22 °C is 50 %', () => {
-      expect(temperatureEffectiveness(12, 17, 22, 40)).toBeCloseTo(50, 9);
+      expect(totalEffectiveness(12, 17, 22, 40)).toBeCloseTo(50, 9);
     });
 
     test('"Outdoor air more humid": 14.0, 13.0 and 12.0 g/m³ give a positive 50 %', () => {
@@ -259,40 +321,47 @@ describe('recovery-calculation scenarios', () => {
     });
 
     test('"Ratio below 0": outdoor 10.0 °C, supply 9.5 °C, extract 20.0 °C gives 0 %', () => {
-      expect(temperatureEffectiveness(10.0, 9.5, 20.0)).toBe(0);
+      expect(totalEffectiveness(10.0, 9.5, 20.0)).toBe(0);
     });
 
     test('"Ratio above 100": outdoor 5 °C, supply 21.5 °C, extract 21 °C gives 100 %', () => {
-      expect(temperatureEffectiveness(5, 21.5, 21)).toBe(100);
+      expect(totalEffectiveness(5, 21.5, 21)).toBe(100);
     });
 
-    test('"Small temperature gradient": extract 22 °C and outdoor 20 °C give no temperature effectiveness', () => {
-      expect(temperatureEffectiveness(20, 21, 22)).toBeUndefined();
+    test('"Small gradient": extract 22 °C and outdoor 20 °C, both at 8.0 g/m³, give no total effectiveness', () => {
+      const equalHumidity = { outdoor: 8.0, supply: 8.0, extract: 8.0 };
+      const small = calculate({
+        ...winter,
+        temperature: { outdoor: 20, supply: 21, extract: 22 },
+        absoluteHumidity: equalHumidity,
+      });
+      expect(small.effectiveness.total).toBeUndefined();
+      expect(totalEffectiveness(20, 21, 22)).toBeUndefined();
       // Exactly at the gate it is given.
-      expect(temperatureEffectiveness(19, 21, 22)).toBeCloseTo(66.67, 2);
+      expect(totalEffectiveness(19, 21, 22)).toBeCloseTo(66.67, 2);
     });
 
     test('the gradient gate holds in both directions and at its boundaries', () => {
-      expect(temperatureEffectiveness(30, 24, 22)).toBeCloseTo(75, 9); // summer: outdoor warmer than extract
-      expect(temperatureEffectiveness(20, 20, 20)).toBeUndefined(); // zero gradient, no NaN
+      expect(totalEffectiveness(30, 24, 22)).toBeCloseTo(75, 9); // summer: outdoor warmer than extract
+      expect(totalEffectiveness(20, 20, 20)).toBeUndefined(); // zero gradient, no NaN
       expect(moistureEffectiveness(6.0, 6.75, 7.5)).toBeCloseTo(50, 9); // exactly 1.5 g/m³
       expect(moistureEffectiveness(6.0, 6.7, 7.4)).toBeUndefined();
     });
 
-    test('"One figure gated": 8 K and 0.7 g/m³ apart give the temperature effectiveness only', () => {
+    test('"One figure gated": 8 K and 0.7 g/m³ apart give the total effectiveness only', () => {
       const result = calculate({
         ...winter,
         temperature: { outdoor: 12, supply: 19, extract: 20 },
         absoluteHumidity: { outdoor: 6.0, supply: 6.4, extract: 6.7 },
       });
-      expect(result.effectiveness.temperature).toBeCloseTo(87.5, 9);
+      // (h_sup - h_out) / (h_ext - h_out) with the humidity terms, not the 87.5 % of the temperatures alone
+      expect(result.effectiveness.total).toBeCloseTo(82.82, 1);
       expect(result.effectiveness.moisture).toBeUndefined();
     });
 
-    test('"No humidity configured": temperatures 10 K apart give the temperature effectiveness only', () => {
-      const { absoluteHumidity: _humidity, ...temperaturesOnly } = winter;
+    test('"No humidity configured": temperatures 10 K apart give the total effectiveness only', () => {
       const result = calculate({ ...temperaturesOnly, temperature: { outdoor: 10, supply: 17, extract: 20 } });
-      expect(result.effectiveness.temperature).toBeCloseTo(70, 9);
+      expect(result.effectiveness.total).toBeCloseTo(70, 9);
       expect(result.effectiveness.moisture).toBeUndefined();
     });
   });

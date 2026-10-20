@@ -219,10 +219,10 @@ describe('savingTarget', () => {
 });
 
 describe('effectivenessLabel', () => {
-  const withFigures = (temperature?: number, moisture?: number): RecoveryResult => ({
+  const withFigures = (total?: number, moisture?: number): RecoveryResult => ({
     ...result('heating', 100),
     effectiveness: {
-      ...(temperature === undefined ? {} : { temperature }),
+      ...(total === undefined ? {} : { total }),
       ...(moisture === undefined ? {} : { moisture }),
     },
   });

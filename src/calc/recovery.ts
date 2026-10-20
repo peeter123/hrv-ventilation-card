@@ -17,7 +17,7 @@ const LATENT_HEAT = 2501; // J/g, water vapour at 0 °C
 const CP_VAPOUR = 1.86; // J/(g K)
 const SECONDS_PER_HOUR = 3600;
 // The smallest extract-outdoor differences at which an effectiveness ratio is still meaningful.
-const MIN_TEMPERATURE_GRADIENT = 3; // K
+const MIN_TEMPERATURE_GRADIENT = 3; // K, of dry air for the total: an enthalpy difference of rho * 1006 * 3 J/m³
 const MIN_HUMIDITY_GRADIENT = 1.5; // g/m³
 
 /** A value per air stream. */
@@ -61,7 +61,8 @@ export interface MoistureRates {
 
 /** Supply-side effectiveness in %, capped to 0-100; a figure is left out below its gradient. */
 export interface Effectiveness {
-  temperature?: number;
+  /** Recovered / (recovered + lost) of the total, the recovery balance card's recovered percentage, in every mode */
+  total?: number;
   /** Only with humidity for the three streams */
   moisture?: number;
 }
@@ -83,7 +84,7 @@ export interface RecoveryResult {
   latentKnown: boolean;
   /** g/h, only with humidity */
   moisture?: MoistureRates;
-  /** Of the unit as a whole, at any bypass position: (supply - outdoor) / (extract - outdoor) */
+  /** Of the unit as a whole, at any bypass position */
   effectiveness: Effectiveness;
 }
 
@@ -96,18 +97,9 @@ const effectivenessRatio = ({ outdoor, supply, extract }: Streams<number>, minGr
   return Math.min(Math.max(((supply - outdoor) / gradient) * 100, 0), 100);
 };
 
-/** Both figures; the moisture one only with humidity for the three streams. */
-const effectivenessOf = (
-  temperature: Streams<number>,
-  absoluteHumidity: Streams<number> | undefined,
-): Effectiveness => {
-  const result: Effectiveness = {};
-  const temperatureRatio = effectivenessRatio(temperature, MIN_TEMPERATURE_GRADIENT);
-  if (temperatureRatio !== undefined) result.temperature = temperatureRatio;
-  const moistureRatio = absoluteHumidity && effectivenessRatio(absoluteHumidity, MIN_HUMIDITY_GRADIENT);
-  if (moistureRatio !== undefined) result.moisture = moistureRatio;
-  return result;
-};
+/** The moisture figure only with humidity for the three streams. */
+const moistureEffectiveness = (absoluteHumidity: Streams<number> | undefined): number | undefined =>
+  absoluteHumidity && effectivenessRatio(absoluteHumidity, MIN_HUMIDITY_GRADIENT);
 
 const known = (value: number | undefined): value is number => value !== undefined && Number.isFinite(value);
 
@@ -163,8 +155,16 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
     recovered: { sensible: (recovered.total - recovered.latent) * toWatts, latent: recovered.latent * toWatts },
     lost: { sensible: (lost.total - lost.latent) * toWatts, latent: lost.latent * toWatts },
     latentKnown: AH !== undefined,
-    effectiveness: effectivenessOf(temperature as Streams<number>, absoluteHumidity as Streams<number> | undefined),
+    effectiveness: {},
   };
+  // The total: recovered / (recovered + lost) = recovered / |extract - outdoor| per m³, before any rounding, capped to
+  // 0-100 and left out below the enthalpy gradient of MIN_TEMPERATURE_GRADIENT K of dry air.
+  const gradient = Math.abs(extract.h - outdoor.h);
+  if (gradient >= rho * CP_AIR * MIN_TEMPERATURE_GRADIENT) {
+    result.effectiveness.total = Math.min(Math.max((recovered.total / gradient) * 100, 0), 100);
+  }
+  const moistureRatio = moistureEffectiveness(absoluteHumidity as Streams<number> | undefined);
+  if (moistureRatio !== undefined) result.effectiveness.moisture = moistureRatio;
   if (absoluteHumidity !== undefined) {
     const moisture = calculateMoisture(absoluteHumidity, supplyFlow);
     if (moisture !== undefined) result.moisture = moisture;
