@@ -12,11 +12,15 @@ selects, legible at any card width and in any theme.
 The card SHALL take every displayed entity from its config, grouped by role: the four air streams (temperature,
 relative humidity, absolute humidity each), fans (level, supply flow, exhaust flow), bypass (position, mode, next
 change), status (operating mode, profile target temperature, temperature profile, next fan change, filter days
-remaining, power, running mean outdoor temperature, saved heating power, saved cooling power, moisture recovery) and seasons (heating, cooling).
+remaining, power, running mean outdoor temperature, saved heating power, saved cooling power, moisture recovery), pre-heater (power, energy) and seasons (heating, cooling).
 
 #### Scenario: Card configured for another unit
 - **WHEN** the config points the roles at a different unit's entities
 - **THEN** each label shows the state of the configured entity for its role
+
+#### Scenario: Pre-heater roles
+- **WHEN** the config sets `pre_heater.power` and `pre_heater.energy`
+- **THEN** the coil on the drawing follows the power entity and the status grid shows the energy entity
 
 ### Requirement: Four stream temperatures are required
 The card SHALL require the outdoor, supply, extract and exhaust air temperature entities and SHALL show a
@@ -42,10 +46,10 @@ fixed aspect ratio and SHALL NOT force a fixed card height; the card's height SH
 ### Requirement: Labels on the drawing
 Each stream's temperature and humidities SHALL be shown next to that stream's end on the drawing, the bypass
 position at the top of the exchanger, just inside its outline, the saving badge on its centre and, on an ERV, the
-moisture recovery figure low in the exchanger, under the crossing streams. The supply and exhaust flow SHALL
-be shown above the tip of the supply and the exhaust arrow, clear of the bypass path. With the automatic layout,
-labels SHALL NOT overlap each other or the arrowheads and SHALL NOT extend outside the card at any card width from
-280 px.
+moisture recovery figure right of the exchanger, at the height of its centre and the house symbol's. The supply and
+exhaust flow SHALL be shown below the tip of the supply and the exhaust arrow, clear of the bypass path. With the
+automatic layout, labels SHALL NOT overlap each other or the arrowheads and SHALL NOT extend outside the card at any
+card width from 280 px.
 
 #### Scenario: Stream labels
 - **WHEN** the outdoor air entities are configured
@@ -53,17 +57,19 @@ labels SHALL NOT overlap each other or the arrowheads and SHALL NOT extend outsi
 
 #### Scenario: Flow labels
 - **WHEN** the supply and exhaust flow entities are configured and the layout is full
-- **THEN** the supply flow is shown above the supply arrow's tip and the exhaust flow above the exhaust arrow's tip
+- **THEN** the supply flow is shown below the supply arrow's tip and the exhaust flow below the exhaust arrow's tip,
+  clear of the bypass path at 100 % and of the corner labels
 
 #### Scenario: ERV at the narrowest width
 - **WHEN** the type is ERV, the bypass is at 50 % and the card is 280 px wide
-- **THEN** the bypass position, the badge and the moisture figure are all inside the exchanger without overlapping
+- **THEN** the bypass position and the badge are inside the exchanger and the moisture figure right of it, between
+  the exchanger and the house symbol, without overlapping
 
 ### Requirement: Top row and status grid
 The season icon, power and running mean outdoor temperature SHALL be shown in a top row above the drawing: the icon
-at the left, power centred on the card and the running mean outdoor temperature at the right. The status values
+at the left, power centred on the card (or, while the pre-heater figure is shown, power and that figure centred together) and the running mean outdoor temperature at the right. The status values
 SHALL be shown below the drawing in a grid of three equal columns, one subject each, with a fixed cell per value:
-the fans (fan level, next fan change, filter days), the bypass (bypass mode, next bypass change) and comfort
+the fans (fan level, next fan change, filter days), the bypass (bypass mode, next bypass change, pre-heater energy) and comfort
 (operating mode, temperature profile, profile target temperature), top to bottom. A value SHALL keep its cell
 whatever the states, and an unconfigured value SHALL leave its cell empty, so nothing shifts. A value SHALL be
 centred in its cell. A value too long for its cell SHALL be cut off with an ellipsis; its tooltip gives it in full.
@@ -73,8 +79,8 @@ the content, from the left to the right corner stack, and the status grid SHALL 
 label of these two rows SHALL have an icon in front, as high as its text and centred vertically on it: power
 `mdi:lightning-bolt`, running mean outdoor temperature `mdi:thermometer-lines`, fan level `mdi:fan`, bypass mode
 `mdi:shuffle-variant`, next bypass change and next fan change `mdi:timer-outline`, operating mode `mdi:cog-outline`,
-profile target temperature `mdi:thermometer`, temperature profile `mdi:thermostat` and filter days
-`mdi:air-filter`. Every label SHALL have a tooltip with its name and state, e.g. "Next bypass change: 01:30".
+profile target temperature `mdi:thermometer`, temperature profile `mdi:thermostat`, filter days
+`mdi:air-filter`, and pre-heater power and pre-heater energy `mdi:heat-wave`. Every label SHALL have a tooltip with its name and state, e.g. "Next bypass change: 01:30".
 
 #### Scenario: Label icons
 - **WHEN** power and the fan level are configured
@@ -89,6 +95,11 @@ profile target temperature `mdi:thermometer`, temperature profile `mdi:thermosta
 - **WHEN** no next fan change entity is configured
 - **THEN** its cell stays empty and the filter days stay in the first column's bottom cell
 
+#### Scenario: Pre-heater energy cell
+- **WHEN** `pre_heater.energy` is configured and reports 12 kWh
+- **THEN** the second column's bottom cell shows a heat wave icon followed by "12 kWh", with the tooltip
+  "Pre-heater energy: 12 kWh"
+
 #### Scenario: Icon centred on its text
 - **WHEN** the card is shown at 400 px and at 600 px wide
 - **THEN** the vertical centre of every top row and status grid icon is within 1 px of the centre of its label's text
@@ -98,17 +109,21 @@ profile target temperature `mdi:thermometer`, temperature profile `mdi:thermosta
 - **THEN** both values are centred in the first column, so their horizontal centres line up
 
 ### Requirement: Rows follow the config
-The top row SHALL be shown while at least one of power, running mean outdoor temperature or a season entity is
+The top row SHALL be shown while at least one of power, running mean outdoor temperature, pre-heater power or a season entity is
 configured, and the status grid while at least one of its roles is configured, regardless of the current states.
 A row with none of its roles configured SHALL NOT be shown.
 
 #### Scenario: No top row roles
-- **WHEN** no power, running mean outdoor temperature or season entity is configured
+- **WHEN** no power, running mean outdoor temperature, pre-heater power or season entity is configured
 - **THEN** no top row is shown and the card starts with the drawing
 
 #### Scenario: Only season entities, between seasons
 - **WHEN** only the two season entities of the top row are configured and both are off
 - **THEN** the top row is shown with the between-seasons icon
+
+#### Scenario: Only pre-heater power, pre-heater off
+- **WHEN** of the top row's roles only `pre_heater.power` is configured and it reports 0 W
+- **THEN** the top row is shown, empty, so the card keeps its height when the pre-heater switches on
 
 #### Scenario: No status roles
 - **WHEN** none of the status grid's roles is configured
@@ -347,22 +362,25 @@ between seasons.
 
 ### Requirement: Visual editor
 The card SHALL offer a visual editor with an exchanger type choice first, then one entity picker per role, grouped
-in collapsible sections per group, with the four temperatures marked as required, and an animation switch. Pickers
+in collapsible sections per group, with the four temperatures marked as required, an animation switch and an effectiveness switch. Pickers
 SHALL only offer entities of a fitting domain. The smoothing window, air density, cold and warm colours, layout
-choice, show-unavailable switch, nominal flow and the next fan change, next bypass change, target temperature,
+choice, show-unavailable switch, nominal flow, pre-heater maximum power and glow colour and the next fan change, next bypass change, target temperature,
 temperature profile, saved heating power, saved cooling power and moisture recovery pickers SHALL be advanced settings.
 
 #### Scenario: Editing the card
 - **WHEN** the user opens the card's editor with the advanced settings off
 - **THEN** an exchanger type choice (HRV or ERV) comes first, then the roles grouped per air stream, fans, bypass,
-  status and seasons, followed by the animation switch
+  status, pre-heater and seasons, followed by the animation switch and the effectiveness switch
 - **AND** the season pickers only offer binary sensors
+- **AND** the pre-heater power picker offers sensors, binary sensors and switches, and the energy picker sensors
 - **AND** the status section shows no next fan change, next bypass change, target temperature, temperature
   profile, saved heating power, saved cooling power or moisture recovery picker
+- **AND** the pre-heater section shows no maximum power or glow colour
 
 #### Scenario: Advanced settings on
 - **WHEN** the user turns the advanced settings on
 - **THEN** the niche status pickers, including the two saved power pickers and moisture recovery, appear in the status section,
+  the maximum power and the glow colour (showing its orange default) appear in the pre-heater section,
   and the colours, layout, unavailable values, nominal flow and a calculation section with smoothing and air
   density appear
 
@@ -385,20 +403,26 @@ fill and legible in light and dark themes. Any other value SHALL be a configurat
 
 ### Requirement: Moisture recovery figure on ERV
 With `exchanger_type: erv` and the badge's inputs configured, the card SHALL show the calculated moisture recovery
-rate in g/h low in the exchanger, under the crossing streams, without an icon. A negative rate SHALL show its sign,
-as moisture kept out, and the tooltip SHALL name the direction with the magnitude.
+rate in g/h right of the exchanger, centred at the height of the exchanger's centre and the house symbol's, between
+the two and clear of the streams. The figure SHALL show the rate's magnitude without a sign, after an icon that
+gives the direction: `mdi:water-sync` while moisture is recovered (a rate of 0 or more) and `mdi:water-remove` while
+it is kept out. The tooltip SHALL name the direction with the magnitude. Where the figure does not fit on one line,
+its unit SHALL go to a second line.
 
 #### Scenario: Moisture recovered
 - **WHEN** the type is ERV and the calculated moisture recovery rate is 120 g/h
-- **THEN** the bottom of the exchanger shows "120 g/h", with the tooltip "Moisture recovered: 120 g/h"
+- **THEN** right of the exchanger a water-sync icon is followed by "120 g/h", with the tooltip "Moisture recovered:
+  120 g/h"
 
 #### Scenario: Moisture kept out
 - **WHEN** the type is ERV and the calculated moisture recovery rate is -418 g/h
-- **THEN** the bottom of the exchanger shows "−418 g/h", with the tooltip "Moisture kept out: 418 g/h"
+- **THEN** right of the exchanger a water-remove icon is followed by "418 g/h", without a minus sign, with the
+  tooltip "Moisture kept out: 418 g/h"
 
 #### Scenario: Four-digit rate on a narrow card
-- **WHEN** the type is ERV, the rate is -1500 g/h and the card is 280 to 600 px wide
-- **THEN** the figure's text stays between the exchanger's slanted sides, clear of the streams and the badge
+- **WHEN** the type is ERV, the rate is -1500 g/h and the card is 280 to 600 px wide, in both layouts
+- **THEN** the figure stays clear of the exchanger, the house symbol, the streams and the corner labels, and its
+  text stays at least 11 px high
 
 #### Scenario: Input unavailable
 - **WHEN** the type is ERV and the supply flow entity is unavailable
@@ -458,3 +482,229 @@ role configured, the figure SHALL NOT be tappable or focusable and SHALL NOT ope
 #### Scenario: No moisture recovery entity
 - **WHEN** `status.moisture_recovery` is not configured
 - **THEN** the moisture figure has no `tabindex` and a tap opens no dialog
+
+### Requirement: Effectiveness rings
+With `show_effectiveness: true` (default false) and the calculation's inputs configured (humidity only for the
+moisture ring), the card SHALL draw two progress rings on the exchanger from its top centre, clockwise: the
+moisture effectiveness in the rim and the total effectiveness along the inner outline, each as long as its figure
+from the shared calculation, 0 to 100 % of the way round.
+
+#### Scenario: Heating with both figures
+- **WHEN** the type is ERV, the option is on and the total effectiveness is 92 % and the moisture effectiveness 65 %
+- **THEN** the inner ring runs 92 % of the way round the inner outline and the rim is filled 65 % of the way round,
+  from the outer to the inner outline
+
+#### Scenario: Option off
+- **WHEN** the config does not set `show_effectiveness`
+- **THEN** the exchanger is drawn as before, without rings or tracks
+
+#### Scenario: Not a boolean
+- **WHEN** the config sets `show_effectiveness: "yes"`
+- **THEN** the card shows a configuration error that names `show_effectiveness`
+
+#### Scenario: Both layouts
+- **WHEN** the option is on and the card is 320 px wide with the automatic layout
+- **THEN** the rings are drawn as in the full layout
+
+### Requirement: Rings are part of the exchanger
+The moisture ring SHALL cover the rim's full width from the outer to the inner outline and nothing outside it, with
+the empty rim as its track, and the outlines SHALL stay drawn over it. The total ring SHALL run over a faint
+full-length track.
+
+#### Scenario: Full moisture ring
+- **WHEN** the type is ERV, the option is on and the moisture effectiveness is 100 %
+- **THEN** the whole rim is filled from outline to outline, and nothing outside the outer outline or inside the
+  inner outline is
+
+### Requirement: Rings by exchanger type
+An HRV SHALL show only the total ring, with the rim left as it is. An ERV SHALL show both rings while every stream
+has a humidity, and only the total ring otherwise.
+
+#### Scenario: HRV with humidity sensors
+- **WHEN** the type is HRV, the option is on and humidity is configured for the three streams
+- **THEN** only the inner ring and its track are drawn, and the inner ring includes the lost latent heat
+
+#### Scenario: ERV without humidity
+- **WHEN** the type is ERV, the option is on and no humidity entities are configured
+- **THEN** only the inner ring and its track are drawn
+
+### Requirement: Ring colours
+The total ring SHALL be drawn in the warm colour in heating mode and the cold colour in cooling mode, mixed towards
+the theme's primary text colour so that it keeps a contrast of at least 3:1 against the exchanger's fill and the
+moisture ring, on the HRV and the ERV fill, in light and dark themes, for the default colours. The rings SHALL NOT
+reduce the contrast of the badge or the bypass position.
+
+#### Scenario: Cooling mode
+- **WHEN** the calculation is in cooling mode and the option is on
+- **THEN** the inner ring is drawn in the configured cold colour mixed towards the text colour, at least 3:1 against
+  the fill and the moisture ring
+
+### Requirement: Moisture ring colour
+The moisture ring SHALL be a darker shade of the ERV fill's blue-grey on a light theme and a stronger one on a dark
+theme, distinguishable from the empty rim by at least 1.2:1, not the moisture bar card's teal.
+
+#### Scenario: Moisture ring in both themes
+- **WHEN** the type is ERV and the option is on, in the light and the dark preview theme
+- **THEN** the filled part of the rim is blue-grey and differs from the empty part by at least 1.2:1
+
+#### Scenario: Text on the exchanger
+- **WHEN** the option is on and the type is ERV, in the light and the dark preview theme
+- **THEN** the badge keeps a contrast of at least 4.5:1, and the rings and the streams do not cover the badge or the
+  bypass position
+
+### Requirement: Rings without a figure
+While a figure is not measurable (its gradient below the calculation's gate) or the calculation has no value, its
+ring SHALL be empty, with its track still drawn, so the exchanger does not change shape.
+
+#### Scenario: Small gradient
+- **WHEN** the option is on and the extract air is 22 °C and the outdoor air 20 °C at the same absolute humidity
+- **THEN** the inner ring is empty and its track is drawn
+
+#### Scenario: Input unavailable
+- **WHEN** the option is on and the supply flow entity is unavailable
+- **THEN** both rings are empty and their tracks are drawn
+
+### Requirement: Rings are labelled
+The rings SHALL have a tooltip and an accessible name with the figure of each drawn ring in whole percent, naming
+them as the unit's effectiveness, the total figure by the mode ("heat", "cooling" or "free cooling"), with "not
+measurable" for a figure without a value. While the bypass is above 0 % the text SHALL also give the bypass
+position. The rings SHALL NOT be tappable.
+
+#### Scenario: Figure not measurable
+- **WHEN** the unit is heating, the total effectiveness is not measurable and the type is HRV
+- **THEN** the tooltip reads "Effectiveness: heat not measurable"
+
+### Requirement: Ring tooltip gives absolute values
+In the rings' tooltip and accessible name, a figure with a value SHALL be followed by its absolute values as
+magnitudes: for the total figure the recovered total and the potential in W, sensible plus latent as on the recovery
+balance card; for the moisture figure the recovered and the extracted moisture in g/h. The recovered value SHALL get
+a minus sign (U+2212) while it works against the potential.
+
+#### Scenario: Bypass closed
+- **WHEN** the unit is heating with the bypass at 0 %, recovers 1,200 W of a 1,304 W potential (92 %) and 390 of
+  600 g/h extracted moisture (65 %)
+- **THEN** the tooltip reads "Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 % (390 / 600 g/h)"
+
+#### Scenario: Bypass modulating
+- **WHEN** the unit is free cooling with the bypass at 40 %, delivers 610 W of a 1,000 W potential (61 %) and the
+  moisture effectiveness is not measurable
+- **THEN** the tooltip reads "Effectiveness: free cooling 61 % (610 / 1,000 W), moisture not measurable
+  (bypass 40 %)"
+
+#### Scenario: Moisture kept out of the house
+- **WHEN** the unit is cooling with the bypass at 0 %, recovers 760 W of a 1,000 W potential, and at 200 m³/h the
+  outdoor air holds 14.0 g/m³, the supply 13.0 g/m³ and the extract 12.0 g/m³
+- **THEN** the tooltip reads "Effectiveness: cooling 76 % (760 / 1,000 W), moisture 50 % (200 / 400 g/h)"
+
+#### Scenario: Recovery against the mode
+The ratio is then clamped to 0 %; where it is clamped to 100 %, both values stay magnitudes.
+- **WHEN** the unit is free cooling and the supply air is warmer than the extract air, so it delivers -120 W of a
+  1,000 W potential, and the moisture recovered is 100 g/h against 800 g/h extracted in the other direction
+- **THEN** the tooltip reads "Effectiveness: free cooling 0 % (−120 / 1,000 W), moisture 0 % (−100 / 800 g/h)"
+
+### Requirement: Pre-heater coil on the drawing
+With `pre_heater.power` configured, the card SHALL draw a heating coil on the outdoor air's straight inlet segment, the part
+the outdoor air shares before the bypass splits off, between the outdoor symbol and the exchanger, in both layouts.
+The coil SHALL be a smooth, rounded wave along the stream's centreline, with three crests on each side, whose first
+and last points lie on the stream's two borders, and it SHALL lie wholly before the point where the bypass splits
+off, whatever the bypass position. Without it no coil SHALL be drawn. The coil SHALL NOT overlap a label at any card width from 280 px.
+
+#### Scenario: Coil drawn
+- **WHEN** `pre_heater.power` is configured
+- **THEN** a coil is drawn on the outdoor stream, left of the exchanger and before the bypass splits off
+- **AND** the coil is a rounded wave along the stream's straight inlet segment, on the stream also with the bypass open
+- **AND** its first point lies on the stream's upper border and its last on the lower border
+
+#### Scenario: No pre-heater
+- **WHEN** no `pre_heater.power` is configured
+- **THEN** the drawing has no coil
+
+#### Scenario: Narrow card with all outdoor labels
+- **WHEN** the card is 280 to 600 px wide and the outdoor temperature and both humidities are configured
+- **THEN** the coil does not overlap the outdoor labels, the flow labels or the bypass position
+
+### Requirement: Pre-heater coil glow
+The coil SHALL be drawn dim while the pre-heater is off and glowing while it is on. A numeric power entity SHALL
+count as on above 0 W, in W or kW. With `pre_heater.max_power` (W) set, the glow SHALL grow with power / maximum,
+capped at full and visibly on above 0 W; without it any power above 0 W SHALL glow fully. An on/off entity SHALL
+glow fully while on. While on, the share of the glow colour SHALL be 30 % + 70 % x the level, so a partial level
+already glows visibly. The glow colour SHALL be the option `pre_heater.glow_color`, a CSS colour that defaults to a
+warm orange (`#ff9800`); an invalid value SHALL be a configuration error that names the option. The wire SHALL be lightened towards white as the level rises, so that at full power it reads as a lighter, hotter core against a halo of the pure glow colour. While the coil is on
+and the card's animation is on and the device does not ask for reduced motion, the glow SHALL pulse gently between its
+level and about 60 % of it in a slow cycle of about 2.5 s; with the animation off, with reduced motion or while the coil
+is off it SHALL NOT pulse.
+
+#### Scenario: Modulating pre-heater
+- **WHEN** `pre_heater.max_power` is 1000 and the pre-heater power is 250 W
+- **THEN** the coil glows with 47.5 % of the glow colour and a glow of the same strength
+
+#### Scenario: No maximum
+- **WHEN** no `pre_heater.max_power` is set and the pre-heater power is 120 W
+- **THEN** the coil glows fully
+
+#### Scenario: On/off entity
+- **WHEN** `pre_heater.power` is a binary sensor that is on
+- **THEN** the coil glows fully
+
+#### Scenario: Off
+- **WHEN** the pre-heater power is 0 W
+- **THEN** the coil is drawn dim, legible as a coil in light and dark themes
+
+#### Scenario: Unavailable
+- **WHEN** the pre-heater power entity is unavailable
+- **THEN** the coil is drawn dim, as off
+
+#### Scenario: Glow colour
+- **WHEN** the pre-heater is on and `pre_heater.glow_color` is not set
+- **THEN** the coil glows in orange (`#ff9800`)
+- **AND** with `pre_heater.glow_color: rgb(255, 0, 0)` it glows in that colour
+
+#### Scenario: Filament core
+- **WHEN** the pre-heater is at full power
+- **THEN** the coil's wire is lighter than its halo, which is the glow colour itself
+
+#### Scenario: Glow pulse
+- **WHEN** the pre-heater is on and the animation is on
+- **THEN** the glow's opacity pulses between its level and about 60 % of it
+- **AND** with `animation.enabled: false`, with reduced motion, or while the pre-heater is off, it does not pulse
+
+#### Scenario: Invalid glow colour
+- **WHEN** the config sets `pre_heater.glow_color: inherit`
+- **THEN** the card shows a configuration error that names `pre_heater.glow_color`
+
+#### Scenario: Invalid maximum
+- **WHEN** the config sets `pre_heater.max_power: 0`
+- **THEN** the card shows a configuration error that names `pre_heater.max_power`
+
+### Requirement: Pre-heater coil opens its entity
+The coil SHALL have a tooltip and accessible name with the pre-heater's state as Home Assistant formats it, e.g.
+"Pre-heater: 350 W" or "Pre-heater: On", and tapping it SHALL open the more-info dialog of `pre_heater.power`.
+
+#### Scenario: Hover
+- **WHEN** the pre-heater power is 350 W and the user hovers the coil
+- **THEN** the tooltip reads "Pre-heater: 350 W"
+
+#### Scenario: Tap
+- **WHEN** the user taps the coil
+- **THEN** the more-info dialog of the `pre_heater.power` entity opens
+
+### Requirement: Pre-heater power in the top row
+While the pre-heater is on and its entity available, the top row SHALL show its state after the power label, with a
+`mdi:heat-wave` icon and the tooltip "Pre-heater: " and its state, side by side with power, without a sum or a
+share. Tapping it SHALL open `pre_heater.power`. While off or unavailable it SHALL NOT be shown.
+
+#### Scenario: Pre-heater on
+- **WHEN** power reads 32 W and the pre-heater power 1000 W
+- **THEN** the top row's centre shows the lightning bolt with "32 W", then the heat wave icon with "1,000 W"
+
+#### Scenario: On/off entity on
+- **WHEN** `pre_heater.power` is a binary sensor that is on
+- **THEN** the top row shows the heat wave icon with "On" after the power label
+
+#### Scenario: Pre-heater off
+- **WHEN** the pre-heater power is 0 W
+- **THEN** the top row shows only power and the running mean outdoor temperature, as without a pre-heater
+
+#### Scenario: Narrow card
+- **WHEN** the card is 280 px wide, the pre-heater reads 1000 W, power 1032 W and RMOT -3.5 °C
+- **THEN** the top row's labels and the season icon do not overlap
