@@ -5,6 +5,7 @@ import './ha-stubs';
 import '../src/cards/moisture-balance-card';
 import '../src/cards/recovery-balance-card';
 import '../src/cards/ventilation-card';
+import { ifDefined } from 'lit/directives/if-defined.js';
 import { html, render, type TemplateResult } from 'lit';
 import type { HrvCard } from '../src/cards/base-card';
 import { STREAMS, type Stream } from '../src/lib/config';
@@ -149,7 +150,7 @@ function preHeaterConfig(): Record<string, unknown> {
     pre_heater: {
       power: options.preHeaterKind === 'power sensor' ? id.preHeater : id.preHeaterOn,
       energy: id.preHeaterEnergy,
-      ...(options.preHeaterMax > 0 ? { max_power: options.preHeaterMax } : {}),
+      ...(options.preHeaterMax >= 1 && options.preHeaterMax <= 4000 ? { max_power: options.preHeaterMax } : {}),
     },
   };
 }
@@ -199,12 +200,20 @@ function updateConfig(): void {
   }
 }
 
-const number = (label: string, value: number, set: (value: number) => void, step = 1): TemplateResult =>
+const number = (
+  label: string,
+  value: number,
+  set: (value: number) => void,
+  step = 1,
+  bounds: { min: number; max: number } | undefined = undefined,
+): TemplateResult =>
   html`<label
     >${label}
     <input
       type="number"
       step=${step}
+      min=${ifDefined(bounds?.min)}
+      max=${ifDefined(bounds?.max)}
       .value=${String(value)}
       @input=${(event: Event) => {
         const parsed = Number((event.target as HTMLInputElement).value);
@@ -351,10 +360,16 @@ function renderControls(): void {
         ${slider('power W', values.preHeater ?? 0, 1500, (value) => {
           values.preHeater = value;
         })}
-        ${number('max W (0 = none)', options.preHeaterMax, (value) => {
-          options.preHeaterMax = value;
-          updateConfig();
-        })}
+        ${number(
+          'max W (0 = none)',
+          options.preHeaterMax,
+          (value) => {
+            options.preHeaterMax = value;
+            updateConfig();
+          },
+          1,
+          { min: 0, max: 4000 },
+        )}
         ${number('energy kWh', values.preHeaterEnergy ?? 8, (value) => {
           values.preHeaterEnergy = value;
         })}
