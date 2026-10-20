@@ -865,6 +865,53 @@ describe('pre-heater coil', () => {
   }
 });
 
+describe('coil glow pulse', () => {
+  afterEach(async () => {
+    await commands.emulateReducedMotion(null);
+  });
+  const sample = async (root: ShadowRoot): Promise<number[]> => {
+    const glow = element(root, 'svg path.coil-glow');
+    const values: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      values.push(parseFloat(getComputedStyle(glow).opacity));
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    }
+    return values;
+  };
+
+  test('airflow-diagram-card "Glow pulse": the glow opacity changes within 60 to 100 % of its level with animation on', async () => {
+    await commands.emulateReducedMotion('no-preference');
+    const { root } = await show(
+      400,
+      'light',
+      'auto',
+      { ...VALUES, preHeater: 1000 },
+      { pre_heater: { power: id.preHeater, max_power: 1000 } },
+    );
+    const values = await sample(root);
+    expect(Math.max(...values) - Math.min(...values)).toBeGreaterThan(0.05);
+    for (const value of values) {
+      expect(value).toBeGreaterThanOrEqual(0.6 - 0.01);
+      expect(value).toBeLessThanOrEqual(1);
+    }
+    console.info('pulse opacities (on)', values.map((v) => v.toFixed(3)).join(' '));
+  });
+
+  test('airflow-diagram-card "Glow pulse": the glow opacity stays constant with animation off', async () => {
+    await commands.emulateReducedMotion('no-preference');
+    const { root } = await show(
+      400,
+      'light',
+      'auto',
+      { ...VALUES, preHeater: 1000 },
+      { pre_heater: { power: id.preHeater, max_power: 1000 }, animation: { enabled: false } },
+    );
+    const values = await sample(root);
+    expect(new Set(values).size).toBe(1);
+    console.info('pulse opacities (off)', values.map((v) => v.toFixed(3)).join(' '));
+  });
+});
+
 describe('animated flow', () => {
   const running = (root: ShadowRoot): number =>
     [...root.querySelectorAll('.flow')].flatMap((overlay) => overlay.getAnimations()).length;

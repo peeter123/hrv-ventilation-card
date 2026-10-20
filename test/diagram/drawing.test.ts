@@ -41,10 +41,10 @@ describe('the pre-heater coil geometry', () => {
     }
   });
 
-  test('airflow-diagram-card "Coil drawn": two crests on each side', () => {
+  test('airflow-diagram-card "Coil drawn": three crests on each side', () => {
     const side = points.map((p) => distance(p) > HALF_WIDTH - 0.3);
     const crests = side.filter((near, i) => near && !side[i - 1]).length;
-    expect(crests).toBe(4);
+    expect(crests).toBe(6);
   });
 });
 

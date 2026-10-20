@@ -63,10 +63,10 @@ const TOTAL_RING_SHARE = 45;
 
 // The pre-heater coil: a smooth wave wire along the outdoor stream (the supply path's start), right of the outdoor
 // stack (x 70 at most) and left of the bypass path's first bend. Its centreline is the stream's own, its amplitude the
-// stream's half-width, so the first and last points (round caps) sit on the stream's borders. Half a wave fewer than
-// the old zigzag: from the upper border, down, up, down to the lower border (two crests on each side).
+// stream's half-width, so the first and last points (round caps) sit on the stream's borders. Three crests on each
+// side: from the upper border, down, up, down, up, down to the lower border.
 const COIL_X = { from: 102.8, to: 125.2 } as const;
-const COIL_HALF_WAVES = 3;
+const COIL_HALF_WAVES = 5;
 const COIL_SAMPLES = 48;
 
 /** A point of the supply stream's cubic centreline and its unit normal (pointing down, to the lower border). */
@@ -109,6 +109,9 @@ const COIL = coilPoints()
   .map(({ x, y }, i) => `${i === 0 ? 'M' : 'L'} ${String(x)} ${String(y)}`)
   .join(' ');
 const COIL_WIDTH = 3;
+
+/** Percent of white in the wire at full level; it falls linearly to 0 at level 0. */
+const CORE_WHITE = 45;
 
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
@@ -230,9 +233,13 @@ function coilWire({ level, color }: Coil): SVGTemplateResult {
   if (level <= 0) {
     return svg`<path class="coil off" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>`;
   }
-  const stroke = `color-mix(in srgb, ${color} ${String(rounded(glowShare(level), 1))}%, var(--secondary-text-color))`;
+  // A filament: the wire is the glow colour towards the text colour, then lightened towards white as the level rises
+  // (up to 45 % at full), so the core reads hotter and lighter than the halo of the pure glow colour behind it.
+  const heated = `color-mix(in srgb, ${color} ${String(rounded(glowShare(level), 1))}%, var(--secondary-text-color))`;
+  const stroke = `color-mix(in srgb, ${heated} ${String(rounded(100 - CORE_WHITE * level, 1))}%, white)`;
   return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${COIL_WIDTH * 1.5} stroke-linejoin="round"
-      opacity=${rounded(glowShare(level) / 100, 3)} style=${styleMap({ stroke: color })}></path>
+      opacity=${rounded(glowShare(level) / 100, 3)}
+      style=${styleMap({ stroke: color, '--glow-opacity': String(rounded(glowShare(level) / 100, 3)) })}></path>
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>`;
 }

@@ -654,15 +654,39 @@ describe('the pre-heater coil', () => {
   });
 
   test('airflow-diagram-card "Partial glow": the warm share is 30 + 70 x level, 100 % at full', async () => {
-    for (const [power, share, opacity] of [
-      ['1000', '100%', '1'],
-      ['100', '37%', '0.37'],
+    for (const [power, share, opacity, white] of [
+      ['1000', '100%', '1', '55%'],
+      ['100', '37%', '0.37', '95.5%'],
     ] as const) {
       const { root } = await render(WITH_HEATER, '0', [state(HEATER, power, 'W')]);
       expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain(share);
+      // The core is lightened towards white (45 % at full), the halo stays the pure glow colour.
+      expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain(`${white}, white`);
+      expect(root.querySelector('svg .coil-glow')?.getAttribute('style')).not.toContain('white');
       expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe(opacity);
       document.body.innerHTML = '';
     }
+  });
+
+  test('airflow-diagram-card "Glow pulse": the glow pulses while the coil is on and animation is on, not otherwise', async () => {
+    const css = [HrvVentilationCard.styles]
+      .flat()
+      .map((style) => ('cssText' in style ? style.cssText : ''))
+      .join('');
+    // The pulse is a CSS animation of the glow copy, stopped by the same two switches as the flow animation.
+    expect(css).toMatch(/\.coil-glow\s*\{[^}]*animation: hrv-glow 2\.5s ease-in-out infinite/);
+    expect(css).toMatch(/\.still \.coil-glow\s*\{\s*animation: none;?\s*\}/);
+    expect(css).toMatch(/prefers-reduced-motion: reduce\)\s*\{[^}]*\.coil-glow\s*\{\s*animation: none/);
+    const lit = [state(HEATER, '250', 'W')];
+    const on = await render(WITH_HEATER, '0', lit);
+    expect(on.root.querySelector('.drawing')?.classList.contains('still')).toBe(false);
+    expect(on.root.querySelector('svg .coil-glow')?.getAttribute('style')).toContain('--glow-opacity:0.475');
+    document.body.innerHTML = '';
+    const still = await render({ ...WITH_HEATER, animation: { enabled: false } }, '0', lit);
+    expect(still.root.querySelector('.drawing')?.classList.contains('still')).toBe(true);
+    document.body.innerHTML = '';
+    const off = await render(WITH_HEATER, '0', [state(HEATER, '0', 'W')]);
+    expect(off.root.querySelector('svg .coil-glow')).toBeNull();
   });
 
   test('airflow-diagram-card "Glow colour": a warm orange by default, pre_heater.glow_color when set', async () => {

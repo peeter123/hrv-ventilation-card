@@ -285,7 +285,7 @@ The ratio is then clamped to 0 %; where it is clamped to 100 %, both values stay
 ### Requirement: Pre-heater coil on the drawing
 With `pre_heater.power` configured, the card SHALL draw a heating coil along the outdoor-to-supply stream, between
 the outdoor symbol and the exchanger, in both layouts. The coil SHALL be a smooth, rounded wave that follows the
-stream's centreline and curvature, with two crests on each side, whose first and last points lie on the stream's two
+stream's centreline and curvature, with three crests on each side, whose first and last points lie on the stream's two
 borders. Without it no coil SHALL be drawn. The coil SHALL NOT overlap a label at any card width from 280 px.
 
 #### Scenario: Coil drawn
@@ -308,7 +308,10 @@ count as on above 0 W, in W or kW. With `pre_heater.max_power` (W) set, the glow
 capped at full and visibly on above 0 W; without it any power above 0 W SHALL glow fully. An on/off entity SHALL
 glow fully while on. While on, the share of the glow colour SHALL be 30 % + 70 % x the level, so a partial level
 already glows visibly. The glow colour SHALL be the option `pre_heater.glow_color`, a CSS colour that defaults to a
-warm orange (`#ff9800`); an invalid value SHALL be a configuration error that names the option.
+warm orange (`#ff9800`); an invalid value SHALL be a configuration error that names the option. The wire SHALL be lightened towards white as the level rises, so that at full power it reads as a lighter, hotter core against a halo of the pure glow colour. While the coil is on
+and the card's animation is on and the device does not ask for reduced motion, the glow SHALL pulse gently between its
+level and about 60 % of it in a slow cycle of about 2.5 s; with the animation off, with reduced motion or while the coil
+is off it SHALL NOT pulse.
 
 #### Scenario: Modulating pre-heater
 - **WHEN** `pre_heater.max_power` is 1000 and the pre-heater power is 250 W
@@ -334,6 +337,15 @@ warm orange (`#ff9800`); an invalid value SHALL be a configuration error that na
 - **WHEN** the pre-heater is on and `pre_heater.glow_color` is not set
 - **THEN** the coil glows in orange (`#ff9800`)
 - **AND** with `pre_heater.glow_color: rgb(255, 0, 0)` it glows in that colour
+
+#### Scenario: Filament core
+- **WHEN** the pre-heater is at full power
+- **THEN** the coil's wire is lighter than its halo, which is the glow colour itself
+
+#### Scenario: Glow pulse
+- **WHEN** the pre-heater is on and the animation is on
+- **THEN** the glow's opacity pulses between its level and about 60 % of it
+- **AND** with `animation.enabled: false`, with reduced motion, or while the pre-heater is off, it does not pulse
 
 #### Scenario: Invalid glow colour
 - **WHEN** the config sets `pre_heater.glow_color: inherit`

@@ -261,6 +261,21 @@ export class HrvVentilationCard extends HrvCard {
     }
     .coil-glow {
       filter: blur(1.5px);
+      animation: hrv-glow 2.5s ease-in-out infinite;
+    }
+    /* A gentle pulse of the glow around its level (--glow-opacity), between 60 % and 100 % of it. */
+    @keyframes hrv-glow {
+      50% {
+        opacity: calc(var(--glow-opacity) * 0.6);
+      }
+    }
+    .still .coil-glow {
+      animation: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .coil-glow {
+        animation: none;
+      }
     }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {

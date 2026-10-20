@@ -168,8 +168,8 @@ exactly as v0.2 did. The user accepted that with the move.
 The coil is a smooth wave wire along the outdoor stream over about x 102.8 to 125.2 (20 % shorter along the stream than the first draft's 100 to 128; user's feedback, round 2). Its shape is computed from the
 stream's own geometry (user's feedback, 2026-10-20: rounder, one turn fewer, following the stream's curve, ends on the
 stream's borders): `coilPoints()` in `drawing.ts` samples the supply path's cubic centreline 48 times and moves each
-sample along the path's normal by the stream's half-width (7) times `-cos(3 pi s)`, so the wire follows the curve,
-has two crests on each side (the zigzag had three) and its first and last points, with round caps, sit on the upper
+sample along the path's normal by the stream's half-width (7) times `-cos(5 pi s)`, so the wire follows the curve,
+has three crests on each side (the same as the first zigzag; two crests did not read as a coil) and its first and last points, with round caps, sit on the upper
 and the lower border. The extent is about x 104 to 123 and y 56 to 75, right of the outdoor stack at every width
 (x 70 at most) and left of the bypass path's first bend. A pure `preHeaterLevel(state, maxPower)` gives 0 to 1:
 
@@ -177,7 +177,7 @@ and the lower border. The extent is about x 104 to 123 and y 56 to 75, right of 
 - `on`: 1, `off`: 0; anything else (unavailable, unknown, text): 0.
 
 The coil's stroke is `color-mix(in srgb, <glow colour> <share>%, var(--secondary-text-color))` with
-`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow (stroke 4.5 against the wire's 3, blur 1.5 px: half the first draft's spread). At 0 it is the secondary text colour at reduced opacity: visible as a coil
+`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow, which pulses gently (below) (stroke 4.5 against the wire's 3, blur 1.5 px: half the first draft's spread). At 0 it is the secondary text colour at reduced opacity: visible as a coil
 in both themes, clearly off.
 
 - *Why not black for off?* It disappears on a dark theme. The secondary text colour follows the theme.
@@ -189,6 +189,13 @@ in both themes, clearly off.
   option, default `#ff9800`, validated by the shared validator) lets a theme or taste change it. It is named
   `glow_color` rather than `color` because editor labels are looked up by field name, and `color` is the recovery
   cards' "Temperature colour".
+- *Filament core.* Full power in the glow colour on a halo of the same colour had too little contrast (user's
+  feedback, round 3). The wire is the mix above lightened towards white by 45 % x level (55 % glow colour at full), the
+  halo stays the pure glow colour: a hot light core in an orange halo. It reads on both themes against the blue
+  stream.
+- *Pulse.* While the coil is on and `animation.enabled` is true, the glow copy's opacity pulses between its level and
+  60 % of it (CSS keyframes `hrv-glow`, 2.5 s, ease-in-out, infinite, the level passed as `--glow-opacity`). It stops
+  under `.still` and `prefers-reduced-motion: reduce`, exactly as the flow animation does. Off has no glow copy.
 - *Why a minimum of 0.1?* A modulating heater at a few percent would otherwise look off.
 
 An HTML box `.on-drawing.pre-heater` over the coil carries `title` and `aria-label` ("Pre-heater: " plus the state

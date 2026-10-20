@@ -187,7 +187,9 @@ outdoor stream, between the outdoor symbol and the bypass bend, when `pre_heater
 smooth wave that follows the stream's curve, from one border of the stream to the other. It is dim (the secondary text
 colour) while the heater is off or its entity is unavailable or unknown, and glows in `glow_color` (orange by
 default) when it heats. The glow starts bright: the share of the glow colour is 30 % plus 70 % of the level, so a
-heater at a quarter of its power already glows clearly orange:
+heater at a quarter of its power already glows clearly orange. While the coil is on and the animation is on, the glow
+pulses gently (a slow cycle of about 2.5 s, between its level and 60 % of it); with `animation.enabled: false` or while
+the device asks for reduced motion it is steady:
 
 - With a power sensor and `max_power`, the glow grows with the power as a share of the maximum. It is at least a tenth
   while the heater draws any power, so a modulating heater at a few percent does not look off, and full at the maximum

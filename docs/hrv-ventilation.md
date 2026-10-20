@@ -155,9 +155,9 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
 - **Pre-heater coil (`pre_heater.power`, drawn only with it).** A smooth wave wire along the outdoor stream
   (`coilPoints()` in `src/diagram/drawing.ts`), x 102.8 to 125.2 of the 400 by 200 drawing (28 units, then 20 % shorter along the stream, around its middle, at the user's request). It is computed from the
   supply path's own cubic (`SUPPLY_CUBIC`, the same numbers as `PATHS.supply`): 48 samples of the centreline, each
-  moved along the path's normal by the stream's half-width (7) times `-cos(3 pi s)`, `s` running 0 to 1. So the wire
+  moved along the path's normal by the stream's half-width (7) times `-cos(5 pi s)`, `s` running 0 to 1. So the wire
   follows the stream's curve and its first and last points (round caps) sit exactly on the upper and lower borders of
-  the stream (two crests on each side; the earlier zigzag had three and ended mid-stream). Its extent is about x 104
+  the stream (three crests on each side, as the first zigzag; the second draft had two, which no longer read as a coil). Its extent is about x 104
   to 123 and y 56 to 75. That is right of the outdoor stack (x 70 at most) at every width and left of the bypass
   path's first bend. Its level comes from the pure `preHeaterLevel(state, maxPower)` in
   `src/diagram/preheater.ts`, 0 to 1:
@@ -174,6 +174,17 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     a hot stream, orange as a heating element, and it stands out on the outdoor stream, which is cold whenever a
     pre-heater runs. The editor field is advanced, labelled "Glow colour" (a distinct name from the recovery cards'
     `color`, because editor labels are looked up by field name).
+  - **Filament core.** Full-power orange on an orange halo had too little contrast (user's feedback). The wire is now
+    that mix lightened towards white: `color-mix(in srgb, <mix above> (100 - 45 x level)%, white)`, so at full it is
+    55 % glow colour and 45 % white (a hot, light core), at a quarter 11 % white (still clearly partial). The halo copy
+    stays the pure glow colour, so the glow colour option drives both. Checked in light and dark: the pale core reads
+    against the orange halo and against the blue stream on both themes.
+  - **Pulse.** While the coil is on and the card's animation is on, the glow copy pulses: `.coil-glow` runs the
+    keyframes `hrv-glow` (2.5 s, ease-in-out, infinite) from its level down to 60 % of it and back. The level is the
+    CSS custom property `--glow-opacity` set on the glow path (the same value as its `opacity` attribute, which
+    stays for the static case). It is stopped exactly like the flow animation: `.still .coil-glow` (the
+    `animation.enabled: false` class) and `@media (prefers-reduced-motion: reduce)`. An off coil has no glow copy, so
+    nothing pulses.
   - **The 0.1 minimum.** A modulating heater at a few percent of its maximum would otherwise be mixed so little that
     it looks off. Any power above 0 reads as on.
   - **Tap box.** The SVG is `aria-hidden`, so it can carry neither a name nor a tap target; an HTML box `.on-drawing.pre-heater` (left 25.5 %,
