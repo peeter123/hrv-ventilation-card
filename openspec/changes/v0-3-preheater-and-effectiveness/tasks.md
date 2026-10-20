@@ -174,7 +174,7 @@
   within 1 % while the bypass is closed, the coil is dim with the tooltip
   "Pre-heater: 0 W" and opens the power sensor, the energy cell shows the sensor's state, and the top row shows no
   pre-heater figure; screenshots at desktop and phone width
-- [ ] 7.5 Update `private/installation.md` (resource `?v=`, the new config keys, the pre-heater sensors and that
+- [x] 7.5 Update `private/installation.md` (resource `?v=`, the new config keys, the pre-heater sensors and that
   they have never been above 0, the rollback to v0.2.0) and the release line in `BACKLOG.md`; verify no tracked
   file holds an entity ID with the device serial, a helper or a dashboard ID (`npm run check:ids` and a `git grep`
   for the serial prefix)
