@@ -132,7 +132,7 @@
   available, and let `pre_heater.power` count for showing the top row (design: "Pre-heater in the top row and the
   status grid"); verify label model tests for "Pre-heater on", "On/off entity on", "Pre-heater off" and "Only
   pre-heater power, pre-heater off", and a card test that a tap on it opens `pre_heater.power`
-- [ ] 6.2 Add `pre_heater.energy` to `STATUS_ROLES` at column 2, row 3, with `mdi:heating-coil`; verify tests for
+- [x] 6.2 Add `pre_heater.energy` to `STATUS_ROLES` at column 2, row 3, with `mdi:heating-coil`; verify tests for
   "Pre-heater energy cell" and that the existing "Status grid", "Unconfigured value" and "Centred cells" tests
   still pass
 - [ ] 6.3 Browser tests: the top row at 280 px with power 1032 W, the pre-heater at 1000 W and RMOT -3.5 °C has no
