@@ -151,7 +151,7 @@
   the pre-heater on and off, the pre-heater energy cell, the editor's pre-heater section with advanced settings off
   and on; 280, 400 and 600 px; light and dark) inspected by an agent, and apply the user's feedback; verify the user
   approves before the review
-- [ ] 6.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 6.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 7. Release and live migration
