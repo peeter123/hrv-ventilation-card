@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { RecoveryResult } from '../../src/calc/recovery';
-import { hasBadge, moistureFigure, savingBadge, savingTarget } from '../../src/diagram/badge';
+import { effectivenessLabel, hasBadge, moistureFigure, savingBadge, savingTarget } from '../../src/diagram/badge';
 import type { CardConfig } from '../../src/lib/config';
 import { nb } from '../nbsp';
 
@@ -183,5 +183,46 @@ describe('savingTarget', () => {
     const none = { heating: undefined, cooling: undefined };
     expect(savingTarget(result('heating', 500), none, states(reading('1'), reading('2')))).toBeUndefined();
     expect(savingTarget(undefined, BOTH, states(reading('1'), reading('2')))).toBeUndefined();
+  });
+});
+
+describe('effectivenessLabel', () => {
+  const withFigures = (temperature?: number, moisture?: number): RecoveryResult => ({
+    ...result('heating', 100),
+    effectiveness: {
+      ...(temperature === undefined ? {} : { temperature }),
+      ...(moisture === undefined ? {} : { moisture }),
+    },
+  });
+
+  test('airflow-diagram-card "Bypass closed": both figures in whole percent, no bypass', () => {
+    expect(effectivenessLabel(withFigures(92.4, 65.2), 0, true, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 %, moisture 65 %'),
+    );
+    expect(effectivenessLabel(withFigures(92.4, 65.2), undefined, true, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 %, moisture 65 %'),
+    );
+  });
+
+  test('airflow-diagram-card "Bypass modulating": a figure without a value is not measurable, the bypass follows', () => {
+    expect(effectivenessLabel(withFigures(61), 40, true, LOCALE)).toBe(
+      nb('Effectiveness: temperature 61 %, moisture not measurable (bypass 40 %)'),
+    );
+  });
+
+  test('airflow-diagram-card "Rings without a figure": no calculation leaves both not measurable', () => {
+    expect(effectivenessLabel(undefined, 0, true, LOCALE)).toBe(
+      'Effectiveness: temperature not measurable, moisture not measurable',
+    );
+  });
+
+  test('airflow-diagram-card "Rings by exchanger type": without a moisture ring the text leaves moisture out', () => {
+    expect(effectivenessLabel(withFigures(92, 65), 25, false, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 % (bypass 25 %)'),
+    );
+  });
+
+  test('the percentages are formatted with the locale and joined to their unit by a no-break space', () => {
+    expect(effectivenessLabel(withFigures(92), 0, false, { language: 'de' })).toBe('Effectiveness: temperature 92 %');
   });
 });

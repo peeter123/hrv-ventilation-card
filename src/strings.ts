@@ -228,4 +228,11 @@ export const DIAGRAM = {
   moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,
   moistureNoValue: `Moisture recovery: ${NO_VALUE}`,
+  /** The effectiveness rings' tooltip: each figure is `effectivenessPercent` or `effectivenessNoValue`. */
+  effectiveness: (temperature: string, moisture?: string, bypass?: string): string =>
+    `Effectiveness: temperature ${temperature}${moisture === undefined ? '' : `, moisture ${moisture}`}${
+      bypass === undefined ? '' : ` (bypass ${bypass}${NBSP}%)`
+    }`,
+  effectivenessPercent: (percent: string): string => `${percent}${NBSP}%`,
+  effectivenessNoValue: 'not measurable',
 } as const;

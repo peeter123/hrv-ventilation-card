@@ -95,3 +95,23 @@ export function moistureFigure(
     title: text === magnitude ? DIAGRAM.moistureRecovered(magnitude) : DIAGRAM.moistureKeptOut(magnitude),
   };
 }
+
+/**
+ * The tooltip and accessible name of the effectiveness rings: both figures in whole percent, "not measurable" for one
+ * without a value (or both without a calculation), and the bypass position while it is above 0 %. `moisture` is false
+ * where no moisture ring is drawn (an HRV, or an ERV without humidity), so the text leaves the moisture figure out.
+ */
+export function effectivenessLabel(
+  result: RecoveryResult | undefined,
+  bypass: number | undefined,
+  moisture: boolean,
+  locale: LocaleLike,
+): string {
+  const figure = (value: number | undefined): string =>
+    value === undefined ? DIAGRAM.effectivenessNoValue : DIAGRAM.effectivenessPercent(formatNumber(value, locale));
+  return DIAGRAM.effectiveness(
+    figure(result?.effectiveness.temperature),
+    moisture ? figure(result?.effectiveness.moisture) : undefined,
+    bypass !== undefined && bypass > 0 ? formatNumber(bypass, locale) : undefined,
+  );
+}

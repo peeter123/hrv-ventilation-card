@@ -7,7 +7,15 @@ import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
 import type { RecoveryResult } from '../calc/recovery';
-import { hasBadge, moistureFigure, savingBadge, savingTarget, type Badge, type MoistureFigure } from '../diagram/badge';
+import {
+  effectivenessLabel,
+  hasBadge,
+  moistureFigure,
+  savingBadge,
+  savingTarget,
+  type Badge,
+  type MoistureFigure,
+} from '../diagram/badge';
 import { drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
 import { flowSpeed } from '../diagram/flow';
 import { isCompact, labelModel, STATUS_CELLS, type DiagramLabel, type LayoutChoice } from '../diagram/labels';
@@ -25,6 +33,7 @@ import {
   type RolePath,
   type Stream,
 } from '../lib/config';
+import { numericValue } from '../lib/availability';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { formatState, stateOf } from '../lib/hass';
@@ -206,6 +215,17 @@ export class HrvVentilationCard extends HrvCard {
     .moisture-recovery {
       left: 50%;
       transform: translateX(-50%);
+    }
+    /*
+     * Over the exchanger (x 145 to 255, y 26 to 174 of 400 by 200), in its hexagon: only a tooltip and a name for the
+     * rings, so it is first in the DOM and everything else on the exchanger stays on top of it.
+     */
+    .effectiveness {
+      top: 13%;
+      left: 36.25%;
+      width: 27.5%;
+      height: 74%;
+      clip-path: polygon(28% 0, 72% 0, 100% 50%, 72% 100%, 28% 100%, 0 50%);
     }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {
@@ -563,6 +583,12 @@ export class HrvVentilationCard extends HrvCard {
     const moisture = moistureFigure(result, settings, locale);
     const { states } = hass;
     const { temperatures, flows } = settings;
+    const rings = effectivenessLabel(
+      result,
+      numericValue(stateOf(states, settings.bypass)),
+      settings.moistureRing,
+      locale,
+    );
     const art = drawing({
       ids: this.ids,
       exchanger: settings.exchanger,
@@ -592,6 +618,11 @@ export class HrvVentilationCard extends HrvCard {
           (stream) =>
             html`<div class="corner ${stream}">${model.corners[stream].map((label) => this.label(label))}</div>`,
         )}
+        ${
+          settings.rings
+            ? html`<div class="on-drawing effectiveness" role="img" aria-label=${rings} title=${rings}></div>`
+            : nothing
+        }
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
         ${badge ? html`<div class="on-drawing saving">${this.badge(badge, savingTarget(result, settings.savings, states))}</div>` : nothing}
         ${this.moistureFigure(moisture)}

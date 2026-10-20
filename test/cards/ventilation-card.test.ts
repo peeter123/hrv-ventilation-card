@@ -561,6 +561,76 @@ describe('the effectiveness rings', () => {
     expect(attribute(root, 'svg .ring.moisture', 'stroke-dasharray')).toBe('0 100');
     expect(root.querySelectorAll('svg .ring-track')).toHaveLength(2);
   });
+
+  const box = (root: ShadowRoot): HTMLElement | null => root.querySelector<HTMLElement>('.on-drawing.effectiveness');
+
+  test('airflow-diagram-card "Bypass closed": the box is an image named "Effectiveness: temperature 92 %, moisture 65 %"', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '0', SOURCE);
+    const text = nb('Effectiveness: temperature 92 %, moisture 65 %');
+    expect(box(root)?.getAttribute('role')).toBe('img');
+    expect(box(root)?.getAttribute('aria-label')).toBe(text);
+    expect(box(root)?.title).toBe(text);
+  });
+
+  test('airflow-diagram-card "Bypass modulating": the box names the bypass position too', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '40', [
+      ...SOURCE,
+      state('sensor.hrv_supply_t', '12.2', '°C'),
+      // No moisture gradient left.
+      state('sensor.hrv_extract_ah', '2', 'g/m³'),
+    ]);
+    expect(box(root)?.title).toBe(nb('Effectiveness: temperature 61 %, moisture not measurable (bypass 40 %)'));
+  });
+
+  test('airflow-diagram-card "Rings without a figure": the box says so when there is no calculation', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '0', [
+      ...SOURCE,
+      state('sensor.hrv_supply_flow', 'unavailable'),
+    ]);
+    expect(box(root)?.title).toBe('Effectiveness: temperature not measurable, moisture not measurable');
+  });
+
+  test('airflow-diagram-card "Rings by exchanger type": an HRV box names the temperature only', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'hrv' }, '0', SOURCE);
+    expect(box(root)?.title).toBe(nb('Effectiveness: temperature 92 %'));
+  });
+
+  test('the box is only there with the option on, and comes before the other boxes', async () => {
+    const { show_effectiveness: _off, ...left } = RINGS;
+    expect(box((await render(left, '0', SOURCE)).root)).toBeNull();
+    document.body.innerHTML = '';
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '40', SOURCE);
+    const boxes = [...root.querySelectorAll('.on-drawing')];
+    expect(boxes.indexOf(box(root) as Element)).toBe(0);
+    expect(boxes.length).toBeGreaterThan(1);
+  });
+
+  test('airflow-diagram-card "Rings are labelled": a tap on the box opens nothing, the badge and the figure keep theirs', async () => {
+    const status = {
+      heating_saving: 'sensor.hrv_heating_saving',
+      cooling_saving: 'sensor.hrv_cooling_saving',
+      moisture_recovery: 'sensor.hrv_moisture',
+    };
+    const { card, root } = await render({ ...RINGS, status, exchanger_type: 'erv' }, '0', [
+      ...SOURCE,
+      state(status.heating_saving, '400', 'W'),
+      state(status.cooling_saving, '0', 'W'),
+      state(status.moisture_recovery, '400', 'g/h'),
+    ]);
+    const opened: string[] = [];
+    card.addEventListener('hass-more-info', (event) => {
+      opened.push((event as CustomEvent<{ entityId: string }>).detail.entityId);
+    });
+    const exchanger = box(root);
+    exchanger?.click();
+    keydown(exchanger as Element, 'Enter');
+    expect(opened).toEqual([]);
+    expect(exchanger?.hasAttribute('data-entity')).toBe(false);
+    expect(exchanger?.hasAttribute('tabindex')).toBe(false);
+    root.querySelector<HTMLElement>('.saving .badge')?.click();
+    root.querySelector<HTMLElement>('.moisture-recovery .figure')?.click();
+    expect(opened).toEqual([status.heating_saving, status.moisture_recovery]);
+  });
 });
 
 describe('checkDiagramConfig', () => {

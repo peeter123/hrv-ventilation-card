@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { describe, expect, test } from 'vitest';
 import * as strings from '../src/strings';
-import { configError, MOISTURE, NO_VALUE, RECOVERY, ROLE_LABELS } from '../src/strings';
+import { configError, DIAGRAM, MOISTURE, NO_VALUE, RECOVERY, ROLE_LABELS } from '../src/strings';
 import { nb } from './nbsp';
 
 // Every source file except strings.ts, as text. unit-state.ts holds the one state the unit reports ('n/a' for no
@@ -185,6 +185,17 @@ describe('texts', () => {
   test('the bypass explanation keeps the wording of the current card', () => {
     expect(MOISTURE.bypass('40')).toBe(
       nb('Bypass 40 % — part of the supply air skips the exchanger, so less is recovered (intended, free cooling)'),
+    );
+  });
+
+  test('airflow-diagram-card "Rings are labelled": the effectiveness texts, with a no-break space before %', () => {
+    const { effectiveness, effectivenessPercent, effectivenessNoValue } = DIAGRAM;
+    expect(effectivenessPercent('92')).toBe('92 %');
+    expect(effectivenessNoValue).toBe('not measurable');
+    expect(effectiveness('92', '65')).toBe('Effectiveness: temperature 92, moisture 65');
+    expect(effectiveness('92')).toBe('Effectiveness: temperature 92');
+    expect(effectiveness(effectivenessPercent('61'), effectivenessNoValue, '40')).toBe(
+      nb('Effectiveness: temperature 61 %, moisture not measurable (bypass 40 %)'),
     );
   });
 
