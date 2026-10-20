@@ -222,7 +222,17 @@ describe('effectivenessLabel', () => {
     );
   });
 
+  test('the bypass part follows the whole percent shown: 0.3 gives none, 0.6 gives "bypass 1 %"', () => {
+    expect(effectivenessLabel(withFigures(92), 0.3, false, LOCALE)).toBe(nb('Effectiveness: temperature 92 %'));
+    expect(effectivenessLabel(withFigures(92), 0.6, false, LOCALE)).toBe(
+      nb('Effectiveness: temperature 92 % (bypass 1 %)'),
+    );
+  });
+
   test('the percentages are formatted with the locale and joined to their unit by a no-break space', () => {
-    expect(effectivenessLabel(withFigures(92), 0, false, { language: 'de' })).toBe('Effectiveness: temperature 92 %');
+    // Arabic-Indic digits, so a label that ignored the locale would fail.
+    expect(effectivenessLabel(withFigures(92), 40, false, { language: 'ar-EG' })).toBe(
+      'Effectiveness: temperature ٩٢ % (bypass ٤٠ %)',
+    );
   });
 });

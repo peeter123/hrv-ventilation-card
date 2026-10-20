@@ -86,8 +86,9 @@ moisture, distinct from the default red and blue.
 
 The tooltip and accessible name are an HTML box over the exchanger: `.on-drawing.effectiveness` with the
 exchanger's bounding box (x 145 to 255, y 26 to 174) clipped to the hexagon, `role="img"`, `aria-label` and `title`
-from a pure `effectivenessLabel(result, bypass, locale)` with the texts in `src/strings.ts` (NBSP before %). It
-comes before the other boxes in the DOM, so the bypass position, the badge and the moisture figure stay on top and
+from a pure `effectivenessLabel(result, bypass, moisture, locale)` with the texts in `src/strings.ts` (NBSP before
+%). `moisture` is the moisture ring's condition (an ERV with humidity for every stream), so an HRV's label names only
+the temperature. It comes before the other boxes in the DOM, so the bypass position, the badge and the moisture figure stay on top and
 keep their own tooltips and taps.
 
 ### The pre-heater coil: SVG for the look, an HTML box for the tap

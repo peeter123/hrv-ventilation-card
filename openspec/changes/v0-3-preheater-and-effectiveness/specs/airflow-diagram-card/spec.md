@@ -173,9 +173,9 @@ ring SHALL be empty, with its track still drawn, so the exchanger does not chang
 - **THEN** both rings are empty and their tracks are drawn
 
 ### Requirement: Rings are labelled
-The rings SHALL have a tooltip and an accessible name with both figures in whole percent, naming them as the unit's
-effectiveness, with "not measurable" for a figure without a value. While the bypass is above 0 % the text SHALL
-also give the bypass position. The rings SHALL NOT be tappable.
+The rings SHALL have a tooltip and an accessible name with the figure of each drawn ring in whole percent, naming
+them as the unit's effectiveness, with "not measurable" for a figure without a value. While the bypass is above 0 %
+the text SHALL also give the bypass position. The rings SHALL NOT be tappable.
 
 #### Scenario: Bypass closed
 - **WHEN** the temperature effectiveness is 92 %, the moisture effectiveness 65 % and the bypass 0 %
