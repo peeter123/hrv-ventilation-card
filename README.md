@@ -116,11 +116,11 @@ supply air (bottom right, into the house), extract air (top right) to the exhaus
 shows its temperature and humidities and is coloured by its temperature; the supply and exhaust flow show below
 the tips of their arrows, the bypass position at the top of the exchanger and the saving badge, shaped like the
 exchanger, on its centre. On an energy recovery unit (`exchanger_type: erv`) the exchanger is blue-grey instead of
-grey and shows the moisture it recovers right of the exchanger. A top row holds the season (left), the power (centred) and
-the running mean outdoor temperature (right), and a status grid below the drawing the fan level, the bypass mode
-and the unit's status.
-Every label there has an icon in front (lightning bolt for power, fan, crossing arrows for the bypass, timer, cog,
-thermometer, thermostat, air filter, thermometer with lines for RMOT), centred on its text, and a tooltip with its
+grey and shows the moisture it recovers right of the exchanger. A top row holds the season (left), the power (centred,
+followed by the pre-heater's power while it heats) and the running mean outdoor temperature (right), and a status grid
+below the drawing the fan level, the bypass mode, the unit's status and the pre-heater's energy.
+Every label there has an icon in front (lightning bolt for power, heating coil for the pre-heater, fan, crossing arrows
+for the bypass, timer, cog, thermometer, thermostat, air filter, thermometer with lines for RMOT), centred on its text, and a tooltip with its
 name and state. Each status value is centred in its column; one too long for it ends in an ellipsis. Every label opens
 Home Assistant's more-info dialog of its sensor, and shows the state as Home Assistant formats it (unit, display
 precision, number format). Options marked "Advanced" are shown in the visual editor when its "Advanced settings"
@@ -133,7 +133,7 @@ switch is on.
 ![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture recovery right of it](docs/images/diagram-erv.png)
 
 Only the four stream temperatures are required. Every other role is optional and leaves its label out when not
-configured. The top row is shown while power, the running mean outdoor temperature or a season sensor is configured,
+configured. The top row is shown while power, the pre-heater power, the running mean outdoor temperature or a season sensor is configured,
 the status grid while one of its roles is; a row does not come and go with the states, so the card keeps its height.
 
 | Name | Type | Default | Advanced | Description |
@@ -178,7 +178,7 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
 | `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
-| `energy` | entity | | | The pre-heater's energy sensor. Reserved for the status grid; the card does not show it yet. |
+| `energy` | entity | | | The pre-heater's energy sensor. Shown in the status grid (second column, bottom cell, heating coil icon). |
 | `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000). Without it the coil glows fully at any power above 0. |
 | `glow_color` | color | `#ff9800` | yes | The colour the coil glows in while the heater is on: a CSS colour, by default a warm orange. |
 
@@ -200,6 +200,19 @@ the device asks for reduced motion it is steady:
 
 Hovering the coil shows "Pre-heater: " and the state as Home Assistant formats it; tapping it opens the more-info
 dialog of `pre_heater.power`.
+
+The same state also shows in the top row, in the centre after the power, with a heating coil icon and the tooltip
+"Pre-heater: " and the state; tapping it opens `pre_heater.power`. It is there only while the pre-heater is on and
+its entity is available. Otherwise it is left out, not hidden, so the power stays centred while the heater is off.
+`pre_heater.power` alone is enough to show the top row. The two figures stand side by side: the card adds them up
+nowhere and shows no share, because whether a unit's power reading includes its pre-heater differs per unit.
+
+`pre_heater.energy` shows in the status grid in the second column's bottom cell, after a heating coil, with the tooltip
+"Pre-heater energy: " and its state (for example "12 kWh"); tapping it opens that sensor. Without a next fan change
+the cell above it stays empty as before.
+
+In the visual editor the pre-heater has its own group after the status group. The basic fields are the power
+(a sensor, binary sensor or switch) and the energy (a sensor); the maximum power and the glow colour are advanced.
 
 #### Seasons object
 

@@ -197,7 +197,6 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     (`coilBox()`, set inline), so they follow the coil. It carries `title` and `aria-label`
     ("Pre-heater: " plus the state as Home Assistant formats it) and, through `this.tap()`, `data-entity` for
     `pre_heater.power`, so the tap, the focus and sample mode work as for every other label.
-  - `pre_heater.energy` is only a configurable role for now: no label or grid cell shows it yet.
 - **Effectiveness rings (`show_effectiveness`, off by default).** Two rings that are parts of the exchanger, drawn
   between its fill and its outlines (order: fill, moisture ring, outlines, total ring with its track), with the
   streams on top, so the streams cover them (drawn above the streams, the rings would cut the air paths in four
@@ -274,8 +273,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   forced full layout) the supply label is a little lower (`top: 82%` instead of 79%) so it clears the bypass path
   as it rises to the supply arrow at 100 % bypass.
 - **Top row and status grid.** The season icon (left), power (centre) and RMOT (right) sit above the drawing; the
-  fan level, bypass mode, operating mode, temperature profile, target temperature, next changes and filter days sit
-  in a three-column grid below it, each cell fixed so nothing moves when a value changes, each value centred in its
+  fan level, bypass mode, operating mode, temperature profile, target temperature, next changes, filter days and the
+  pre-heater energy sit in a three-column grid below it, each cell fixed so nothing moves when a value changes, each value centred in its
   column. Every label has an icon and a tooltip and opens the more-info dialog of its sensor. A label is an inline
   flex box, so its icon is centred on the text whatever the font (`vertical-align` left Home Assistant's icon 2 px
   low, and `middle` centres on the x-height); the ellipsis of a value too long for its cell is on the `.value` span,
@@ -284,6 +283,17 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   icon. The preview's `ha-icon` stub has Home Assistant's structure (an inline host around an inline-flex icon box
   aligned to the middle), and the browser test measures the svg each icon draws, not its host, so it catches an
   offset of the drawn icon.
+  - **Pre-heater figure.** The centre cell holds power and, after it, the pre-heater state with `mdi:heating-coil`
+    ("Pre-heater: <state>", tap opens `pre_heater.power`), a centred flex box with a gap, so the pair widens around
+    the middle. It is given only while the level is above 0 and the entity is available, and otherwise left out of
+    the DOM rather than kept invisible like other labels: an invisible label would push power off-centre all summer.
+    The top row's height does not depend on it, so leaving it out changes no height. `pre_heater.power` counts for
+    showing the top row.
+  - **Energy cell.** `pre_heater.energy` is a status role in column 2, row 3 (the cell under the next fan change;
+    the filter days stay in column 1's bottom cell), with the heating coil icon, the tooltip "Pre-heater energy: <state>" and its tap.
+  - **No sum, no share.** The figure stands side by side with power. Whether a unit's power reading includes its
+    pre-heater differs per unit and could not be confirmed on the live one, so adding the two or showing a share
+    could double count or understate. No follow-up is planned (proposal, non-goals).
 - **Seasons.** With both season sensors configured and both off, the top row shows the "between seasons" icon.
 - **Layout.** `layout: auto` switches to compact below 340 px card width. A narrow desktop sections column is about
   350 px and a full-width card on a 360 px phone about 344 px, so both show the full layout.
