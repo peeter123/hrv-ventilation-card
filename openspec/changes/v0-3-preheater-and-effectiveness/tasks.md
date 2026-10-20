@@ -65,7 +65,7 @@
   counts", "Free cooling", "Ratio below 0", "Ratio above 100", "Small gradient", "Humid summer day", "One figure
   gated", "No humidity configured" and "Golden vectors", and a test that the figure equals the recovery card's
   header percentage within 1 % on every vector set
-- [ ] 4.2 Fuse the rings with the exchanger in `drawing()` (design: "The rings"): the moisture ring along the rim's
+- [x] 4.2 Fuse the rings with the exchanger in `drawing()` (design: "The rings"): the moisture ring along the rim's
   midline at the rim's widest width, clipped to the rim (a clip ID per card instance), the empty rim as its track and
   the outlines drawn over it, in `--erv-ring`; the total ring on the inner outline in the mode colour mixed with the
   theme's primary text colour; set the preview page's "small gradient" scenario to 2 K and 0.3 g/m³ (design:
