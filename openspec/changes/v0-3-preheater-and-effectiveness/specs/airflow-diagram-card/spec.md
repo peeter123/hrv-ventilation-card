@@ -108,20 +108,71 @@ temperature profile, saved heating power, saved cooling power and moisture recov
   and the colours, layout, unavailable values, nominal flow and a calculation section with smoothing and air
   density appear
 
+### Requirement: Labels on the drawing
+Each stream's temperature and humidities SHALL be shown next to that stream's end on the drawing, the bypass
+position at the top of the exchanger, just inside its outline, the saving badge on its centre and, on an ERV, the
+moisture recovery figure right of the exchanger, at the height of its centre and the house symbol's. The supply and
+exhaust flow SHALL be shown below the tip of the supply and the exhaust arrow, clear of the bypass path. With the
+automatic layout, labels SHALL NOT overlap each other or the arrowheads and SHALL NOT extend outside the card at any
+card width from 280 px.
+
+#### Scenario: Stream labels
+- **WHEN** the outdoor air entities are configured
+- **THEN** the outdoor temperature and humidities are shown next to the outdoor end of the outdoor-to-supply stream
+
+#### Scenario: Flow labels
+- **WHEN** the supply and exhaust flow entities are configured and the layout is full
+- **THEN** the supply flow is shown below the supply arrow's tip and the exhaust flow below the exhaust arrow's tip,
+  clear of the bypass path at 100 % and of the corner labels
+
+#### Scenario: ERV at the narrowest width
+- **WHEN** the type is ERV, the bypass is at 50 % and the card is 280 px wide
+- **THEN** the bypass position and the badge are inside the exchanger and the moisture figure right of it, between
+  the exchanger and the house symbol, without overlapping
+
+### Requirement: Moisture recovery figure on ERV
+With `exchanger_type: erv` and the badge's inputs configured, the card SHALL show the calculated moisture recovery
+rate in g/h right of the exchanger, centred at the height of the exchanger's centre and the house symbol's, between
+the two and clear of the streams. The figure SHALL show the rate's magnitude without a sign, after an icon that
+gives the direction: `mdi:water-plus` while moisture is recovered (a rate of 0 or more) and `mdi:water-minus` while
+it is kept out. The tooltip SHALL name the direction with the magnitude. Where the figure does not fit on one line,
+its unit SHALL go to a second line.
+
+#### Scenario: Moisture recovered
+- **WHEN** the type is ERV and the calculated moisture recovery rate is 120 g/h
+- **THEN** right of the exchanger a water-plus icon is followed by "120 g/h", with the tooltip "Moisture recovered:
+  120 g/h"
+
+#### Scenario: Moisture kept out
+- **WHEN** the type is ERV and the calculated moisture recovery rate is -418 g/h
+- **THEN** right of the exchanger a water-minus icon is followed by "418 g/h", without a minus sign, with the
+  tooltip "Moisture kept out: 418 g/h"
+
+#### Scenario: Four-digit rate on a narrow card
+- **WHEN** the type is ERV, the rate is -1500 g/h and the card is 280 to 600 px wide, in both layouts
+- **THEN** the figure stays clear of the exchanger, the house symbol, the streams and the corner labels, and its
+  text stays at least 11 px high
+
+#### Scenario: Input unavailable
+- **WHEN** the type is ERV and the supply flow entity is unavailable
+- **THEN** the moisture figure is hidden, or shows "n/a" when the show-unavailable option is on, like the badge
+
+#### Scenario: HRV
+- **WHEN** the type is HRV and humidity is configured for the three streams
+- **THEN** no moisture recovery figure is shown
+
 ## ADDED Requirements
 
 ### Requirement: Effectiveness rings
-With `show_effectiveness: true` (default false) and the calculation's inputs configured (humidity only for the moisture
-ring), the card SHALL draw two progress
-rings on the exchanger, both starting at the top centre and running clockwise: the moisture effectiveness along the
-outer rim and the temperature effectiveness along the inner outline. Each SHALL be as long as its figure from the
-shared calculation, 0 to 100 % of the way round, over a faint full-length track.
+With `show_effectiveness: true` (default false) and the calculation's inputs configured (humidity only for the
+moisture ring), the card SHALL draw two progress rings on the exchanger from its top centre, clockwise: the
+moisture effectiveness in the rim and the total effectiveness along the inner outline, each as long as its figure
+from the shared calculation, 0 to 100 % of the way round.
 
 #### Scenario: Heating with both figures
-- **WHEN** the type is ERV, the option is on and the temperature effectiveness is 92 % and the moisture effectiveness
-  65 %
-- **THEN** the inner ring runs 92 % of the way round the inner outline and the outer ring 65 % of the way round the
-  rim
+- **WHEN** the type is ERV, the option is on and the total effectiveness is 92 % and the moisture effectiveness 65 %
+- **THEN** the inner ring runs 92 % of the way round the inner outline and the rim is filled 65 % of the way round,
+  from the outer to the inner outline
 
 #### Scenario: Option off
 - **WHEN** the config does not set `show_effectiveness`
@@ -135,39 +186,58 @@ shared calculation, 0 to 100 % of the way round, over a faint full-length track.
 - **WHEN** the option is on and the card is 320 px wide with the automatic layout
 - **THEN** the rings are drawn as in the full layout
 
+### Requirement: Rings are part of the exchanger
+The moisture ring SHALL cover the rim's full width from the outer to the inner outline and nothing outside it, with
+the empty rim as its track, and the outlines SHALL stay drawn over it. The total ring SHALL run over a faint
+full-length track.
+
+#### Scenario: Full moisture ring
+- **WHEN** the type is ERV, the option is on and the moisture effectiveness is 100 %
+- **THEN** the whole rim is filled from outline to outline, and nothing outside the outer outline or inside the
+  inner outline is
+
 ### Requirement: Rings by exchanger type
-An HRV SHALL show only the temperature ring, with the rim left as it is. An ERV SHALL show both rings while every
-stream has a humidity, and only the temperature ring otherwise.
+An HRV SHALL show only the total ring, with the rim left as it is. An ERV SHALL show both rings while every stream
+has a humidity, and only the total ring otherwise.
 
 #### Scenario: HRV with humidity sensors
 - **WHEN** the type is HRV, the option is on and humidity is configured for the three streams
-- **THEN** only the inner ring and its track are drawn
+- **THEN** only the inner ring and its track are drawn, and the inner ring includes the lost latent heat
 
 #### Scenario: ERV without humidity
 - **WHEN** the type is ERV, the option is on and no humidity entities are configured
 - **THEN** only the inner ring and its track are drawn
 
 ### Requirement: Ring colours
-The temperature ring SHALL be drawn in the warm colour in heating mode and the cold colour in cooling mode, the
-moisture ring in a blue-teal distinct from both. Both rings SHALL stay visible against the HRV and the ERV fill in
-light and dark themes, and SHALL NOT reduce the contrast of the badge or the moisture figure.
+The total ring SHALL be drawn in the warm colour in heating mode and the cold colour in cooling mode, mixed towards
+the theme's primary text colour so that it keeps a contrast of at least 3:1 against the exchanger's fill and the
+moisture ring, on the HRV and the ERV fill, in light and dark themes, for the default colours. The rings SHALL NOT
+reduce the contrast of the badge or the bypass position.
 
 #### Scenario: Cooling mode
 - **WHEN** the calculation is in cooling mode and the option is on
-- **THEN** the inner ring is drawn in the configured cold colour
+- **THEN** the inner ring is drawn in the configured cold colour mixed towards the text colour, at least 3:1 against
+  the fill and the moisture ring
+
+### Requirement: Moisture ring colour
+The moisture ring SHALL be a darker shade of the ERV fill's blue-grey on a light theme and a stronger one on a dark
+theme, distinguishable from the empty rim by at least 1.2:1, not the moisture bar card's teal.
+
+#### Scenario: Moisture ring in both themes
+- **WHEN** the type is ERV and the option is on, in the light and the dark preview theme
+- **THEN** the filled part of the rim is blue-grey and differs from the empty part by at least 1.2:1
 
 #### Scenario: Text on the exchanger
 - **WHEN** the option is on and the type is ERV, in the light and the dark preview theme
-- **THEN** the badge and the moisture figure keep a contrast of at least 4.5:1, and the rings and the streams do not
-  cover the badge or the bypass position; where a ring meets the moisture figure on a narrow card, the figure has a
-  halo in the exchanger's colour, so it keeps 4.5:1 against its halo and stays at least 11 px high
+- **THEN** the badge keeps a contrast of at least 4.5:1, and the rings and the streams do not cover the badge or the
+  bypass position
 
 ### Requirement: Rings without a figure
 While a figure is not measurable (its gradient below the calculation's gate) or the calculation has no value, its
 ring SHALL be empty, with its track still drawn, so the exchanger does not change shape.
 
-#### Scenario: Small temperature gradient
-- **WHEN** the option is on and the extract air is 22 °C and the outdoor air 20 °C
+#### Scenario: Small gradient
+- **WHEN** the option is on and the extract air is 22 °C and the outdoor air 20 °C at the same absolute humidity
 - **THEN** the inner ring is empty and its track is drawn
 
 #### Scenario: Input unavailable
@@ -176,16 +246,34 @@ ring SHALL be empty, with its track still drawn, so the exchanger does not chang
 
 ### Requirement: Rings are labelled
 The rings SHALL have a tooltip and an accessible name with the figure of each drawn ring in whole percent, naming
-them as the unit's effectiveness, with "not measurable" for a figure without a value. While the bypass is above 0 %
-the text SHALL also give the bypass position. The rings SHALL NOT be tappable.
+them as the unit's effectiveness, the total figure by the mode ("heat", "cooling" or "free cooling"), with "not
+measurable" for a figure without a value. While the bypass is above 0 % the text SHALL also give the bypass
+position. The rings SHALL NOT be tappable.
+
+#### Scenario: Figure not measurable
+- **WHEN** the unit is heating, the total effectiveness is not measurable and the type is HRV
+- **THEN** the tooltip reads "Effectiveness: heat not measurable"
+
+### Requirement: Ring tooltip gives absolute values
+In the rings' tooltip and accessible name, a figure with a value SHALL be followed by its absolute values as
+magnitudes: for the total figure the recovered total and the potential in W, sensible plus latent as on the recovery
+balance card; for the moisture figure the recovered and the extracted moisture in g/h.
 
 #### Scenario: Bypass closed
-- **WHEN** the temperature effectiveness is 92 %, the moisture effectiveness 65 % and the bypass 0 %
-- **THEN** the tooltip reads "Effectiveness: temperature 92 %, moisture 65 %"
+- **WHEN** the unit is heating with the bypass at 0 %, recovers 1,200 W of a 1,304 W potential (92 %) and 390 of
+  600 g/h extracted moisture (65 %)
+- **THEN** the tooltip reads "Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 % (390 / 600 g/h)"
 
 #### Scenario: Bypass modulating
-- **WHEN** the temperature effectiveness is 61 %, the moisture effectiveness is not measurable and the bypass 40 %
-- **THEN** the tooltip reads "Effectiveness: temperature 61 %, moisture not measurable (bypass 40 %)"
+- **WHEN** the unit is free cooling with the bypass at 40 %, delivers 610 W of a 1,000 W potential (61 %) and the
+  moisture effectiveness is not measurable
+- **THEN** the tooltip reads "Effectiveness: free cooling 61 % (610 / 1,000 W), moisture not measurable
+  (bypass 40 %)"
+
+#### Scenario: Moisture kept out of the house
+- **WHEN** the unit is cooling with the bypass at 0 %, recovers 760 W of a 1,000 W potential, and at 200 m³/h the
+  outdoor air holds 14.0 g/m³, the supply 13.0 g/m³ and the extract 12.0 g/m³
+- **THEN** the tooltip reads "Effectiveness: cooling 76 % (760 / 1,000 W), moisture 50 % (200 / 400 g/h)"
 
 ### Requirement: Pre-heater coil on the drawing
 With `pre_heater.power` configured, the card SHALL draw a heating coil across the outdoor-to-supply stream, between

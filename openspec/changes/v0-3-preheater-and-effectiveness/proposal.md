@@ -12,13 +12,20 @@ shows the defaults of unset options without writing them, and no spec describes 
 ## What Changes
 
 - **Effectiveness rings (airflow card).** A new option `show_effectiveness` (off by default) draws two progress rings
-  on the exchanger. The moisture effectiveness runs around the outer rim and the temperature effectiveness around the
-  inner outline, both clockwise from the top centre. The figures are the unit's supply-side effectiveness,
-  `(X_sup - X_out) / (X_ext - X_out)`, for temperature and absolute humidity. They are capped to 0-100 %, shown also
-  while the bypass modulates, and left empty below a minimum indoor-outdoor gradient (3 K, 1.5 g/m³). An HRV gets
-  the temperature ring only. The numbers are in the exchanger's tooltip and accessible name, not drawn.
+  that are part of the exchanger. The moisture effectiveness fills the rim between the outer and the inner outline,
+  in a darker shade of the ERV's blue-grey, and the total effectiveness runs along the inner outline in the mode's
+  colour, mixed for contrast, both clockwise from the top centre. The total effectiveness is the recovery balance
+  card's recovered percentage (latent heat included, so lost latent heat lowers it); the moisture effectiveness is
+  `(AH_sup - AH_out) / (AH_ext - AH_out)`. They are capped to 0-100 %, shown also while the bypass modulates, and
+  left empty below a minimum indoor-outdoor gradient (the enthalpy of 3 K of dry air, 1.5 g/m³). An HRV gets the
+  total ring only. The numbers, with their absolute values (W and g/h), are in the exchanger's tooltip and accessible
+  name, not drawn.
 - **Effectiveness in the calculation.** The shared calculation gives both figures with their gates. The golden
-  vectors are extended from the macro's `eff_sensible` and `eff_moisture` kinds.
+  vectors are extended from the macro's `eff_moisture` kind; the total figure is checked against the macro's
+  recovered and lost power.
+- **Moisture figure and flow labels (airflow card).** The ERV's moisture recovery figure moves out of the exchanger
+  to its right, at the height of the house symbol, with a water-plus or water-minus icon instead of a sign. The flow
+  labels move below their arrowheads to make room. This changes the look of existing configs.
 - **Pre-heater on the drawing.** A new optional role `pre_heater.power` takes a power sensor or an on/off entity.
   A heating coil drawn on the outdoor stream, between the outdoor symbol and the exchanger, glows by the power:
   dim while off, glowing while on, in proportion to the new option `pre_heater.max_power` when it is set. Hovering it
@@ -56,8 +63,8 @@ None.
   (top row figure, status cell), `src/diagram/options.ts`, `src/lib/config.ts` (two roles),
   `src/cards/ventilation-card.ts`, `src/editor/diagram-schema.ts`, `src/lib/sample.ts` (pre-heater sample states),
   `src/strings.ts`, the preview page in `dev/`, `test/vectors.json` and the tests in `test/`.
-- Config: additive only. Existing configs render as before: the rings are off by default and the pre-heater roles
-  are optional.
+- Config: additive only. Existing configs render as before, apart from the moved moisture figure and flow labels:
+  the rings are off by default and the pre-heater roles are optional.
 - Docs: `README.md` (options tables, screenshots), `docs/hrv-ventilation.md` (effectiveness of the unit, the
   pre-heater), `docs/images/`, `private/installation.md` (migration, resource `?v=`), and `BACKLOG.md`.
 - Live installation: both dashboards' diagram cards, the Lovelace resource version and a release `v0.3.0` of

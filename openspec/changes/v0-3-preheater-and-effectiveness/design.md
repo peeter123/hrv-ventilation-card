@@ -32,7 +32,8 @@ See proposal.md for the motivation. The facts below come from the code and the l
 
 - Pure functions for every new figure (effectiveness, glow level, tooltips), unit-tested, with the card only placing
   them. Browser tests that measure placement, as for the moisture figure.
-- Existing configs render exactly as in v0.2: rings off by default, no coil without the role.
+- Existing configs render as in v0.2, apart from the moisture figure and the flow labels, which move for every config
+  (see "Moisture figure and flow labels"): rings off by default, no coil without the role.
 - Every new state can be shown on the preview page, because the live pre-heater stays off.
 
 **Non-Goals:**
@@ -44,70 +45,113 @@ See proposal.md for the motivation. The facts below come from the code and the l
 
 ### Effectiveness is part of the recovery result
 
-`RecoveryResult` gets `effectiveness: { temperature?: number; moisture?: number }`, computed in `calculateRecovery`
-from the same inputs (raw temperatures, smoothed absolute humidity), capped to 0-100, and left out below its
-gradient (3 K, 1.5 g/m³, as constants next to the formula) or, for moisture, while latent figures are unknown.
-There is no bypass gate.
+`RecoveryResult` gets `effectiveness: { total?: number; moisture?: number }`, computed in `calculateRecovery` from the
+same inputs (raw temperatures, smoothed absolute humidity), capped to 0-100, and left out below its gradient or, for
+moisture, while latent figures are unknown. There is no bypass gate.
 
-- *Why in the result and not a separate function?* The rings need the badge's inputs (less the humidities), at the same moment.
-  One calculation per render keeps the badge, the moisture figure and the rings consistent, as for the moisture
-  figure. A missing input then empties both rings, which the spec states.
+- *Total:* the recovered total divided by the recovered and lost total, per m³ and before any rounding: the recovery
+  balance card's recovered percentage, in every mode. Heating gives (h_sup - h_out) / (h_ext - h_out), cooling against
+  the outdoor air the same ratio, and free cooling (h_ext - h_sup) / (h_ext - h_out), the share of the cooling
+  delivered, as the card's header says then. Without humidity the enthalpies are sensible only, so it is the
+  temperature ratio. The gate is the enthalpy difference of extract and outdoor air: at least air density × 1006 × 3
+  J/m³, the 3 K of dry air the temperature figure had, so a humid summer day with 1 K between the temperatures still
+  gets a figure.
+- *Moisture:* (AH_sup - AH_out) / (AH_ext - AH_out), gated at 1.5 g/m³, unchanged.
+
+- *Why the total and not the temperature ratio?* The user decided (2026-10-20, after group 3) that the ring must
+  match the recovery card's percentage and follow the physics: the latent heat of extracted moisture that is not
+  returned is lost, so an HRV or a poor ERV scores lower than its temperature ratio. This holds for every exchanger
+  type, as the recovery card counts latent heat whenever humidity is configured. Example: 0/17/21 °C with 4.0/6.5/7.5
+  g/m³ gives 78 % (temperature ratio 81 %); with the supply at the outdoor humidity, as for an HRV, 60 %.
+- *Why in the result and not a separate function?* The rings need the badge's inputs (less the humidities), at the
+  same moment. One calculation per render keeps the badge, the moisture figure and the rings consistent. A missing
+  input then empties both rings, which the spec states.
 - *Why no bypass gate, unlike the macro?* The user chose (2026-10-19) to show the figure while the bypass modulates.
   It then describes the unit as a whole. The docs say so, and the macro's gated sensors keep their meaning.
 
-The vectors: each set in `test/vectors.json` gets `eff_sensible` and `eff_moisture` rendered from the macro in Home
-Assistant (the macro inline in `ha_eval_template`, as when the vectors were made). The test compares only where the
-macro gives a value from 0 to 100; the 1 % tolerance absorbs the macro's integer rounding. Added hand-made sets cover
-the cap, the gates and an open bypass, with the expected figures worked out in the test.
+The vectors: `test/vectors.json` has `eff_sensible` and `eff_moisture` per set, rendered from the macro in Home
+Assistant on 2026-10-20 (task 2.2). The total figure is compared with the macro's own power figures, recovered total
+/ (recovered total + lost total) of the `expected` block, capped to 0-100, on every set above the gate; `eff_moisture`
+stays the reference for the moisture figure, compared where the macro gives 0 to 100. `eff_sensible` is no longer
+compared and leaves the file and its description. A test also checks that the figure equals the recovery card's
+header percentage on every set, so the two cards cannot drift apart.
 
-### The rings: two dashed paths with `pathLength="100"`
+### The rings: part of the exchanger
 
-Two paths go into the drawing between the exchanger polygons and the streams, so the streams stay on top (the
-"background" the user asked for). Both start at the top centre and run clockwise:
+The rings are drawn as the exchanger's own parts, between its fill and its outlines, so they line up with it exactly.
+The first version ran an 8-unit stroke on the rim's midline, which left the rim's edges uncovered, because the inner
+hexagon is not a parallel offset of the outer one: the rim is 12 units wide at the top and bottom and 9.7 to 13.2
+units on the slanted sides. The drawing order is: the exchanger's fill, the moisture ring, the outlines (outer and
+inner), the total ring's track and the total ring, then the streams, which stay on top (the "background" the user
+asked for). Both rings start at the top centre and run clockwise:
 
-- Moisture: along the rim's midline (the midpoints of the outer and inner vertices, from (200, 32)), stroke about
-  8 units, so it stays inside the rim.
-- Temperature: along the inner outline, from (200, 38), stroke about 3 units, drawn over the existing outline.
+- Moisture: a path along the rim's midline (from (200, 32)) with a stroke of 14 units, wider than the rim anywhere,
+  clipped to the rim: a `clipPath` of the outer and the inner hexagon with `clip-rule: evenodd`. Its ID is per card
+  instance, next to the gradient IDs in `DrawingIds`. So a full ring fills the rim from outline to outline and never
+  spills over, and the outlines drawn after it give it crisp edges. Its track is the empty rim itself, in the ERV fill.
+- Total: along the inner outline, from (200, 38), stroke about 3 units, over a faint full-length track (the same path
+  in a 25 % mix of the ring colour with the secondary background), drawn over the inner outline.
 
 Each path has `pathLength="100"` and `stroke-dasharray: <figure> 100`, so the figure in % is the dash length with no
-geometry in the code. Under each runs a track: the same path at full length in a faint mix of the ring colour and
-the fill. An empty ring is the track alone. The rings are only rendered with `show_effectiveness: true` and the inputs of the sensible calculation (the badge's
-without the humidities; without them a ring could never fill), and the
-moisture ring and its track only on an ERV with humidity for every stream.
+geometry in the code. The rings are only rendered with `show_effectiveness: true` and the inputs of the sensible
+calculation (the badge's without the humidities; without them a ring could never fill), and the moisture ring only on
+an ERV with humidity for every stream. On an HRV the rim stays as it is.
 
-Colours: the temperature ring takes the configured warm colour in heating and the cold colour in cooling, as the
-badge does. The moisture ring is teal `#00897b`, the colour the installation's charts already use for recovered
-moisture, distinct from the default red and blue.
+Colours:
+
+- Moisture: `--erv-ring`, defined next to `--erv-fill`: the same mix of the secondary background with `#4f86b8`, with
+  50 % of the blue instead of 25 %. On a light theme that is a slightly darker blue-grey than the exchanger, as the
+  user asked (not the teal of the moisture bar card). On a dark theme the stronger blue reads lighter than the fill,
+  which keeps it visible. The browser test requires 1.2:1 between the filled and the empty rim in both themes; the
+  share is tuned with the user in the feedback round (task 4.7).
+- Total: the mode's colour (the warm colour in heating, the cold colour in cooling, as the badge) mixed with
+  `--primary-text-color`: darker on a light theme, lighter on a dark one. The share is the smallest that gives the
+  default warm and cold colours 3:1 (the WCAG contrast for graphics) against the core fill and against the moisture
+  ring, on the HRV and the ERV fill, in the light and the dark preview theme, measured by the browser test. The
+  unmixed cold colour on the ERV fill was about 1.9:1, which the user found too weak.
 
 - *Why not a fill level in the core?* The user chose rings (option C, 2026-10-19). A fill would sit under the badge
-  and the moisture figure and lower their contrast.
+  and lower its contrast.
 - *Why do the streams cover the rings?* Drawn above the streams, the rings would cut the air paths in four places
   and read as the foreground. The streams cover part of each slanted side. The top and bottom edges stay visible,
   and the numbers are in the tooltip.
 
-*The moisture figure beside the rings (task 3.3).* The figure ("983 g/h", or "-1,234 g/h" on a humid summer day) is as
-wide as the hexagon is at the height it sits, so on a narrow card its glyphs meet the rings' slanted sides: up to 1 px
-deep for three digits and 3.7 px for four in the test font, 2.1 px and 3.9 px with Arial, whose digits are as wide as
-Roboto's (measured against the glyphs' boxes, whose corners are empty). Moving it up only helps from 320 px and puts a
-four-digit figure into the streams at 280 px, and shrinking it would go below the 11 px label minimum, so the figure
-keeps its size and, while `show_effectiveness` is on (a `rings` class on the drawing), gets a halo: about 130 zero-blur
-text shadows in the exchanger's colour (`--erv-fill`, the ERV fill), on a 0.75 px grid within 4.5 px and round its edge,
-so 4.5 px of solid halo surrounds the glyphs, thin strokes such as the minus sign included. A shadow is always painted behind the glyphs, so the glyph shapes stay as they are
-and a ring that meets a glyph is masked around it. (A text stroke under the fill with `paint-order` would do the same,
-but no `@supports` query can tell whether `paint-order` applies to HTML text; where it does not, the stroke would cover
-the digits.) The value's padding (undone by an equal negative margin)
-keeps its overflow clip from cutting the halo of the first and last glyph. Without the rings nothing changes, so
-existing configs render as in v0.2. The text keeps 4.5:1 against the halo, as it does against the fill. The browser
-test requires the halo to be at least as wide as the measured overlap plus 0.5 px for the three and the four-digit
-figure at 280 to 600 px, that the badge and the bypass position clear every ring strictly, and that the halo
-notches a stream's edge by at most 1.5 px.
-
 The tooltip and accessible name are an HTML box over the exchanger: `.on-drawing.effectiveness` with the
 exchanger's bounding box (x 145 to 255, y 26 to 174) clipped to the hexagon, `role="img"`, `aria-label` and `title`
-from a pure `effectivenessLabel(result, bypass, moisture, locale)` with the texts in `src/strings.ts` (NBSP before
-%). `moisture` is the moisture ring's condition (an ERV with humidity for every stream), so an HRV's label names only
-the temperature. It comes before the other boxes in the DOM, so the bypass position, the badge and the moisture figure stay on top and
-keep their own tooltips and taps.
+from a pure `effectivenessLabel(result, bypass, moisture, locale)` with the texts in `src/strings.ts` (NBSP before %
+and the units). The total figure is named by the mode ("heat", "cooling", "free cooling") and followed by its
+absolute values as magnitudes, the recovered total and the potential in W (sensible plus latent, the recovery card's
+header figures); the moisture figure by the recovered and the extracted moisture in g/h (`result.moisture`), so a
+humid day's "kept out" reads as positive numbers, as the figure does. Example: "Effectiveness: heat 92 % (1,200 /
+1,304 W), moisture 65 % (390 / 600 g/h)". `moisture` is the moisture ring's condition (an ERV with humidity for every
+stream), so an HRV's label names only the total. The box comes before the other boxes in the DOM, so the bypass
+position and the badge stay on top and keep their own tooltips and taps.
+
+### Moisture figure and flow labels
+
+The moisture figure leaves the exchanger (user's decision, 2026-10-20): in the exchanger it met the rings' slanted
+sides on narrow cards and needed a halo of text shadows, which the user found ugly. It now sits right of the
+exchanger, centred at y 100, the height of the exchanger's centre and the house symbol's, horizontally centred
+between the exchanger's right vertex (x 255) and the house symbol's circle (x 344). The streams leave a wedge there,
+from the exhaust stream (bottom edge about y 76 at x 275) to the supply stream (top edge about y 126).
+
+- It shows the rate's magnitude after an icon, `mdi:water-plus` while moisture is recovered (0 or more) and
+  `mdi:water-minus` while it is kept out, so it needs no minus sign. The icon is drawn like the top row's icons, as
+  high as the text and centred on it. The tooltip keeps its words ("Moisture recovered: 120 g/h", "Moisture kept out:
+  418 g/h") and the tap keeps opening `status.moisture_recovery`.
+- At 280 px the gap is about 55 px; a four-digit figure with its icon needs about 65 px at the 11 px minimum. Where it
+  does not fit, the unit goes to a second line under the number (the wedge is about 31 px high at 280 px, room for
+  two 11 px lines). The browser test measures it at 280 to 600 px in both layouts with three and four digits.
+- The halo goes (`HALO_SHADOW`, its padding and margin, and the `rings` class if nothing else needs it).
+
+The supply flow label sat in that wedge (above the supply arrow's tip), so both flow labels move below their
+arrowheads (y 152 and lower), the exhaust flow for symmetry. On the right, the bypass path rises through about
+(285, 150) to the arrow at (306, 138), and the supply corner labels start at about y 155 from x 340, so the label is
+right-aligned under the head, between the bypass path and the corner labels. The left side has more room: the bypass
+path is right of x 144 there.
+
+This changes every ERV config's drawing and every config's flow labels, so v0.3 does not render existing configs
+exactly as v0.2 did. The user accepted that with the move.
 
 ### The pre-heater coil: SVG for the look, an HTML box for the tap
 
@@ -171,7 +215,8 @@ The preview page gets, next to the existing controls:
   a pre-heater binary sensor and an energy sensor, and the availability control lists them;
 - a `show_effectiveness` switch next to the exchanger type;
 - two scenario buttons: "frost (pre-heater on)" (outdoor -8 °C, pre-heater at 600 W, heating) and "small gradient"
-  (outdoor and extract 2 K and 0.7 g/m³ apart), next to the existing heating, cooling and bypass scenarios.
+  (outdoor and extract 2 K and 0.3 g/m³ apart, below both gates; the 0.7 g/m³ of task 3.4 is above the total
+  figure's enthalpy gate), next to the existing heating, cooling and bypass scenarios.
 
 So every spec scenario that the live unit cannot show (coil glowing, the top row figure, empty rings, rings while
 the bypass modulates) can be checked by hand and by the browser tests on the same page.
@@ -184,16 +229,24 @@ the bypass modulates) can be checked by hand and by the browser tests on the sam
   *Measured (task 3.3):* the bypass position's glyphs cleared the inner ring by only 0.14 px at 280 px in the test
   font, so it moved from `top: 20.5%` to `21.5%` (always, with or without rings). It now clears every ring by at
   least 0.56 px (0.29 px with Arial, whose digits are as wide as Roboto's). The same test found that the moisture
-  figure meets the inner ring's slanted side by up to 1 px at 280 to 400 px, which the figure's halo covers (see
-  "The rings").
+  figure meets the inner ring's slanted side by up to 1 px at 280 to 400 px; group 3 covered that with a halo, and
+  group 4 moves the figure out of the exchanger instead (see "Moisture figure and flow labels").
+- [A four-digit moisture figure does not fit between the exchanger and the house symbol at 280 px] → its unit goes
+  to a second line; the browser test measures both forms at 280 to 600 px in both layouts.
+- [A flow label below its arrowhead meets the bypass path or the bottom corner labels on a narrow card] → the browser
+  test measures both flow labels against the arrowheads, the bypass path at 100 % and the corner labels at 280 to
+  600 px. If the right one collides, the measurements and options go to the user in the feedback round (task 4.7)
+  rather than a silent workaround.
 - [The streams hide the end of a ring on a slanted side, so 40 % and 45 % can look alike] → the numbers are in the
   tooltip, and the rings read as a rough gauge. Accepted by the user's choice of rings on the outlines.
 - [The coil collides with the outdoor stack at some width or font] → a browser test measures the coil's box
   against the outdoor labels, the flow labels and the bypass position at 280 to 600 px, as for the moisture figure.
 - [The top row overflows at 280 px while the pre-heater is on] → a browser test at 280 px with 1032 W, 1000 W and
   RMOT -3.5 °C. The labels already end in an ellipsis rather than overlap.
-- [The ring readings differ from the installation's gated effectiveness sensors while the bypass is open] → the
-  docs explain it. The sensors keep their bypass gate for the charts.
+- [The ring readings differ from the installation's gated effectiveness sensors] → the inner ring is the total
+  figure, so it differs from the sensible effectiveness sensor whenever humidity counts, and both rings differ while
+  the bypass is open. The docs explain it; the inner ring matches the recovery card instead. The sensors keep their
+  bypass gate for the charts.
 - [The live installation cannot show the pre-heater on] → the preview page emulates it, and the live check covers
   the off state, the energy cell and the rings.
 
@@ -201,12 +254,13 @@ the bypass modulates) can be checked by hand and by the browser tests on the sam
 
 1. Release: `npm run release`, version `0.3.0` in `package.json`, commit `dist/`.
 2. Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=` (number in
-   `private/installation.md`). Existing configs render as in v0.2.
+   `private/installation.md`). Existing configs render as in v0.2, apart from the moved moisture figure and flow
+   labels.
 3. On both dashboards' diagram cards, add `show_effectiveness: true`, and `pre_heater.power` and
    `pre_heater.energy` pointing at the unit's pre-heater power and energy sensors (IDs in `private/installation.md`).
    Use `python_transform` with the latest `config_hash`, locating the cards by type.
-4. Check with Playwright (service workers blocked): both rings with figures matching the installation's
-   effectiveness sensors while the bypass is closed, the dim coil and its tooltip, the tap on the coil, the energy
+4. Check with Playwright (service workers blocked): the inner ring matching the recovery balance card's percentage
+   and the outer ring the installation's moisture effectiveness sensor while the bypass is closed, the dim coil and its tooltip, the tap on the coil, the energy
    cell, no pre-heater figure in the top row.
 5. Push `main` and the tag `v0.3.0` to `peeter123/hrv-ventilation-card`, with the user's confirmation. The user
    publishes the release in the GitHub UI.
