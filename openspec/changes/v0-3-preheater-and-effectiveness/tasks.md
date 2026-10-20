@@ -2,7 +2,7 @@
 
 ## 1. Editor's shown defaults (spec coverage)
 
-- [ ] 1.1 Map each scenario of the card-bundle requirement "Editor shows defaults without writing them" (shown
+- [x] 1.1 Map each scenario of the card-bundle requirement "Editor shows defaults without writing them" (shown
   default, unrelated edit writes no default, empty section kept, typing the default into an unset field, default
   already set) to a test in `test/editor/`, naming the scenario in the test title as the other spec tests do, and
   add the missing ones (at least "Typing the default into an unset field" through the editor element, not only
