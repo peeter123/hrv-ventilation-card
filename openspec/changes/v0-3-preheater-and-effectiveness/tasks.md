@@ -180,7 +180,7 @@
   for the serial prefix)
 - [x] 7.6 Feedback round: show screenshots of both live dashboards after the migration (desktop and phone width,
   light and dark) inspected by an agent, and apply the user's feedback; verify the user approves before the review
-- [ ] 7.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 7.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
 - [ ] 7.8 With the user's confirmation before each outward step, push `main` and the tag `v0.3.0` to
   `peeter123/hrv-ventilation-card` (never `private/history`); the user publishes the release from the tag in the
