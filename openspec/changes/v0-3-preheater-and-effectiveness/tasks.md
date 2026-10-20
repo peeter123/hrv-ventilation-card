@@ -144,7 +144,7 @@
   on"
 - [x] 6.5 Add `pre_heater.power` (0 W) and `pre_heater.energy` (8 kWh) to `src/lib/sample.ts`; verify the
   card-preview tests (every full-layout role in the sample, no tap targets) and `npm run check:ids`
-- [ ] 6.6 Document the top row figure, the energy cell and the editor section in `README.md` and the top row and
+- [x] 6.6 Document the top row figure, the energy cell and the editor section in `README.md` and the top row and
   status grid points in `docs/hrv-ventilation.md` (why the figure is left out rather than kept invisible, why no
   sum or share); verify the README tests pass
 - [ ] 6.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the top row with
