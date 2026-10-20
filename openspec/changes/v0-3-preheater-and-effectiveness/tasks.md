@@ -108,7 +108,7 @@
 - [x] 5.2 Add `preHeaterLevel(state, maxPower)` (design: "The pre-heater coil"); verify unit tests for "Modulating
   pre-heater" (0.25), "No maximum" (1), "On/off entity" (1), "Off" (0), "Unavailable" (0), a power in kW, and the
   0.1 minimum
-- [ ] 5.3 Draw the coil and its glow in `drawing()` and add the `.on-drawing.pre-heater` box with tooltip, accessible
+- [x] 5.3 Draw the coil and its glow in `drawing()` and add the `.on-drawing.pre-heater` box with tooltip, accessible
   name and the tap through `this.tap()`; verify card tests for "Coil drawn", "No pre-heater", "Hover" ("Pre-heater:
   350 W") and "Tap" (opens `pre_heater.power`, nothing in sample mode)
 - [ ] 5.4 Browser tests: the coil's box clear of the outdoor labels, the flow labels and the bypass position at 280

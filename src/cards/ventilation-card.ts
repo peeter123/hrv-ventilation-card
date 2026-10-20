@@ -29,6 +29,7 @@ import {
   type LayoutChoice,
 } from '../diagram/labels';
 import { DIAGRAM_OPTION_LIST, DIAGRAM_OPTIONS, DIAGRAM_REQUIREMENTS } from '../diagram/options';
+import { preHeaterLevel } from '../diagram/preheater';
 import { seasonIcon, type SeasonIcon } from '../diagram/season';
 import { bypassStrength, temperatureColors } from '../diagram/streams';
 import { DIAGRAM_SCHEMA } from '../editor/diagram-schema';
@@ -69,6 +70,8 @@ interface DiagramSettings {
    */
   savings: Record<RecoveryResult['mode'], string | undefined>;
   moistureRecovery?: string;
+  /** The `pre_heater.power` entity, which draws the coil, and the rated power its glow is a share of. */
+  preHeater?: { entityId: string; maxPower: number | undefined };
   /**
    * The effectiveness rings are drawn: the option is on and the config has the inputs of the sensible calculation.
    * `moisture`: the moisture ring too, on an ERV with humidity for every stream.
@@ -241,6 +244,23 @@ export class HrvVentilationCard extends HrvCard {
       width: 27.5%;
       height: 74%;
       clip-path: polygon(28% 0, 72% 0, 100% 50%, 72% 100%, 28% 100%, 0 50%);
+    }
+    /* Over the pre-heater coil (x 100 to 128, y 50 to 74 of 400 by 200). */
+    .pre-heater {
+      top: 25%;
+      left: 25%;
+      width: 7%;
+      height: 12%;
+    }
+    .coil {
+      stroke-linecap: round;
+    }
+    .coil.off {
+      stroke: var(--secondary-text-color);
+      opacity: 0.5;
+    }
+    .coil-glow {
+      filter: blur(3px);
     }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {
@@ -435,6 +455,7 @@ export class HrvVentilationCard extends HrvCard {
   }
 
   protected configure(config: CardConfig): void {
+    const preHeaterEntity = entityAt(config, 'pre_heater.power');
     this.settings = {
       exchanger: optionValue(config, DIAGRAM_OPTIONS.exchangerType),
       colors: { cold: optionValue(config, DIAGRAM_OPTIONS.cold), warm: optionValue(config, DIAGRAM_OPTIONS.warm) },
@@ -446,6 +467,9 @@ export class HrvVentilationCard extends HrvCard {
         cooling: entityAt(config, 'status.cooling_saving'),
       },
       moistureRecovery: entityAt(config, 'status.moisture_recovery'),
+      preHeater: preHeaterEntity
+        ? { entityId: preHeaterEntity, maxPower: optionValue(config, DIAGRAM_OPTIONS.preHeaterMaxPower) }
+        : undefined,
       rings:
         optionValue(config, DIAGRAM_OPTIONS.showEffectiveness) && hasRings(config)
           ? {
@@ -625,6 +649,20 @@ export class HrvVentilationCard extends HrvCard {
     </div>`;
   }
 
+  /** The box over the pre-heater coil: its tooltip and name, and the tap that opens the power entity. */
+  private coilBox(entityId: string, text: string): TemplateResult {
+    const tap = this.tap(entityId, 'img');
+    const title = roleTitle('pre_heater.power', text);
+    return html`<div
+      class="on-drawing pre-heater"
+      role=${ifDefined(tap.role)}
+      tabindex=${ifDefined(tap.tabindex)}
+      aria-label=${title}
+      title=${title}
+      data-entity=${ifDefined(tap.entity)}
+    ></div>`;
+  }
+
   protected override render(): TemplateResult | typeof nothing {
     const hass = this.shownHass;
     if (!this.config || !hass || !this.settings) return nothing;
@@ -645,6 +683,7 @@ export class HrvVentilationCard extends HrvCard {
     const ringsLabel = rings
       ? effectivenessLabel(result, calculation?.inputs.bypass, rings.moisture, locale)
       : undefined;
+    const { preHeater } = settings;
     const art = drawing({
       ids: this.ids,
       exchanger: settings.exchanger,
@@ -664,6 +703,12 @@ export class HrvVentilationCard extends HrvCard {
             color: modeColor(result?.mode, settings.colors),
           }
         : undefined,
+      coil: preHeater
+        ? {
+            level: preHeaterLevel(stateOf(states, preHeater.entityId), preHeater.maxPower),
+            color: settings.colors.warm,
+          }
+        : undefined,
     });
 
     return html`<ha-card @click=${this.activate} @keydown=${this.activate}>
@@ -679,6 +724,7 @@ export class HrvVentilationCard extends HrvCard {
             ? nothing
             : html`<div class="on-drawing effectiveness" role="img" aria-label=${ringsLabel} title=${ringsLabel}></div>`
         }
+        ${preHeater ? this.coilBox(preHeater.entityId, formatState(hass, preHeater.entityId)) : nothing}
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
         ${badge ? html`<div class="on-drawing saving">${this.badge(badge, savingTarget(result, settings.savings, states))}</div>` : nothing}
         ${this.moistureFigure(moisture)}

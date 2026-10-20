@@ -58,6 +58,11 @@ const RIM =
 /** Percent of the mode's colour in the total ring (the rest is the text colour): the largest that keeps 3:1 against the core and the moisture ring. */
 const TOTAL_RING_SHARE = 45;
 
+// The pre-heater coil: a zigzag wire across the outdoor stream (the stream is y 55 to 69 there), right of the outdoor
+// stack (x 70 at most) and left of the bypass path's first bend.
+const COIL = 'M 100 62 L 104 50 L 108 74 L 112 50 L 116 74 L 120 50 L 124 74 L 128 62';
+const COIL_WIDTH = 3;
+
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
 const HOUSE = 'M 12 4 L 21 12 L 18 12 L 18 20 L 14 20 L 14 15 L 10 15 L 10 20 L 6 20 L 6 12 L 3 12 Z';
@@ -92,6 +97,14 @@ export interface Rings {
   color: string;
 }
 
+/** The pre-heater coil (drawn only with `pre_heater.power`). */
+export interface Coil {
+  /** How hot it glows, 0 (off) to 1; see `preHeaterLevel`. */
+  level: number;
+  /** The colour it glows in: the card's warm colour. */
+  color: string;
+}
+
 export interface DrawingInput {
   ids: DrawingIds;
   /** Sets the exchanger's class, which the card's styles fill grey (HRV) or blue-grey (ERV). */
@@ -104,6 +117,8 @@ export interface DrawingInput {
   speeds: { supply: number; exhaust: number };
   /** The effectiveness rings; none without it. */
   rings?: Rings;
+  /** The pre-heater coil; none without it. */
+  coil?: Coil;
 }
 
 /** The time the dashes take to move one dash pattern at the medium speed, in seconds. */
@@ -160,8 +175,20 @@ function totalRing(color: string, figure: number | undefined): SVGTemplateResult
       style=${styleMap({ stroke: ringColor })}></path>`;
 }
 
+/** The pre-heater coil: dim in the secondary text colour while off, else the warm colour over a blurred glow. */
+function coilWire({ level, color }: Coil): SVGTemplateResult {
+  if (level <= 0) {
+    return svg`<path class="coil off" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>`;
+  }
+  const stroke = `color-mix(in srgb, ${color} ${String(rounded(level * 100, 1))}%, var(--secondary-text-color))`;
+  return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${COIL_WIDTH * 2} stroke-linejoin="round"
+      opacity=${rounded(level, 3)} style=${styleMap({ stroke: color })}></path>
+    <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
+      style=${styleMap({ stroke })}></path>`;
+}
+
 /** The drawing for the current colours and bypass strength. A path at strength 0 is left out. */
-export function drawing({ ids, exchanger, colors, bypass, speeds, rings }: DrawingInput): SVGTemplateResult {
+export function drawing({ ids, exchanger, colors, bypass, speeds, rings, coil }: DrawingInput): SVGTemplateResult {
   const [around, through] = [rounded(bypass, 3), rounded(1 - bypass, 3)];
   const supplyStroke = `url(#${ids.supply})`;
   const exhaustStroke = `url(#${ids.exhaust})`;
@@ -190,6 +217,7 @@ export function drawing({ ids, exchanger, colors, bypass, speeds, rings }: Drawi
     ${rings ? totalRing(rings.color, rings.total) : null}
     ${streamPath('bypass', supplyStroke, around)}
     ${streamPath('supply', supplyStroke, through)}
+    ${coil ? coilWire(coil) : null}
     <polygon class="head" points=${HEADS.supply} style=${styleMap({ fill: colors.supply })}></polygon>
     ${streamPath('exhaust', exhaustStroke, 1)}
     <polygon class="head" points=${HEADS.exhaust} style=${styleMap({ fill: colors.exhaust })}></polygon>

@@ -632,6 +632,59 @@ describe('the effectiveness rings', () => {
   });
 });
 
+describe('the pre-heater coil', () => {
+  const HEATER = 'sensor.hrv_pre_heater';
+  const WITH_HEATER: CardConfig = { ...CONFIG, pre_heater: { power: HEATER, max_power: 1000 } };
+  const opened = (card: HTMLElement): string[] => {
+    const entities: string[] = [];
+    card.addEventListener('hass-more-info', (event) => {
+      entities.push((event as CustomEvent<{ entityId: string }>).detail.entityId);
+    });
+    return entities;
+  };
+  const box = (root: ShadowRoot): HTMLElement | null => root.querySelector<HTMLElement>('.on-drawing.pre-heater');
+
+  test('airflow-diagram-card "Coil drawn": the coil and its box exist, and the glow follows the level', async () => {
+    const { root } = await render(WITH_HEATER, '0', [state(HEATER, '250', 'W')]);
+    expect(root.querySelector('svg .coil.on')).not.toBeNull();
+    expect(box(root)).not.toBeNull();
+    expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.25');
+    expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain('25%');
+  });
+
+  test('airflow-diagram-card "Off": the coil is drawn dim, without a glow, also while unavailable', async () => {
+    for (const value of ['0', 'unavailable']) {
+      const { root } = await render(WITH_HEATER, '0', [state(HEATER, value, 'W')]);
+      expect(root.querySelector('svg .coil.off')).not.toBeNull();
+      expect(root.querySelector('svg .coil-glow')).toBeNull();
+      document.body.innerHTML = '';
+    }
+  });
+
+  test('airflow-diagram-card "No pre-heater": no coil and no box', async () => {
+    const { root } = await render(CONFIG, '0');
+    expect(root.querySelector('svg .coil')).toBeNull();
+    expect(root.querySelector('svg .coil-glow')).toBeNull();
+    expect(box(root)).toBeNull();
+  });
+
+  test('airflow-diagram-card "Hover": the box is named by the formatted state', async () => {
+    const { root } = await render(WITH_HEATER, '0', [state(HEATER, '350', 'W')]);
+    // The state text is Home Assistant's own (here the fallback without formatEntityState, a plain space).
+    expect(box(root)?.title).toBe('Pre-heater: 350 W');
+    expect(box(root)?.getAttribute('aria-label')).toBe('Pre-heater: 350 W');
+  });
+
+  test('airflow-diagram-card "Tap": the box opens the power entity', async () => {
+    const { card, root } = await render(WITH_HEATER, '0', [state(HEATER, '350', 'W')]);
+    const entities = opened(card);
+    box(root)?.click();
+    keydown(box(root) as Element, 'Enter');
+    expect(box(root)?.getAttribute('role')).toBe('button');
+    expect(entities).toEqual([HEATER, HEATER]);
+  });
+});
+
 describe('checkDiagramConfig', () => {
   const check = (config: CardConfig) => () => {
     checkDiagramConfig(config);
