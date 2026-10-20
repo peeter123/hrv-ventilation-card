@@ -57,7 +57,7 @@
 
 ## 4. Rings, moisture figure and flow labels after the review of groups 2 and 3
 
-- [ ] 4.1 Replace `effectiveness.temperature` with `effectiveness.total` in `src/calc/recovery.ts` (design:
+- [x] 4.1 Replace `effectiveness.temperature` with `effectiveness.total` in `src/calc/recovery.ts` (design:
   "Effectiveness is part of the recovery result"): recovered / (recovered + lost) of the total, as the recovery
   card's header, in every mode, capped to 0-100 and gated on an extract-outdoor enthalpy difference of
   rho × 1006 × 3 J/m³; compare it in the vector test with the macro's recovered and lost totals, and drop
