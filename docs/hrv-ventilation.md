@@ -165,9 +165,9 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   split, so with the bypass open it still lies on the stream. Its level comes from the pure `preHeaterLevel(state, maxPower)` in
   `src/diagram/preheater.ts`, 0 to 1:
   - a number (converted to W): 0 at or below 0 W; with `pre_heater.max_power`, `max(power / max, 0.1)` capped at 1;
-    (`max_power` is the unit's rated pre-heater power, e.g. Zehnder ComfoAir Q450: 1740 W; it differs per unit, take it
-    from the unit's documentation)
     without it, 1;
+    `max_power` is the unit's rated pre-heater power, e.g. Zehnder ComfoAir Q450: 1740 W; it differs per unit, so take it
+    from the unit's documentation;
   - `on`: 1, `off`: 0; anything else (unavailable, unknown, text, an unknown unit): 0.
   - **Colours.** At level 0 the coil is `--secondary-text-color` at opacity 0.5: visible as a coil in both themes and
     clearly off. Black would disappear on a dark theme; the secondary text colour follows the theme. Above 0 the

@@ -85,7 +85,9 @@ try {
     /** @type {Record<'outdoor' | 'supply' | 'extract' | 'exhaust', number>} */
     const t = { outdoor: 0, supply: 0, extract: 0, exhaust: 0 };
     for (const stream of /** @type {const} */ (['outdoor', 'supply', 'extract', 'exhaust'])) {
-      t[stream] = Number(await inputOf(stream, 'T').inputValue());
+      const raw = await inputOf(stream, 'T').inputValue();
+      t[stream] = raw.trim() === '' ? Number.NaN : Number(raw);
+      if (!Number.isFinite(t[stream])) throw new Error(`the ${stream} T input holds "${raw}", not a number`);
     }
     return t;
   };
