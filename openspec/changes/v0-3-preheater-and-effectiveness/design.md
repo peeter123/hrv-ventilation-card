@@ -84,17 +84,21 @@ moisture, distinct from the default red and blue.
   and read as the foreground. The streams cover part of each slanted side. The top and bottom edges stay visible,
   and the numbers are in the tooltip.
 
-*The moisture figure beside the rings (task 3.3).* The seven-glyph figure ("983 g/h") is as wide as the hexagon is
-at the height it sits, so on a narrow card its last glyphs meet the rings' slanted sides (up to 1 px in the test font,
-2 px with Arial, whose digits are as wide as Roboto's). Moving it up only helps from 320 px and puts a four-digit
-figure into the streams at 280 px, and shrinking it would go below the 11 px label minimum, so the figure keeps its
-size and, while `show_effectiveness` is on (a `rings` class on the drawing), gets a halo: a 2 px text stroke in the
-exchanger's colour (`--erv-fill`, the ERV fill) painted under the glyphs with `paint-order: stroke fill`, so the
-glyph shapes stay as they are and a ring that meets a glyph is masked around it. The value's padding (undone by an
-equal negative margin) keeps its overflow clip from cutting the halo of the first and last glyph. Without the rings
-nothing changes, so existing configs render as in v0.2. The text keeps 4.5:1 against the halo, as it does against the
-fill. The browser test requires the halo to be at least as wide as the measured overlap plus 0.5 px, and that the
-badge and the bypass position clear every ring strictly.
+*The moisture figure beside the rings (task 3.3).* The figure ("983 g/h", or "-1,234 g/h" on a humid summer day) is as
+wide as the hexagon is at the height it sits, so on a narrow card its glyphs meet the rings' slanted sides: up to 1 px
+deep for three digits and 3.7 px for four in the test font, 2.1 px and 3.9 px with Arial, whose digits are as wide as
+Roboto's (measured against the glyphs' boxes, whose corners are empty). Moving it up only helps from 320 px and puts a
+four-digit figure into the streams at 280 px, and shrinking it would go below the 11 px label minimum, so the figure
+keeps its size and, while `show_effectiveness` is on (a `rings` class on the drawing), gets a halo: a text stroke of
+9 px in the exchanger's colour (`--erv-fill`, the ERV fill), 4.5 px of it outside the glyphs, painted under them with
+`paint-order: stroke fill`, so the glyph shapes stay as they are and a ring that meets a glyph is masked around it.
+The halo is only applied where the browser supports `paint-order` on HTML text (`@supports`), as it would otherwise
+be painted over the glyphs; the figure then has no halo. The value's padding (undone by an equal negative margin)
+keeps its overflow clip from cutting the halo of the first and last glyph. Without the rings nothing changes, so
+existing configs render as in v0.2. The text keeps 4.5:1 against the halo, as it does against the fill. The browser
+test requires the halo to be at least as wide as the measured overlap plus 0.5 px for the three and the four-digit
+figure at 280 to 600 px, that the badge and the bypass position clear every ring strictly, and that the halo
+notches a stream's edge by at most 1.5 px.
 
 The tooltip and accessible name are an HTML box over the exchanger: `.on-drawing.effectiveness` with the
 exchanger's bounding box (x 145 to 255, y 26 to 174) clipped to the hexagon, `role="img"`, `aria-label` and `title`

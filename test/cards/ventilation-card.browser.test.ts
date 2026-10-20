@@ -35,6 +35,15 @@ const VALUES: MockValues = {
   unavailable: new Set(),
 };
 
+// A humid summer day at a high flow: the exchanger keeps out more than 1000 g/h, the widest realistic figure.
+const KEPT_OUT: MockValues = {
+  ...VALUES,
+  temperature: { outdoor: 32, supply: 26, extract: 24, exhaust: 30 },
+  humidity: { outdoor: 70, supply: 60, extract: 55, exhaust: 60 },
+  flow: 300,
+  bypass: 0,
+};
+
 const frames = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
 async function show(
@@ -297,15 +306,6 @@ describe('exchanger type', () => {
     expect(overlap(bypass, figure)).toBe(false);
   });
 
-  // A humid summer day at a high flow: the exchanger keeps out more than 1000 g/h, the widest realistic figure.
-  const KEPT_OUT: MockValues = {
-    ...VALUES,
-    temperature: { outdoor: 32, supply: 26, extract: 24, exhaust: 30 },
-    humidity: { outdoor: 70, supply: 60, extract: 55, exhaust: 60 },
-    flow: 300,
-    bypass: 0,
-  };
-
   test('a four-digit kept-out figure stays between the slanted sides, clear of the streams and the badge', async () => {
     for (const width of [280, 320, COMPACT_BELOW, 400, 600]) {
       // No smoothing: the humidity history of the other tests would average this day away.
@@ -445,75 +445,110 @@ describe('effectiveness rings', () => {
     return nearest - half;
   }
 
+  // The most, in px, by which the figure's halo may reach into a stream beside the glyphs' boxes (see the test).
+  const STREAM_NOTCH = 1.5;
+
   const tracks = (root: ShadowRoot): SVGPathElement[] => [...root.querySelectorAll<SVGPathElement>('svg .ring-track')];
 
   for (const theme of ['light', 'dark'] as const) {
-    test(`airflow-diagram-card "Text on the exchanger", ${theme}: the badge and bypass position keep 4.5:1 and no ring covers them, and the moisture figure has a halo, 280 to 600 px`, async () => {
+    test(`airflow-diagram-card "Text on the exchanger", ${theme}: the badge and bypass position keep 4.5:1 and no ring covers them, and the three and four digit moisture figure has a halo, 280 to 600 px`, async () => {
       // How far a ring reaches into the figure's glyphs, in px, over the widths; the halo has to cover it.
-      let overlap = 0;
-      const widths: number[] = [];
-      for (const width of [280, 320, COMPACT_BELOW, 360, 400, 500, 600]) {
-        const { root } = await show(width, theme, 'auto', VALUES, RINGS);
-        const where = `${theme} ${String(width)} px`;
-        // Both rings are drawn, with a figure, so the test measures the rings as they are in use.
-        expect(
-          tracks(root)
-            .map((track) => track.getAttribute('class')?.split(' ')[1])
-            .sort(),
-          where,
-        ).toEqual(['moisture', 'temperature']);
-        for (const ring of root.querySelectorAll('svg .ring')) {
-          const figure = parseFloat((ring.getAttribute('stroke-dasharray') ?? '0').split(' ')[0] ?? '0');
-          expect(figure, where).toBeGreaterThan(0);
-        }
-        const exchanger = root.querySelector<SVGPolygonElement>('svg .exchanger');
-        const badge = root.querySelector('.saving .badge');
-        const bypass = root.querySelector('.bypass-position .label');
-        const figure = root.querySelector('.moisture-recovery .figure');
-        if (!exchanger || !badge || !bypass || !figure) throw new Error(`a text is missing at ${where}`);
-        for (const [name, element] of Object.entries({ badge, bypass })) {
-          for (const track of tracks(root)) {
-            const gap = clearance(track, inkBoxes(element));
-            expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(0);
+      const overlap = { 'three digits': 0, 'four digits': 0 };
+      const halo: number[] = [];
+      for (const [digits, values] of [
+        ['three digits', VALUES],
+        ['four digits', KEPT_OUT],
+      ] as const) {
+        for (const width of [280, 320, COMPACT_BELOW, 360, 400, 500, 600]) {
+          const { root } = await show(width, theme, 'auto', values, RINGS);
+          const where = `${theme} ${digits} ${String(width)} px`;
+          // Both rings are drawn, so the test measures the rings as they are in use.
+          expect(
+            tracks(root)
+              .map((track) => track.getAttribute('class')?.split(' ')[1])
+              .sort(),
+            where,
+          ).toEqual(['moisture', 'temperature']);
+          const exchanger = root.querySelector<SVGPolygonElement>('svg .exchanger');
+          const badge = root.querySelector('.saving .badge');
+          const bypass = root.querySelector('.bypass-position .label:not(.hidden)');
+          const figure = root.querySelector('.moisture-recovery .figure');
+          if (!exchanger || !badge || !figure) throw new Error(`a text is missing at ${where}`);
+          if (digits === 'three digits') {
+            expect(bypass, where).not.toBeNull();
+            for (const ring of root.querySelectorAll('svg .ring')) {
+              const length = parseFloat((ring.getAttribute('stroke-dasharray') ?? '0').split(' ')[0] ?? '0');
+              expect(length, where).toBeGreaterThan(0);
+            }
+          } else {
+            expect(figure.textContent, where).toMatch(/\d,\d{3}/);
           }
-        }
-        for (const track of tracks(root)) overlap = Math.max(overlap, -clearance(track, inkBoxes(figure)));
-        // The streams cross the badge, which hides them with its fill; they stay clear of the other two texts.
-        const toDrawing = exchanger.getScreenCTM()?.inverse();
-        const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
-        for (const rect of [textBox(figure), textBox(bypass)]) {
-          for (let i = 0; i <= 10; i++) {
-            for (const y of [rect.top, rect.bottom]) {
-              const point = new DOMPoint(rect.left + (rect.width * i) / 10, y).matrixTransform(toDrawing);
-              expect(
-                streams.some((stream) => stream.isPointInStroke(point)),
-                where,
-              ).toBe(false);
+          for (const [name, element] of Object.entries({ badge, bypass })) {
+            if (!element) continue;
+            for (const track of tracks(root)) {
+              const gap = clearance(track, inkBoxes(element));
+              expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(0);
             }
           }
+          for (const track of tracks(root)) {
+            overlap[digits] = Math.max(overlap[digits], -clearance(track, inkBoxes(figure)));
+          }
+          // What is behind the text: the exchanger's fill for the bypass position and the figure, the badge's own fill.
+          const fill = getComputedStyle(exchanger).fill;
+          if (bypass) {
+            expect(contrast(fill, getComputedStyle(bypass).color), `bypass, ${where}`).toBeGreaterThanOrEqual(4.5);
+          }
+          expect(contrast(fill, getComputedStyle(figure).color), `figure, ${where}`).toBeGreaterThanOrEqual(4.5);
+          const badgeFill = getComputedStyle(badge, '::before').backgroundColor;
+          expect(contrast(badgeFill, getComputedStyle(badge).color), `badge, ${where}`).toBeGreaterThanOrEqual(4.5);
+          // The figure keeps its size, 11 px at least, and a halo in the exchanger's colour (a text stroke under the
+          // fill) masks a ring where it meets a glyph; the text keeps 4.5:1 against the halo as against the fill.
+          const style = getComputedStyle(figure);
+          const value = figure.querySelector('.value');
+          if (!value) throw new Error('no moisture value');
+          expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
+          expect(style.paintOrder.split(' ')[0], where).toBe('stroke');
+          expect(channels(style.webkitTextStrokeColor), where).toEqual(channels(fill));
+          expect(contrast(style.webkitTextStrokeColor, style.color), `halo, ${where}`).toBeGreaterThanOrEqual(4.5);
+          const width2 = parseFloat(style.webkitTextStrokeWidth) / 2;
+          halo.push(width2);
+          // The streams cross the badge, which hides them with its fill; they stay clear of the bypass position and
+          // of the figure with its halo.
+          const toDrawing = exchanger.getScreenCTM()?.inverse();
+          const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
+          const crossed = (rect: DOMRect): boolean => {
+            for (let i = 0; i <= 10; i++) {
+              for (const [x, y] of [
+                [rect.left + (rect.width * i) / 10, rect.top],
+                [rect.left + (rect.width * i) / 10, rect.bottom],
+                [rect.left, rect.top + (rect.height * i) / 10],
+                [rect.right, rect.top + (rect.height * i) / 10],
+              ] as const) {
+                const point = new DOMPoint(x, y).matrixTransform(toDrawing);
+                if (streams.some((stream) => stream.isPointInStroke(point))) return true;
+              }
+            }
+            return false;
+          };
+          if (bypass) expect(crossed(textBox(bypass)), `bypass ${where}`).toBe(false);
+          // The glyphs' boxes grown by the halo, less STREAM_NOTCH, stay clear of the streams: the boxes' corners are
+          // empty and the halo is round, so it may notch a stream's edge there by that much and no more.
+          const reach = width2 - STREAM_NOTCH;
+          for (const glyph of inkBoxes(figure)) {
+            const grown = new DOMRect(
+              glyph.left - reach,
+              glyph.top - reach,
+              glyph.width + 2 * reach,
+              glyph.height + 2 * reach,
+            );
+            expect(crossed(grown), `figure halo ${where}`).toBe(false);
+          }
+          document.body.innerHTML = '';
         }
-        // What is behind the text: the exchanger's fill for the bypass position and the figure, the badge's own fill.
-        const fill = getComputedStyle(exchanger).fill;
-        expect(contrast(fill, getComputedStyle(bypass).color), `bypass position, ${where}`).toBeGreaterThanOrEqual(4.5);
-        expect(contrast(fill, getComputedStyle(figure).color), `moisture figure, ${where}`).toBeGreaterThanOrEqual(4.5);
-        const badgeFill = getComputedStyle(badge, '::before').backgroundColor;
-        expect(contrast(badgeFill, getComputedStyle(badge).color), `badge, ${where}`).toBeGreaterThanOrEqual(4.5);
-        // The figure keeps its size, 11 px at least, and a halo in the exchanger's colour (a text stroke under the
-        // fill) masks a ring where it meets a glyph; the text keeps 4.5:1 against the halo as against the fill.
-        const style = getComputedStyle(figure);
-        const value = figure.querySelector('.value');
-        if (!value) throw new Error('no moisture value');
-        expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
-        expect(style.paintOrder.split(' ')[0], where).toBe('stroke');
-        expect(channels(style.webkitTextStrokeColor), where).toEqual(channels(fill));
-        expect(
-          contrast(style.webkitTextStrokeColor, style.color),
-          `moisture figure halo, ${where}`,
-        ).toBeGreaterThanOrEqual(4.5);
-        widths.push(parseFloat(style.webkitTextStrokeWidth) / 2);
-        document.body.innerHTML = '';
       }
-      expect(Math.min(...widths), 'halo width').toBeGreaterThanOrEqual(overlap + 0.5);
+      for (const digits of ['three digits', 'four digits'] as const) {
+        expect(Math.min(...halo), `halo width for ${digits}`).toBeGreaterThanOrEqual(overlap[digits] + 0.5);
+      }
     });
   }
 

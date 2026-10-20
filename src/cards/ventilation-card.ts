@@ -242,16 +242,21 @@ export class HrvVentilationCard extends HrvCard {
     /*
      * With the rings, a halo in the exchanger's colour around the figure's glyphs: a text stroke painted under the
      * fill (paint-order), so the glyph shapes stay as they are and a ring that meets a glyph on a narrow card is
-     * masked around it. The visible halo is half the stroke width, 2 px. The value clips its overflow for the
-     * ellipsis, so its padding (undone by the margin) keeps the halo of the first and last glyph from being cut.
+     * masked around it. The visible halo is half the stroke width, 4.5 px: a four-digit figure meets the rings
+     * 3.9 px deep (a three-digit one 2.1 px) with digits as wide as Roboto's. Only where the browser applies
+     * paint-order to HTML text; elsewhere the stroke would be painted over the glyphs, so the figure has no halo.
+     * The value clips its overflow for the ellipsis, so its padding (undone by the margin) keeps the halo of the
+     * first and last glyph from being cut.
      */
-    .rings .moisture-recovery {
-      -webkit-text-stroke: 4px var(--erv-fill);
-      paint-order: stroke fill;
-    }
-    .rings .moisture-recovery .value {
-      padding: 2px;
-      margin: -2px;
+    @supports (paint-order: stroke fill) and (-webkit-text-stroke: 1px red) {
+      .rings .moisture-recovery {
+        -webkit-text-stroke: 9px var(--erv-fill);
+        paint-order: stroke fill;
+      }
+      .rings .moisture-recovery .value {
+        padding: 4.5px;
+        margin: -4.5px;
+      }
     }
     /* On the exchanger's centre. */
     .saving {
