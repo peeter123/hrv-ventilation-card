@@ -54,11 +54,26 @@ ESPHome. The measured examples below come from that unit.
     the house does not need more cooling. It means "cooling available but not used", not exchanger inefficiency.
     In **heating** with the bypass closed, "lost" is the real exchanger shortfall, and "N % recovered" approximates
     the total (enthalpy) effectiveness.
-- **Effectiveness** (supply side, the usual datasheet definition; not shown by the cards, kept for the planned
-  integration): `eff_sensible = (T_sup - T_out) / (T_ext - T_out)`, `eff_moisture = (AH_sup - AH_out) / (AH_ext -
-  AH_out)`. Only meaningful with the bypass fully closed and `|T_ext - T_out| >= 3 K` (resp. `|AH_ext - AH_out| >=
-  1.5 g/m³`); with small gradients the ratio is noise (on 2026-09-30 the moisture gradient went from 0.72 to 0.03
-  g/m³ within an hour). Fan heat (about +0.5 to 1 K on the supply side) inflates the sensible effectiveness.
+- **Effectiveness** (supply side, the usual datasheet definition; part of the recovery result, so the cards and the
+  planned integration share it): temperature `(T_sup - T_out) / (T_ext - T_out)`, moisture `(AH_sup - AH_out) /
+  (AH_ext - AH_out)`, in %. The temperature figure uses the raw temperatures, the moisture figure the smoothed
+  absolute humidity, and the moisture figure needs humidity for all three streams.
+  - **Cap:** the figure is limited to 0-100 %. A sensor offset or fan heat (about +0.5 to 1 K on the supply side,
+    which inflates the sensible figure) can push the raw ratio past 100 %, and a supply colder than the outdoor air
+    (or drier, for moisture) past 0 %; neither is a real effectiveness.
+  - **Gate:** a figure is left out while `|T_ext - T_out| < 3 K` (resp. `|AH_ext - AH_out| < 1.5 g/m³`), in either
+    direction, because with a small gradient the ratio is noise (on 2026-09-30 the moisture gradient went from 0.72
+    to 0.03 g/m³ within an hour). The two figures are gated separately.
+  - **No bypass gate:** the figure is calculated at any bypass position. With the bypass closed it describes the
+    exchanger. While the bypass modulates, the supply air is a mix of exchanger air and bypassed outdoor air, so the
+    figure falls with the bypass and describes the unit as a whole, not the exchanger. Read it together with the
+    bypass position.
+  - **Difference from gated sensors:** an effectiveness sensor built on the same ratio in a template helper (as on
+    the author's installation) is uncapped, rounded to an integer, and unknown unless the bypass is fully
+    closed and the gradient passes the gate. It keeps the exchanger meaning for charts. The calculated figure can
+    therefore differ from it: it shows a value while the bypass is open, where the sensor has none, and it stays
+    within 0-100 %, where the sensor can leave it. Where both have a value they agree within the sensor's rounding
+    (the golden vectors compare them).
 
 ## Moisture
 
