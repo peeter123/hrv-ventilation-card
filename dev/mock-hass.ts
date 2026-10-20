@@ -16,6 +16,8 @@ export interface MockValues {
   /** For tests only: an exhaust flow other than the supply flow. */
   exhaustFlow?: number;
   bypass: number;
+  /** The pre-heater's power in W, for the `pre_heater.power` entity; 0 (off) when left out. */
+  preHeater?: number;
   season: SeasonChoice;
   /** Entity IDs reported as unavailable. */
   unavailable: ReadonlySet<string>;
@@ -38,6 +40,7 @@ export const id = {
   filter: 'sensor.hrv_filter_days',
   power: 'sensor.hrv_power',
   rmot: 'sensor.hrv_rmot',
+  preHeater: 'sensor.hrv_pre_heater_power',
   heating: 'binary_sensor.hrv_heating_season',
   cooling: 'binary_sensor.hrv_cooling_season',
 } as const;

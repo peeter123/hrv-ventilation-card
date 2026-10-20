@@ -793,6 +793,63 @@ declare module 'vitest/browser' {
   }
 }
 
+describe('pre-heater coil', () => {
+  const HEATER = { pre_heater: { power: id.preHeater, max_power: 1000 } };
+  const WIDTHS = [280, 300, 320, COMPACT_BELOW, 360, 400, 500, 600];
+
+  for (const layout of ['full', 'compact'] as const) {
+    for (const [name, values] of [
+      ['off', VALUES],
+      ['on', { ...VALUES, preHeater: 600 }],
+    ] as const) {
+      test(`airflow-diagram-card "Narrow card with all outdoor labels", ${layout} layout, ${name}: the coil's box is clear of the outdoor labels, the flow labels and the bypass position, 280 to 600 px`, async () => {
+        const shown = await show(280, 'light', layout, { ...values, bypass: 100 }, HEATER);
+        const { root } = shown;
+        for (const width of WIDTHS) {
+          await resize(shown, width);
+          const where = `${layout} ${name} ${String(width)} px`;
+          const coil = box(root, '.on-drawing.pre-heater');
+          const wire = box(root, 'svg .coil');
+          expect(coil.width, where).toBeGreaterThan(0);
+          expect(coil.height, where).toBeGreaterThan(0);
+          // The outdoor stack is the corner's labels; the flow labels and the bypass position have their own boxes.
+          const outdoor = [...root.querySelectorAll('.corner .label:not(.hidden)')];
+          expect(outdoor.length, where).toBeGreaterThan(0);
+          const others = [
+            ...root.querySelectorAll('.supply-flow .label, .exhaust-flow .label, .bypass-position .label:not(.hidden)'),
+          ];
+          expect(others.length, where).toBeGreaterThan(layout === 'full' ? 1 : 0);
+          for (const other of [...outdoor, ...others]) {
+            const label = other.getBoundingClientRect();
+            const what = `${where} ${other.textContent.trim()}`;
+            expect(overlap(coil, label), `${what} / box`).toBe(false);
+            expect(overlap(wire, label), `${what} / wire`).toBe(false);
+          }
+        }
+      });
+    }
+  }
+
+  for (const theme of ['light', 'dark'] as const) {
+    test(`airflow-diagram-card "Off", ${theme}: the off coil is drawn dim and differs from the outdoor stream's colour`, async () => {
+      const { root } = await show(400, theme, 'auto', { ...VALUES, bypass: 0 }, HEATER);
+      const coil = element(root, 'svg .coil');
+      expect(coil.classList.contains('off')).toBe(true);
+      const style = getComputedStyle(coil);
+      expect(parseFloat(style.opacity)).toBeGreaterThan(0);
+      expect(parseFloat(style.opacity)).toBeLessThan(1);
+      // The outdoor stream's colour is the first stop of the supply gradient; the dim wire is drawn over the stream.
+      const stream = getComputedStyle(element(root, 'svg linearGradient stop')).stopColor;
+      const [wire, back] = [channels(style.stroke), channels(stream)];
+      const opacity = parseFloat(style.opacity);
+      const shown = wire.map((channel, i) => channel * opacity + (back[i] ?? 0) * (1 - opacity));
+      // Luminance contrast cannot tell a grey from a blue of the same lightness, so the colours' distance is measured.
+      const distance = Math.hypot(...shown.map((channel, i) => channel - (back[i] ?? 0)));
+      expect(distance).toBeGreaterThan(30);
+    });
+  }
+});
+
 describe('animated flow', () => {
   const running = (root: ShadowRoot): number =>
     [...root.querySelectorAll('.flow')].flatMap((overlay) => overlay.getAnimations()).length;

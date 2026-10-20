@@ -111,7 +111,7 @@
 - [x] 5.3 Draw the coil and its glow in `drawing()` and add the `.on-drawing.pre-heater` box with tooltip, accessible
   name and the tap through `this.tap()`; verify card tests for "Coil drawn", "No pre-heater", "Hover" ("Pre-heater:
   350 W") and "Tap" (opens `pre_heater.power`, nothing in sample mode)
-- [ ] 5.4 Browser tests: the coil's box clear of the outdoor labels, the flow labels and the bypass position at 280
+- [x] 5.4 Browser tests: the coil's box clear of the outdoor labels, the flow labels and the bypass position at 280
   to 600 px in both layouts ("Narrow card with all outdoor labels"), and the off coil distinguishable from the
   stream in the light and dark preview themes ("Off"); verify the tests pass
 - [ ] 5.5 Add the "pre-heater" fieldset to the preview page (kind, power slider, maximum power, energy, the
