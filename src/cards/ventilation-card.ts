@@ -144,7 +144,7 @@ export class HrvVentilationCard extends HrvCard {
     }
     .drawing {
       --erv-fill: color-mix(in srgb, var(--secondary-background-color) 75%, #4f86b8);
-      --erv-ring: color-mix(in srgb, var(--secondary-background-color) 50%, #4f86b8);
+      --erv-ring: color-mix(in srgb, var(--secondary-background-color) 44%, #3d78ae);
       position: relative;
       aspect-ratio: 2 / 1;
     }

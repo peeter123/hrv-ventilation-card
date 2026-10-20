@@ -630,11 +630,11 @@ describe('ring colours and coverage', () => {
       }
     }
 
-    test(`airflow-diagram-card "Moisture ring in both themes", ${theme}: the filled rim is at least 1.2:1 against the empty rim`, async () => {
+    test(`airflow-diagram-card "Moisture ring in both themes", ${theme}: the filled rim is at least ${theme === 'light' ? '1.5' : '1.3'}:1 against the empty rim`, async () => {
       const { root } = await show(400, theme, 'auto', VALUES, { ...RINGS, exchanger_type: 'erv' });
       const filled = stroke(root, 'svg .ring.moisture');
       const empty = getComputedStyle(element(root, 'svg .exchanger')).fill;
-      expect(contrast(filled, empty)).toBeGreaterThanOrEqual(1.2);
+      expect(contrast(filled, empty)).toBeGreaterThanOrEqual(theme === 'light' ? 1.5 : 1.3);
       // Blue-grey, not the moisture bar's teal: the blue channel is the strongest.
       const [r, g, b] = channels(filled);
       expect(b).toBeGreaterThan(g);

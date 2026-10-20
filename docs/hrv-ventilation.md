@@ -172,14 +172,14 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     an HRV, or an ERV without humidity, has the total ring alone. A ring is empty below its gate or while the
     calculation has no result (see Effectiveness under Formulas). No bypass gate.
   - **Colours and contrast rule:** the moisture ring is `--erv-ring`, defined next to `--erv-fill` on `.drawing`:
-    the secondary background mixed with 50 % of `#4f86b8` (the exchanger has 25 %). On a light theme it is a
-    slightly darker blue-grey than the exchanger, on a dark theme lighter. The total ring is the mode's colour
+    the secondary background mixed with 44 % of `#3d78ae` (the exchanger has 25 % of `#4f86b8`). On a light theme it is a
+    clearly darker blue than the exchanger, on a dark theme lighter. The total ring is the mode's colour
     (the cold colour in cooling and free cooling, the warm colour otherwise, also when there is no result;
     `modeColor` in `src/diagram/badge.ts`, which the badge's tint uses too; unlike the badge it never turns grey at a
-    low saving) mixed with `--primary-text-color` (`TOTAL_RING_SHARE`, 50 %): darker on a light theme, lighter on a
+    low saving) mixed with `--primary-text-color` (`TOTAL_RING_SHARE`, 45 %): darker on a light theme, lighter on a
     dark one. The rule, measured by the browser test in the light and the dark preview theme, on the HRV and the ERV
     fill: the total ring has at least 3:1 (the WCAG contrast for graphics) against the core fill and against the
-    moisture ring, and the filled rim at least 1.2:1 against the empty rim. The mode colour's share (50 %) is the largest, so the text colour's the smallest, that meets it for
+    moisture ring, and the filled rim at least 1.5:1 (light theme) or 1.3:1 (dark theme) against the empty rim (measured about 1.53 and 1.36). The mode colour's share (45 %) is the largest, so the text colour's the smallest, that meets it for
     the default warm and cold colours (the unmixed cold colour on the ERV fill was about 1.9:1). Colours are set
     inline on the elements.
   - **Tooltip box.** `.on-drawing.effectiveness` is an HTML box over the exchanger (x 145 to 255, y 26 to 174),

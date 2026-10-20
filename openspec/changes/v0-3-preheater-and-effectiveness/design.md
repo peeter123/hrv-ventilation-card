@@ -99,16 +99,17 @@ an ERV with humidity for every stream. On an HRV the rim stays as it is.
 
 Colours:
 
-- Moisture: `--erv-ring`, defined next to `--erv-fill`: the same mix of the secondary background with `#4f86b8`, with
-  50 % of the blue instead of 25 %. On a light theme that is a slightly darker blue-grey than the exchanger, as the
-  user asked (not the teal of the moisture bar card). On a dark theme the stronger blue reads lighter than the fill,
-  which keeps it visible. The browser test requires 1.2:1 between the filled and the empty rim in both themes; the
-  share is tuned with the user in the feedback round (task 4.7).
+- Moisture: `--erv-ring`, defined next to `--erv-fill`: the secondary background mixed with 44 % of a darker blue
+  (`#3d78ae`; the exchanger uses 25 % of `#4f86b8`). On a light theme that is a clearly darker blue-grey than the
+  exchanger, as the user asked (not the teal of the moisture bar card). On a dark theme it still reads lighter than
+  the fill. User decision 2026-10-20 (task 4.7): darker in the light theme, because the filled rim measured only
+  1.31:1 against the empty rim; it now measures about 1.53:1 in light and 1.36:1 in dark. The browser test requires
+  1.5:1 in light and 1.3:1 in dark. The ring cannot get much darker because the total ring must keep 3:1 against it.
 - Total: the mode's colour (the warm colour in heating, the cold colour in cooling, as the badge) mixed with
-  `--primary-text-color`: darker on a light theme, lighter on a dark one. The share is the smallest that gives the
+  `--primary-text-color`: darker on a light theme, lighter on a dark one. The mode colour's share is 45 % (50 % before the darker moisture ring; the text colour's share is the smallest that gives the
   default warm and cold colours 3:1 (the WCAG contrast for graphics) against the core fill and against the moisture
   ring, on the HRV and the ERV fill, in the light and the dark preview theme, measured by the browser test. The
-  unmixed cold colour on the ERV fill was about 1.9:1, which the user found too weak.
+  unmixed cold colour on the ERV fill was about 1.9:1, which the user found too weak.)
 
 - *Why not a fill level in the core?* The user chose rings (option C, 2026-10-19). A fill would sit under the badge
   and lower its contrast.
