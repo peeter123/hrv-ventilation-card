@@ -9,6 +9,18 @@ v0.2 was released on 2026-10-15. Next is v0.3 (OpenSpec change `v0-3-preheater-a
 shown defaults, the pre-heater on the airflow card and the effectiveness rings), then the integration, then
 packaging.
 
+- **Exchanger inlet after the pre-heater** (before the integration, which copies the formulas). While a
+  pre-heater runs, the recovery calculation counts its electric heat as recovered: it takes the outdoor air
+  temperature, measured before the pre-heater, as the exchanger's inlet. Recovered heat (thermal saving, sensible
+  part) is then too high by up to the pre-heater's heat into the supply air, and the sensible effectiveness (inner
+  ring) is too high and can reach the cap. Moisture recovery and the outer ring are unaffected (heating does not
+  change absolute humidity). The fix: a new optional role `pre_heater.temperature_after` (the ComfoAir Q exposes
+  "pre-heater temperature after"; its outdoor air temperature is measured before the pre-heater). When it is set, the
+  exchanger's inlet is that temperature: effectiveness (supply - after) / (extract - after), recovered heat
+  flow x cp x (supply - after), with the pre-heater's own energy kept as a separate figure (`pre_heater.energy`).
+  Touches `src/calc/recovery.ts` (rings and bars), the formula macro and template sensors of an installation, new
+  sets in `test/vectors.json`, and the docs. Mostly matters with an HRV core: with an ERV core the moisture exchange
+  lowers the frost risk, so the pre-heater rarely runs. Check against real data from a run of the pre-heater.
 - **Integration for history and energy statistics.** A custom integration that creates power, energy,
   effectiveness and moisture rate sensors from the raw unit sensors with the same formulas as the cards, checked
   against the same `test/vectors.json`, replacing the `comfoair_q450.jinja` macro and the template, filter and
