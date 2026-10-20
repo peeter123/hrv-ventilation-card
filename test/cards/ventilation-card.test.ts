@@ -446,6 +446,123 @@ describe('the animated flow', () => {
   });
 });
 
+describe('the effectiveness rings', () => {
+  const HUMIDITY: CardConfig = {
+    outdoor: { temperature: 'sensor.hrv_outdoor_t', absolute_humidity: 'sensor.hrv_outdoor_ah' },
+    supply: { temperature: 'sensor.hrv_supply_t', absolute_humidity: 'sensor.hrv_supply_ah' },
+    extract: { temperature: 'sensor.hrv_extract_t', absolute_humidity: 'sensor.hrv_extract_ah' },
+  };
+  const RINGS: CardConfig = {
+    ...CONFIG,
+    ...HUMIDITY,
+    fans: { supply_flow: 'sensor.hrv_supply_flow' },
+    smoothing: 0,
+    show_effectiveness: true,
+  };
+  // Outdoor 0 and extract 20 degrees, supply 18.4: 92 %. Absolute humidity 2, 12 and 8.5 g/m3: 65 %.
+  const SOURCE = [
+    state('sensor.hrv_outdoor_t', '0', '°C'),
+    state('sensor.hrv_supply_t', '18.4', '°C'),
+    state('sensor.hrv_extract_t', '20', '°C'),
+    state('sensor.hrv_outdoor_ah', '2', 'g/m³'),
+    state('sensor.hrv_supply_ah', '8.5', 'g/m³'),
+    state('sensor.hrv_extract_ah', '12', 'g/m³'),
+    state('sensor.hrv_supply_flow', '200', 'm³/h'),
+  ];
+  const attribute = (root: ShadowRoot, selector: string, name: string): string | null | undefined =>
+    root.querySelector(selector)?.getAttribute(name);
+  const ringClasses = (root: ShadowRoot): string[] =>
+    [...root.querySelectorAll('svg .ring, svg .ring-track')]
+      .map((element) => element.getAttribute('class') ?? '')
+      .sort();
+
+  test('airflow-diagram-card "Heating with both figures": the rings run 92 and 65 of 100 on pathLength 100', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '0', SOURCE);
+    expect(attribute(root, 'svg .ring.temperature', 'stroke-dasharray')).toBe('92 100');
+    expect(attribute(root, 'svg .ring.moisture', 'stroke-dasharray')).toBe('65 100');
+    for (const ring of root.querySelectorAll('svg .ring')) expect(ring.getAttribute('pathLength')).toBe('100');
+    // Each ring has a full-length track, and the streams are drawn after (over) the rings.
+    expect(root.querySelectorAll('svg .ring-track')).toHaveLength(2);
+    const order = [...root.querySelectorAll('svg path')].map((path) => path.getAttribute('class')?.split(' ')[0]);
+    expect(order.lastIndexOf('ring')).toBeLessThan(order.indexOf('stream'));
+    expect(attribute(root, 'svg .ring.temperature', 'style')).toContain('#db4437');
+    expect(attribute(root, 'svg .ring.moisture', 'style')).toContain('#00897b');
+  });
+
+  test('airflow-diagram-card "Option off": no rings or tracks', async () => {
+    const { show_effectiveness: _off, ...left } = RINGS;
+    expect(ringClasses((await render(left, '0', SOURCE)).root)).toEqual([]);
+    document.body.innerHTML = '';
+    const off = await render({ ...RINGS, show_effectiveness: false, exchanger_type: 'erv' }, '0', SOURCE);
+    expect(ringClasses(off.root)).toEqual([]);
+  });
+
+  test('airflow-diagram-card "Not a boolean": show_effectiveness "yes" is a configuration error', () => {
+    expect(() => {
+      checkDiagramConfig({ ...CONFIG, show_effectiveness: 'yes' });
+    }).toThrow('Invalid option show_effectiveness: expected true or false');
+    expect(() => {
+      checkDiagramConfig({ ...CONFIG, show_effectiveness: true });
+    }).not.toThrow();
+  });
+
+  test('airflow-diagram-card "HRV with humidity sensors": only the inner ring and its track', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'hrv' }, '0', SOURCE);
+    expect(ringClasses(root)).toEqual(['ring temperature', 'ring-track temperature']);
+  });
+
+  test('airflow-diagram-card "ERV without humidity": only the inner ring and its track', async () => {
+    const config: CardConfig = {
+      ...CONFIG,
+      fans: { supply_flow: 'sensor.hrv_supply_flow' },
+      show_effectiveness: true,
+      exchanger_type: 'erv',
+      smoothing: 0,
+    };
+    const { root } = await render(config, '0', [state('sensor.hrv_supply_flow', '200', 'm³/h')]);
+    expect(ringClasses(root)).toEqual(['ring temperature', 'ring-track temperature']);
+    // Supply 18 degrees, extract 21, outdoor 0: 85.71 %.
+    expect(attribute(root, 'svg .ring.temperature', 'stroke-dasharray')).toBe('85.71 100');
+  });
+
+  test('airflow-diagram-card "Cooling mode": the inner ring takes the configured cold colour', async () => {
+    const cooling = [
+      state('sensor.hrv_outdoor_t', '30', '°C'),
+      state('sensor.hrv_supply_t', '25', '°C'),
+      state('sensor.hrv_extract_t', '22', '°C'),
+      // Muggy outdoor air: more enthalpy than the extract air.
+      state('sensor.hrv_outdoor_ah', '20', 'g/m³'),
+    ];
+    const config = { ...RINGS, colors: { cold: '#112233', warm: '#aa0000' } };
+    const { root } = await render(config, '0', [...SOURCE, ...cooling]);
+    const ring = attribute(root, 'svg .ring.temperature', 'style');
+    expect(ring).toContain('#112233');
+    expect(ring).not.toContain('#aa0000');
+  });
+
+  test('airflow-diagram-card "Small temperature gradient": the inner ring is empty and its track is drawn', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '0', [
+      ...SOURCE,
+      state('sensor.hrv_outdoor_t', '20', '°C'),
+      state('sensor.hrv_extract_t', '22', '°C'),
+    ]);
+    expect(attribute(root, 'svg .ring.temperature', 'stroke-dasharray')).toBe('0 100');
+    expect(root.querySelector('svg .ring-track.temperature')).not.toBeNull();
+    // The moisture gradient is still large.
+    expect(attribute(root, 'svg .ring.moisture', 'stroke-dasharray')).toBe('65 100');
+  });
+
+  test('airflow-diagram-card "Input unavailable": both rings are empty and their tracks are drawn', async () => {
+    const { root } = await render({ ...RINGS, exchanger_type: 'erv' }, '0', [
+      ...SOURCE,
+      state('sensor.hrv_supply_flow', 'unavailable'),
+    ]);
+    expect(attribute(root, 'svg .ring.temperature', 'stroke-dasharray')).toBe('0 100');
+    expect(attribute(root, 'svg .ring.moisture', 'stroke-dasharray')).toBe('0 100');
+    expect(root.querySelectorAll('svg .ring-track')).toHaveLength(2);
+  });
+});
+
 describe('checkDiagramConfig', () => {
   const check = (config: CardConfig) => () => {
     checkDiagramConfig(config);

@@ -16,7 +16,15 @@ import { seasonIcon, type SeasonIcon } from '../diagram/season';
 import { bypassStrength, temperatureColors } from '../diagram/streams';
 import { DIAGRAM_SCHEMA } from '../editor/diagram-schema';
 import { EDITOR_TAG } from '../editor/hrv-card-editor';
-import { entityAt, mapStreams, STREAMS, type CardConfig, type RolePath, type Stream } from '../lib/config';
+import {
+  entityAt,
+  hasAllHumidity,
+  mapStreams,
+  STREAMS,
+  type CardConfig,
+  type RolePath,
+  type Stream,
+} from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
 import { formatState, stateOf } from '../lib/hass';
@@ -44,6 +52,10 @@ interface DiagramSettings {
    */
   savings: Record<RecoveryResult['mode'], string | undefined>;
   moistureRecovery?: string;
+  /** The effectiveness rings are drawn. */
+  rings: boolean;
+  /** The moisture ring is drawn too: an ERV with humidity for every stream. */
+  moistureRing: boolean;
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
   flows: { supply?: string; exhaust?: string };
@@ -139,6 +151,11 @@ export class HrvVentilationCard extends HrvCard {
       fill: none;
       stroke: var(--divider-color);
       stroke-width: 1.5;
+    }
+    /* The effectiveness rings: the colours are set on the elements (the ring colour, the track mixed from it). */
+    .ring,
+    .ring-track {
+      fill: none;
     }
     .stream {
       fill: none;
@@ -361,6 +378,10 @@ export class HrvVentilationCard extends HrvCard {
         cooling: entityAt(config, 'status.cooling_saving'),
       },
       moistureRecovery: entityAt(config, 'status.moisture_recovery'),
+      rings: optionValue(config, DIAGRAM_OPTIONS.showEffectiveness),
+      moistureRing:
+        optionValue(config, DIAGRAM_OPTIONS.exchangerType) === 'erv' &&
+        hasAllHumidity(config, ['outdoor', 'supply', 'extract']),
       temperatures: mapStreams((stream) => entityAt(config, `${stream}.temperature`)),
       bypass: entityAt(config, 'bypass.position'),
       flows: { supply: entityAt(config, 'fans.supply_flow'), exhaust: entityAt(config, 'fans.exhaust_flow') },
@@ -535,8 +556,8 @@ export class HrvVentilationCard extends HrvCard {
     const { compact } = this;
     const model = labelModel(this.config, hass.states, { showUnavailable: settings.showUnavailable, compact });
     const season = seasonIcon(this.config, hass.states, settings.colors);
-    // One calculation for the badge and the moisture figure, which need the same inputs.
-    const result = settings.badge && this.calculator ? this.calculator(hass).result : undefined;
+    // One calculation for the badge, the moisture figure and the rings, which need the same inputs.
+    const result = (settings.badge || settings.rings) && this.calculator ? this.calculator(hass).result : undefined;
     const locale = localeFromHass(hass);
     const badge = settings.badge ? savingBadge(result, settings, locale) : undefined;
     const moisture = moistureFigure(result, settings, locale);
@@ -554,6 +575,13 @@ export class HrvVentilationCard extends HrvCard {
         supply: flowSpeed(stateOf(states, flows.supply), settings.nominalFlow),
         exhaust: flowSpeed(stateOf(states, flows.exhaust), settings.nominalFlow),
       },
+      rings: settings.rings
+        ? {
+            figures: result?.effectiveness ?? {},
+            moisture: settings.moistureRing,
+            color: result?.mode === 'cooling' ? settings.colors.cold : settings.colors.warm,
+          }
+        : undefined,
     });
 
     return html`<ha-card @click=${this.activate} @keydown=${this.activate}>

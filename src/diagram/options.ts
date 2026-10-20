@@ -22,6 +22,8 @@ export const DIAGRAM_OPTIONS = {
   cold: { kind: 'color', path: 'colors.cold', default: '#039be5' },
   warm: { kind: 'color', path: 'colors.warm', default: '#db4437' },
   animation: { kind: 'boolean', path: 'animation.enabled', default: true },
+  // Two progress rings on the exchanger with the unit's temperature (and on an ERV moisture) effectiveness.
+  showEffectiveness: { kind: 'boolean', path: 'show_effectiveness', default: false },
   // In the unit of the flow entities; without it every stream moves at the same speed.
   nominalFlow: { kind: 'number', path: 'animation.nominal_flow', min: 1, max: 100_000, default: undefined },
   layout: { kind: 'choice', path: 'layout', choices: LAYOUTS, default: 'auto' },

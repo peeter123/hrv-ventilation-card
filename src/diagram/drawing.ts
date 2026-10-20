@@ -11,6 +11,7 @@
 // restart the animation; the card's styles stop it with `animation.enabled: false` or reduced motion.
 import { svg, type SVGTemplateResult } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
+import type { Effectiveness } from '../calc/recovery';
 import type { Stream } from '../lib/config';
 
 /** The drawing's coordinate system: 2 by 1, the drawing band's aspect ratio. */
@@ -36,6 +37,14 @@ const HEADS = {
 const EXCHANGER = '175.8,26 224.2,26 255,100 224.2,174 175.8,174 145,100';
 const EXCHANGER_INNER = '181.3,38 218.7,38 240.7,100 218.7,162 181.3,162 159.3,100';
 
+// The effectiveness rings start at the top centre and run clockwise, so a dash of the figure's length (the paths have
+// pathLength 100) is the figure in %. The moisture ring runs along the rim's midline (the midpoints of the outer and
+// inner vertices), the temperature ring along the inner outline.
+const MOISTURE_RING = 'M 200 32 L 221.45 32 L 247.85 100 L 221.45 168 L 178.55 168 L 152.15 100 L 178.55 32 Z';
+const TEMPERATURE_RING = 'M 200 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 L 181.3 38 Z';
+// The moisture ring's colour: the installation's recovered-moisture teal, distinct from the default warm and cold.
+const MOISTURE_COLOR = '#00897b';
+
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
 const HOUSE = 'M 12 4 L 21 12 L 18 12 L 18 20 L 14 20 L 14 15 L 10 15 L 10 20 L 6 20 L 6 12 L 3 12 Z';
@@ -58,6 +67,16 @@ export function drawingIds(): DrawingIds {
 /** The `exchanger_type` option: heat recovery (HRV) or energy recovery (ERV), which also passes moisture. */
 export type ExchangerType = 'hrv' | 'erv';
 
+/** The effectiveness rings (the `show_effectiveness` option). */
+export interface Rings {
+  /** The figures in %; a ring without one is empty, with its track. */
+  figures: Effectiveness;
+  /** Whether the moisture ring is drawn: an ERV with humidity for every stream. */
+  moisture: boolean;
+  /** The temperature ring's colour: the warm colour in heating, the cold colour in cooling. */
+  color: string;
+}
+
 export interface DrawingInput {
   ids: DrawingIds;
   /** Sets the exchanger's class, which the card's styles fill grey (HRV) or blue-grey (ERV). */
@@ -68,6 +87,8 @@ export interface DrawingInput {
   bypass: number;
   /** The speed factor of each stream (see flow.ts); 0 stands still. */
   speeds: { supply: number; exhaust: number };
+  /** The effectiveness rings; none without it. */
+  rings?: Rings;
 }
 
 /** The time the dashes take to move one dash pattern at the medium speed, in seconds. */
@@ -104,8 +125,18 @@ const symbol = (x: number, color: string, shape: string): SVGTemplateResult =>
     <path d=${shape} transform="translate(${String(x - 12)} ${String(100 - 12)})"></path>
   </g>`;
 
+/** A ring and the faint full-length track under it, in the ring's colour. */
+function ring(name: string, d: string, color: string, width: number, figure: number | undefined): SVGTemplateResult {
+  // Rounded, so float noise stays out of the DOM; the dash length is the figure in % of the path's length of 100.
+  const dash = Math.round((figure ?? 0) * 100) / 100;
+  return svg`<path class="ring-track ${name}" d=${d} stroke-width=${width}
+      style=${styleMap({ stroke: `color-mix(in srgb, ${color} 25%, var(--secondary-background-color))` })}></path>
+    <path class="ring ${name}" d=${d} stroke-width=${width} pathLength="100" stroke-dasharray="${String(dash)} 100"
+      style=${styleMap({ stroke: color })}></path>`;
+}
+
 /** The drawing for the current colours and bypass strength. A path at strength 0 is left out. */
-export function drawing({ ids, exchanger, colors, bypass, speeds }: DrawingInput): SVGTemplateResult {
+export function drawing({ ids, exchanger, colors, bypass, speeds, rings }: DrawingInput): SVGTemplateResult {
   // Rounded, so float noise (1 - 0.07 = 0.9299999999999999) stays out of the DOM.
   const share = (value: number): number => Math.round(value * 1000) / 1000;
   const [around, through] = [share(bypass), share(1 - bypass)];
@@ -130,6 +161,8 @@ export function drawing({ ids, exchanger, colors, bypass, speeds }: DrawingInput
     ${symbol(364, colors.extract, HOUSE)}
     <polygon class="exchanger ${exchanger}" points=${EXCHANGER}></polygon>
     <polygon class="exchanger-inner" points=${EXCHANGER_INNER}></polygon>
+    ${rings?.moisture ? ring('moisture', MOISTURE_RING, MOISTURE_COLOR, 8, rings.figures.moisture) : null}
+    ${rings ? ring('temperature', TEMPERATURE_RING, rings.color, 3, rings.figures.temperature) : null}
     ${streamPath('bypass', supplyStroke, around)}
     ${streamPath('supply', supplyStroke, through)}
     <polygon class="head" points=${HEADS.supply} style=${styleMap({ fill: colors.supply })}></polygon>

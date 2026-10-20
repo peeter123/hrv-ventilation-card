@@ -59,6 +59,7 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
       numberField('nominal_flow', DIAGRAM_OPTIONS.nominalFlow, 1),
     ],
   },
+  booleanField('show_effectiveness', DIAGRAM_OPTIONS.showEffectiveness),
   CALCULATION_SECTION,
   {
     type: 'expandable',

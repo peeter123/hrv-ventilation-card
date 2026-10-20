@@ -148,6 +148,7 @@ the status grid while one of its roles is; a row does not come and go with the s
 | `status` | object | | | The unit's status, see [Status](#status-object). |
 | `seasons` | object | | | Heating and cooling season, see [Seasons](#seasons-object). |
 | `animation` | object | | | Moving air along the streams, see [Animation](#animation-object). |
+| `show_effectiveness` | boolean | `false` | | Draw two rings on the exchanger with the unit's temperature effectiveness (inner ring) and, on an ERV with humidity for every stream, moisture effectiveness (outer ring). |
 | `smoothing` | number | `10` | yes | Minutes over which absolute humidity is averaged for the badge (0 to 1440, 0 = off). |
 | `air_density` | number | `1.2` | yes | Air density in kg/m³ for the badge (0.5 to 1.5); about 1.0 at 1500 m altitude. |
 | `colors` | object | | yes | Cold and warm colour, see [Colours](#colours-object). |
@@ -421,6 +422,7 @@ seasons:
 animation:
   enabled: true
   nominal_flow: 300
+show_effectiveness: false
 smoothing: 10
 air_density: 1.2
 colors:

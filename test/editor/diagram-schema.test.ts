@@ -39,6 +39,7 @@ describe('DIAGRAM_SCHEMA', () => {
       'status',
       'seasons',
       'animation',
+      'show_effectiveness',
     ]);
     const named = sections(shown);
     for (const stream of ['outdoor', 'supply', 'extract', 'exhaust'])
@@ -84,7 +85,12 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('colors')).toEqual(['cold', 'warm']);
     const topLevel = visibleSchema(DIAGRAM_SCHEMA, true).filter((item) => !('schema' in item));
-    expect(topLevel.map((item) => item.name)).toEqual(['exchanger_type', 'layout', 'show_unavailable']);
+    expect(topLevel.map((item) => item.name)).toEqual([
+      'exchanger_type',
+      'show_effectiveness',
+      'layout',
+      'show_unavailable',
+    ]);
   });
 
   test('the exchanger type is a basic choice of HRV and ERV, HRV by default', () => {
