@@ -32,7 +32,7 @@
 
 ## 3. Effectiveness rings on the diagram
 
-- [ ] 3.1 Add the `show_effectiveness` option to `DIAGRAM_OPTIONS` and draw the two rings and their tracks in
+- [x] 3.1 Add the `show_effectiveness` option to `DIAGRAM_OPTIONS` and draw the two rings and their tracks in
   `drawing()` between the exchanger and the streams (design: "The rings"), the moisture ring only on an ERV with
   humidity for every stream, coloured by mode; verify unit tests for "Heating with both figures" (dash lengths 92
   and 65), "Option off" (no ring elements), "Not a boolean", "HRV with humidity sensors", "ERV without humidity",
