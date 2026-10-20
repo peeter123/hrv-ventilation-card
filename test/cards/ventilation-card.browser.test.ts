@@ -264,9 +264,11 @@ const measuring = canvasContext();
 
 /** A CSS colour as the browser computes it (rgb() or color(srgb ...)), as 0 to 255 channels, through a canvas. */
 function channels(color: string): [number, number, number] {
+  context.clearRect(0, 0, 1, 1);
   context.fillStyle = color;
   context.fillRect(0, 0, 1, 1);
-  const [r = 0, g = 0, b = 0] = context.getImageData(0, 0, 1, 1).data;
+  const [r = 0, g = 0, b = 0, a = 0] = context.getImageData(0, 0, 1, 1).data;
+  if (a !== 255) throw new Error(`colour is not opaque: ${color}`);
   return [r, g, b];
 }
 
