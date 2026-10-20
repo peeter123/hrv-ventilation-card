@@ -71,7 +71,7 @@
   theme's primary text colour; set the preview page's "small gradient" scenario to 2 K and 0.3 g/m³ (design:
   "Preview page"); verify the updated unit tests for "Heating with both figures", "Option off", "HRV with humidity
   sensors", "ERV without humidity", "Cooling mode" and "Input unavailable", and that two cards get different clip IDs
-- [ ] 4.3 Name the mode (heat, cooling, free cooling) and add the absolute values to `effectivenessLabel`: the
+- [x] 4.3 Name the mode (heat, cooling, free cooling) and add the absolute values to `effectivenessLabel`: the
   recovered total and the potential in W for the total figure (sensible plus latent, as the recovery card's header),
   the recovered and the extracted moisture in g/h for the moisture figure, both as magnitudes; texts in
   `src/strings.ts` (NBSP before the units); verify unit tests for "Bypass closed", "Bypass modulating", "Figure not
