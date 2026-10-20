@@ -97,7 +97,7 @@
 - [x] 4.7 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (HRV and ERV;
   heating, cooling, free cooling and small gradient; bypass 0 % and 50 %; 280, 400 and 600 px; light and dark)
   inspected by an agent, and apply the user's feedback; verify the user approves before the review
-- [ ] 4.8 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed
+- [x] 4.8 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed
   finding; verify `npm run check` passes, then commit the group
 
 ## 5. Pre-heater coil
