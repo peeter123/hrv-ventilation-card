@@ -65,7 +65,7 @@ const TOTAL_RING_SHARE = 45;
 // stack (x 70 at most) and left of the bypass path's first bend. Its centreline is the stream's own, its amplitude the
 // stream's half-width, so the first and last points (round caps) sit on the stream's borders. Half a wave fewer than
 // the old zigzag: from the upper border, down, up, down to the lower border (two crests on each side).
-const COIL_X = { from: 100, to: 128 } as const;
+const COIL_X = { from: 102.8, to: 125.2 } as const;
 const COIL_HALF_WAVES = 3;
 const COIL_SAMPLES = 48;
 
@@ -231,7 +231,7 @@ function coilWire({ level, color }: Coil): SVGTemplateResult {
     return svg`<path class="coil off" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>`;
   }
   const stroke = `color-mix(in srgb, ${color} ${String(rounded(glowShare(level), 1))}%, var(--secondary-text-color))`;
-  return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${COIL_WIDTH * 2} stroke-linejoin="round"
+  return svg`<path class="coil-glow" d=${COIL} fill="none" stroke-width=${COIL_WIDTH * 1.5} stroke-linejoin="round"
       opacity=${rounded(glowShare(level) / 100, 3)} style=${styleMap({ stroke: color })}></path>
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>`;

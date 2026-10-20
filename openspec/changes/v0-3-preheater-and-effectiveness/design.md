@@ -165,19 +165,19 @@ exactly as v0.2 did. The user accepted that with the move.
 
 ### The pre-heater coil: SVG for the look, an HTML box for the tap
 
-The coil is a smooth wave wire along the outdoor stream over about x 100 to 128. Its shape is computed from the
+The coil is a smooth wave wire along the outdoor stream over about x 102.8 to 125.2 (20 % shorter along the stream than the first draft's 100 to 128; user's feedback, round 2). Its shape is computed from the
 stream's own geometry (user's feedback, 2026-10-20: rounder, one turn fewer, following the stream's curve, ends on the
 stream's borders): `coilPoints()` in `drawing.ts` samples the supply path's cubic centreline 48 times and moves each
 sample along the path's normal by the stream's half-width (7) times `-cos(3 pi s)`, so the wire follows the curve,
 has two crests on each side (the zigzag had three) and its first and last points, with round caps, sit on the upper
-and the lower border. The extent is about x 101 to 126 and y 56 to 76, right of the outdoor stack at every width
+and the lower border. The extent is about x 104 to 123 and y 56 to 75, right of the outdoor stack at every width
 (x 70 at most) and left of the bypass path's first bend. A pure `preHeaterLevel(state, maxPower)` gives 0 to 1:
 
 - numeric (converted to W): 0 at or below 0 W; with a maximum, `max(power / max, 0.1)` capped at 1; without one, 1;
 - `on`: 1, `off`: 0; anything else (unavailable, unknown, text): 0.
 
 The coil's stroke is `color-mix(in srgb, <glow colour> <share>%, var(--secondary-text-color))` with
-`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow. At 0 it is the secondary text colour at reduced opacity: visible as a coil
+`share = 30 + 70 x level`, with a blurred copy behind it at opacity `share / 100` as the glow (stroke 4.5 against the wire's 3, blur 1.5 px: half the first draft's spread). At 0 it is the secondary text colour at reduced opacity: visible as a coil
 in both themes, clearly off.
 
 - *Why not black for off?* It disappears on a dark theme. The secondary text colour follows the theme.

@@ -245,11 +245,11 @@ export class HrvVentilationCard extends HrvCard {
       height: 74%;
       clip-path: polygon(28% 0, 72% 0, 100% 50%, 72% 100%, 28% 100%, 0 50%);
     }
-    /* Over the pre-heater coil (x 100 to 128, y 53 to 77 of 400 by 200: the wave is y 56 to 76, plus its glow). */
+    /* Over the pre-heater coil (x 102 to 125, y 53 to 77 of 400 by 200: the wave is x 104 to 123 and y 56 to 75, plus its glow). */
     .pre-heater {
       top: 26.5%;
-      left: 25%;
-      width: 7%;
+      left: 25.5%;
+      width: 5.75%;
       height: 12%;
     }
     .coil {
@@ -260,7 +260,7 @@ export class HrvVentilationCard extends HrvCard {
       opacity: 0.5;
     }
     .coil-glow {
-      filter: blur(3px);
+      filter: blur(1.5px);
     }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {

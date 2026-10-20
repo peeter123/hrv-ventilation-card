@@ -153,12 +153,12 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   The bypass path is drawn with a strength equal to the bypass position, and the moving dashes split between the
   exchanger and bypass paths in the same proportion. Each stream end is coloured by its temperature.
 - **Pre-heater coil (`pre_heater.power`, drawn only with it).** A smooth wave wire along the outdoor stream
-  (`coilPoints()` in `src/diagram/drawing.ts`), x 100 to 128 of the 400 by 200 drawing. It is computed from the
+  (`coilPoints()` in `src/diagram/drawing.ts`), x 102.8 to 125.2 of the 400 by 200 drawing (28 units, then 20 % shorter along the stream, around its middle, at the user's request). It is computed from the
   supply path's own cubic (`SUPPLY_CUBIC`, the same numbers as `PATHS.supply`): 48 samples of the centreline, each
   moved along the path's normal by the stream's half-width (7) times `-cos(3 pi s)`, `s` running 0 to 1. So the wire
   follows the stream's curve and its first and last points (round caps) sit exactly on the upper and lower borders of
-  the stream (two crests on each side; the earlier zigzag had three and ended mid-stream). Its extent is about x 101
-  to 126 and y 56 to 76. That is right of the outdoor stack (x 70 at most) at every width and left of the bypass
+  the stream (two crests on each side; the earlier zigzag had three and ended mid-stream). Its extent is about x 104
+  to 123 and y 56 to 75. That is right of the outdoor stack (x 70 at most) at every width and left of the bypass
   path's first bend. Its level comes from the pure `preHeaterLevel(state, maxPower)` in
   `src/diagram/preheater.ts`, 0 to 1:
   - a number (converted to W): 0 at or below 0 W; with `pre_heater.max_power`, `max(power / max, 0.1)` capped at 1;
@@ -167,7 +167,7 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   - **Colours.** At level 0 the coil is `--secondary-text-color` at opacity 0.5: visible as a coil in both themes and
     clearly off. Black would disappear on a dark theme; the secondary text colour follows the theme. Above 0 the
     stroke is `color-mix(in srgb, <glow colour> <share>%, var(--secondary-text-color))` with `share = 30 + 70 x
-    level` (`glowShare()`), and a blurred copy of the coil (twice as wide, in the glow colour) lies behind it at
+    level` (`glowShare()`), and a blurred copy of the coil (half again as wide, 4.5 instead of 3, in the glow colour, with a 1.5 px blur) lies behind it at
     opacity `share / 100` as the glow. The share starts at 30 % because a share equal to the level made a quarter
     power nearly grey (25 % colour); 250 of 1,000 W is now 47.5 %. The glow colour is `pre_heater.glow_color`
     (default `#ff9800`, a warm orange, validated as a CSS colour), not the card's `colors.warm`: red-ish warm reads as
@@ -176,8 +176,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     `color`, because editor labels are looked up by field name).
   - **The 0.1 minimum.** A modulating heater at a few percent of its maximum would otherwise be mixed so little that
     it looks off. Any power above 0 reads as on.
-  - **Tap box.** The SVG is `aria-hidden`, so it can carry neither a name nor a tap target; an HTML box `.on-drawing.pre-heater` (left 25 %,
-    top 26.5 %, 7 % by 12 % of the drawing, the coil's area with its glow) lies over it. It carries `title` and `aria-label`
+  - **Tap box.** The SVG is `aria-hidden`, so it can carry neither a name nor a tap target; an HTML box `.on-drawing.pre-heater` (left 25.5 %,
+    top 26.5 %, 5.75 % by 12 % of the drawing, the coil's area with its glow) lies over it. It carries `title` and `aria-label`
     ("Pre-heater: " plus the state as Home Assistant formats it) and, through `this.tap()`, `data-entity` for
     `pre_heater.power`, so the tap, the focus and sample mode work as for every other label.
   - `pre_heater.energy` is only a configurable role for now: no label or grid cell shows it yet.
