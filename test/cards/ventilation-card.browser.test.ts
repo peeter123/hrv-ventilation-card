@@ -243,7 +243,11 @@ describe('airflow diagram layout', () => {
     }));
     expect(root.querySelector(heater)?.textContent).toContain('1,000');
     const row = box(root, '.top');
+    // A collapsed box would pass the overlap check vacuously.
+    expect(drawnIcon(root.querySelector('.top ha-icon.season')).height).toBeGreaterThan(10);
     for (const { name, box: rect } of parts) {
+      expect(rect.width, name).toBeGreaterThan(0);
+      expect(rect.height, name).toBeGreaterThan(0);
       expect(rect.left, name).toBeGreaterThanOrEqual(row.left - 0.5);
       expect(rect.right, name).toBeLessThanOrEqual(row.right + 0.5);
     }
