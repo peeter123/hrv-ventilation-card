@@ -448,7 +448,10 @@ describe('effectiveness rings', () => {
   const tracks = (root: ShadowRoot): SVGPathElement[] => [...root.querySelectorAll<SVGPathElement>('svg .ring-track')];
 
   for (const theme of ['light', 'dark'] as const) {
-    test(`airflow-diagram-card "Text on the exchanger", ${theme}: the badge, moisture figure and bypass position keep 4.5:1 and no ring covers them, 280 to 600 px`, async () => {
+    test(`airflow-diagram-card "Text on the exchanger", ${theme}: the badge and bypass position keep 4.5:1 and no ring covers them, and the moisture figure has a halo, 280 to 600 px`, async () => {
+      // How far a ring reaches into the figure's glyphs, in px, over the widths; the halo has to cover it.
+      let overlap = 0;
+      const widths: number[] = [];
       for (const width of [280, 320, COMPACT_BELOW, 360, 400, 500, 600]) {
         const { root } = await show(width, theme, 'auto', VALUES, RINGS);
         const where = `${theme} ${String(width)} px`;
@@ -468,13 +471,13 @@ describe('effectiveness rings', () => {
         const bypass = root.querySelector('.bypass-position .label');
         const figure = root.querySelector('.moisture-recovery .figure');
         if (!exchanger || !badge || !bypass || !figure) throw new Error(`a text is missing at ${where}`);
-        const texts = { badge, figure, bypass };
-        for (const [name, element] of Object.entries(texts)) {
+        for (const [name, element] of Object.entries({ badge, bypass })) {
           for (const track of tracks(root)) {
             const gap = clearance(track, inkBoxes(element));
             expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(0);
           }
         }
+        for (const track of tracks(root)) overlap = Math.max(overlap, -clearance(track, inkBoxes(figure)));
         // The streams cross the badge, which hides them with its fill; they stay clear of the other two texts.
         const toDrawing = exchanger.getScreenCTM()?.inverse();
         const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
@@ -495,10 +498,33 @@ describe('effectiveness rings', () => {
         expect(contrast(fill, getComputedStyle(figure).color), `moisture figure, ${where}`).toBeGreaterThanOrEqual(4.5);
         const badgeFill = getComputedStyle(badge, '::before').backgroundColor;
         expect(contrast(badgeFill, getComputedStyle(badge).color), `badge, ${where}`).toBeGreaterThanOrEqual(4.5);
+        // The figure keeps its size, 11 px at least, and a halo in the exchanger's colour (a text stroke under the
+        // fill) masks a ring where it meets a glyph; the text keeps 4.5:1 against the halo as against the fill.
+        const style = getComputedStyle(figure);
+        const value = figure.querySelector('.value');
+        if (!value) throw new Error('no moisture value');
+        expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
+        expect(style.paintOrder.split(' ')[0], where).toBe('stroke');
+        expect(channels(style.webkitTextStrokeColor), where).toEqual(channels(fill));
+        expect(
+          contrast(style.webkitTextStrokeColor, style.color),
+          `moisture figure halo, ${where}`,
+        ).toBeGreaterThanOrEqual(4.5);
+        widths.push(parseFloat(style.webkitTextStrokeWidth) / 2);
         document.body.innerHTML = '';
       }
+      expect(Math.min(...widths), 'halo width').toBeGreaterThanOrEqual(overlap + 0.5);
     });
   }
+
+  test('without the rings the moisture figure has no halo', async () => {
+    const { root } = await show(280, 'light', 'auto', VALUES, { exchanger_type: 'erv' });
+    const figure = root.querySelector('.moisture-recovery .figure');
+    if (!figure) throw new Error('no moisture figure');
+    const style = getComputedStyle(figure);
+    expect(style.webkitTextStrokeWidth).toBe('0px');
+    expect(style.paintOrder).toBe('normal');
+  });
 
   test('airflow-diagram-card "Both layouts": the rings and their tracks are drawn at 320 px in the compact layout', async () => {
     const { root } = await show(320, 'light', 'auto', VALUES, RINGS);

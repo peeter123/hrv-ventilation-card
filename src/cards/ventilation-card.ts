@@ -138,6 +138,7 @@ export class HrvVentilationCard extends HrvCard {
       opacity: 0.6;
     }
     .drawing {
+      --erv-fill: color-mix(in srgb, var(--secondary-background-color) 75%, #4f86b8);
       position: relative;
       aspect-ratio: 2 / 1;
     }
@@ -154,7 +155,7 @@ export class HrvVentilationCard extends HrvCard {
     }
     /* An energy recovery exchanger: blue-grey, mixed from the theme's colour so it stays light or dark with it. */
     .exchanger.erv {
-      fill: color-mix(in srgb, var(--secondary-background-color) 75%, #4f86b8);
+      fill: var(--erv-fill);
     }
     .exchanger-inner {
       fill: none;
@@ -239,12 +240,18 @@ export class HrvVentilationCard extends HrvCard {
       bottom: 24%;
     }
     /*
-     * With the rings, the figure shrinks on a narrow card so that its last glyphs stay clear of the rings' slanted
-     * sides, which the full-size figure meets below 500 px: 8.25 px (three quarters of the 11 px minimum) at 280 px,
-     * growing with the card to the 14 px of a card from 500 px. Without the rings the figure keeps its size.
+     * With the rings, a halo in the exchanger's colour around the figure's glyphs: a text stroke painted under the
+     * fill (paint-order), so the glyph shapes stay as they are and a ring that meets a glyph on a narrow card is
+     * masked around it. The visible halo is half the stroke width, 2 px. The value clips its overflow for the
+     * ellipsis, so its padding (undone by the margin) keeps the halo of the first and last glyph from being cut.
      */
     .rings .moisture-recovery {
-      font-size: clamp(8.25px, calc(8.25px + (100cqi - 280px) * 0.0261), 14px);
+      -webkit-text-stroke: 4px var(--erv-fill);
+      paint-order: stroke fill;
+    }
+    .rings .moisture-recovery .value {
+      padding: 2px;
+      margin: -2px;
     }
     /* On the exchanger's centre. */
     .saving {

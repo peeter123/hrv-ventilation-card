@@ -85,15 +85,16 @@ moisture, distinct from the default red and blue.
   and the numbers are in the tooltip.
 
 *The moisture figure beside the rings (task 3.3).* The seven-glyph figure ("983 g/h") is as wide as the hexagon is
-at the height it sits, so at full size its last glyphs meet the rings' slanted sides below 500 px, and moving it up
-only helps from 320 px and puts a four-digit figure into the streams at 280 px. While `show_effectiveness` is on
-(a `rings` class on the drawing), the figure's font size therefore shrinks on a narrow card:
-`clamp(8.25px, 8.25px + (100cqi - 280px) * 0.0261, 14px)`, which is 8.25 px (three quarters of the 11 px minimum)
-at 280 px, about 11.4 px at 400 px, and the usual 14 px from 500 px. Without the rings the figure is unchanged, so
-existing configs render as in v0.2. The browser test measures every text against both rings at 280 to 600 px in both
-themes and requires a strictly positive clearance: at least 1.0 px for the figure and the inner ring at 280 px in the
-test font (0.25 px with Arial). The smaller text is below the 11 px label minimum of the diagram's layout
-requirement, which needs a spec delta for the rings case.
+at the height it sits, so on a narrow card its last glyphs meet the rings' slanted sides (up to 1 px in the test font,
+2 px with Arial, whose digits are as wide as Roboto's). Moving it up only helps from 320 px and puts a four-digit
+figure into the streams at 280 px, and shrinking it would go below the 11 px label minimum, so the figure keeps its
+size and, while `show_effectiveness` is on (a `rings` class on the drawing), gets a halo: a 2 px text stroke in the
+exchanger's colour (`--erv-fill`, the ERV fill) painted under the glyphs with `paint-order: stroke fill`, so the
+glyph shapes stay as they are and a ring that meets a glyph is masked around it. The value's padding (undone by an
+equal negative margin) keeps its overflow clip from cutting the halo of the first and last glyph. Without the rings
+nothing changes, so existing configs render as in v0.2. The text keeps 4.5:1 against the halo, as it does against the
+fill. The browser test requires the halo to be at least as wide as the measured overlap plus 0.5 px, and that the
+badge and the bypass position clear every ring strictly.
 
 The tooltip and accessible name are an HTML box over the exchanger: `.on-drawing.effectiveness` with the
 exchanger's bounding box (x 145 to 255, y 26 to 174) clipped to the hexagon, `role="img"`, `aria-label` and `title`
@@ -177,7 +178,7 @@ the bypass modulates) can be checked by hand and by the browser tests on the sam
   *Measured (task 3.3):* the bypass position's glyphs cleared the inner ring by only 0.14 px at 280 px in the test
   font, so it moved from `top: 20.5%` to `21.5%` (always, with or without rings). It now clears every ring by at
   least 0.56 px (0.29 px with Arial, whose digits are as wide as Roboto's). The same test found that the moisture
-  figure met the inner ring's slanted side by up to 1 px at 280 to 400 px, which the figure is smaller for (see
+  figure meets the inner ring's slanted side by up to 1 px at 280 to 400 px, which the figure's halo covers (see
   "The rings").
 - [The streams hide the end of a ring on a slanted side, so 40 % and 45 % can look alike] → the numbers are in the
   tooltip, and the rings read as a rough gauge. Accepted by the user's choice of rings on the outlines.

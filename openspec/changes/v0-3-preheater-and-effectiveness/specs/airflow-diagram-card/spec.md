@@ -158,7 +158,8 @@ light and dark themes, and SHALL NOT reduce the contrast of the badge or the moi
 #### Scenario: Text on the exchanger
 - **WHEN** the option is on and the type is ERV, in the light and the dark preview theme
 - **THEN** the badge and the moisture figure keep a contrast of at least 4.5:1, and the rings and the streams do not
-  cover their text
+  cover the badge or the bypass position; where a ring meets the moisture figure on a narrow card, the figure has a
+  halo in the exchanger's colour, so it keeps 4.5:1 against its halo and stays at least 11 px high
 
 ### Requirement: Rings without a figure
 While a figure is not measurable (its gradient below the calculation's gate) or the calculation has no value, its
