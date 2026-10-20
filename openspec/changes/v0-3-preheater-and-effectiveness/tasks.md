@@ -82,7 +82,7 @@
   the `rings` class if nothing else uses it); move both flow labels below their arrowheads (design: "Moisture figure
   and flow labels"); verify unit tests for "Moisture recovered", "Moisture kept out", "Input unavailable" and "HRV",
   and the card test that a tap on the figure opens `status.moisture_recovery`
-- [ ] 4.5 Rewrite the browser tests for the rings, the moisture figure and the flow labels: in the light and dark
+- [x] 4.5 Rewrite the browser tests for the rings, the moisture figure and the flow labels: in the light and dark
   preview themes, the total ring at least 3:1 against the core fill and the moisture ring for the default warm and
   cold colours on the HRV and ERV fills; the filled rim at least 1.2:1 against the empty rim; the moisture ring
   covering the rim at 100 % and nothing outside it; at 280 to 600 px in both layouts, the moisture figure (three and
