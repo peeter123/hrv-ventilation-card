@@ -356,6 +356,171 @@ describe('exchanger type', () => {
   }
 });
 
+describe('effectiveness rings', () => {
+  const RINGS = { exchanger_type: 'erv', show_effectiveness: true, smoothing: 0 };
+  // Known limit, measured with the test font (the browser's serif fallback): below this width the moisture figure
+  // ("983 g/h", seven glyphs) is as wide as the hexagon is where it sits, so its last glyph meets the inner ring's
+  // slanted side by up to 1 px (and its first the moisture ring at 280 px). Moving the figure up clears it from 320 px
+  // but puts a four-digit figure into the streams at 280 px (see the kept-out test). From this width it clears both.
+  const FIGURE_CLEAR_FROM = 500;
+  const FIGURE_TOUCH = 1.5;
+
+  /** The boxes of a node's text, one per text node (the browser's text boxes, not the label's line box). */
+  const textNodes = (element: Element): { node: Node; box: DOMRect }[] => {
+    const found: { node: Node; box: DOMRect }[] = [];
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      if (!node.textContent?.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      found.push({ node, box: range.getBoundingClientRect() });
+    }
+    return found;
+  };
+
+  /** The box around a text and the icons in it. */
+  const textBox = (element: Element): DOMRect => {
+    const parts = [
+      ...textNodes(element).map(({ box }) => box),
+      ...[...element.querySelectorAll('ha-icon')].map(drawnIcon),
+    ];
+    if (parts.length === 0) throw new Error('no text');
+    const left = Math.min(...parts.map((part) => part.left));
+    const top = Math.min(...parts.map((part) => part.top));
+    return new DOMRect(
+      left,
+      top,
+      Math.max(...parts.map((part) => part.right)) - left,
+      Math.max(...parts.map((part) => part.bottom)) - top,
+    );
+  };
+
+  /**
+   * The ink of an element's text, one box per glyph (and per icon), measured with a canvas in the element's font:
+   * the empty corners of a line box, such as the space under "983 g/h" except for its "g", are not text, and a ring
+   * may pass through them. The baseline is where a zero-size inline box, put after the text for a moment, lands.
+   */
+  function inkBoxes(element: Element): DOMRect[] {
+    const context = document.createElement('canvas').getContext('2d');
+    if (!context) throw new Error('no canvas');
+    const boxes = [...element.querySelectorAll('ha-icon')].map(drawnIcon);
+    for (const { node, box } of textNodes(element)) {
+      context.font = getComputedStyle(node.parentElement as Element).font;
+      const text = node.textContent ?? '';
+      const probe = document.createElement('span');
+      probe.style.cssText = 'display: inline-block; width: 0; height: 0';
+      node.parentNode?.insertBefore(probe, node.nextSibling);
+      const baseline = probe.getBoundingClientRect().bottom;
+      probe.remove();
+      for (let i = 0; i < text.length; i++) {
+        const glyph = context.measureText(text.charAt(i));
+        if (glyph.actualBoundingBoxRight + glyph.actualBoundingBoxLeft <= 0) continue; // a space
+        const x = box.left + context.measureText(text.slice(0, i)).width;
+        boxes.push(
+          new DOMRect(
+            x - glyph.actualBoundingBoxLeft,
+            baseline - glyph.actualBoundingBoxAscent,
+            glyph.actualBoundingBoxLeft + glyph.actualBoundingBoxRight,
+            glyph.actualBoundingBoxAscent + glyph.actualBoundingBoxDescent,
+          ),
+        );
+      }
+    }
+    return boxes;
+  }
+
+  /**
+   * The smallest gap, in screen px, between some boxes and the drawn stroke of a ring's track (which is as long as the
+   * ring, whatever its figure): the distance from the boxes to points sampled along the track's path, less half its
+   * stroke width, so a negative gap is a stroke over a box.
+   */
+  function clearance(track: SVGPathElement, rects: DOMRect[]): number {
+    const toScreen = track.getScreenCTM();
+    if (!toScreen) throw new Error('no ring transform');
+    const half = (parseFloat(track.getAttribute('stroke-width') ?? '0') / 2) * toScreen.a;
+    const length = track.getTotalLength();
+    let nearest = Infinity;
+    for (let i = 0; i <= 600; i++) {
+      const point = track.getPointAtLength((length * i) / 600).matrixTransform(toScreen);
+      for (const rect of rects) {
+        const dx = Math.max(rect.left - point.x, 0, point.x - rect.right);
+        const dy = Math.max(rect.top - point.y, 0, point.y - rect.bottom);
+        nearest = Math.min(nearest, Math.hypot(dx, dy));
+      }
+    }
+    return nearest - half;
+  }
+
+  const tracks = (root: ShadowRoot): SVGPathElement[] => [...root.querySelectorAll<SVGPathElement>('svg .ring-track')];
+
+  for (const theme of ['light', 'dark'] as const) {
+    test(`airflow-diagram-card "Text on the exchanger", ${theme}: the badge, moisture figure and bypass position keep 4.5:1 and no ring covers them, 280 to 600 px`, async () => {
+      for (const width of [280, 320, COMPACT_BELOW, 360, 400, 500, 600]) {
+        const { root } = await show(width, theme, 'auto', VALUES, RINGS);
+        const where = `${theme} ${String(width)} px`;
+        // Both rings are drawn, with a figure, so the test measures the rings as they are in use.
+        expect(
+          tracks(root)
+            .map((track) => track.getAttribute('class')?.split(' ')[1])
+            .sort(),
+          where,
+        ).toEqual(['moisture', 'temperature']);
+        for (const ring of root.querySelectorAll('svg .ring')) {
+          const figure = parseFloat((ring.getAttribute('stroke-dasharray') ?? '0').split(' ')[0] ?? '0');
+          expect(figure, where).toBeGreaterThan(0);
+        }
+        const exchanger = root.querySelector<SVGPolygonElement>('svg .exchanger');
+        const badge = root.querySelector('.saving .badge');
+        const bypass = root.querySelector('.bypass-position .label');
+        const figure = root.querySelector('.moisture-recovery .figure');
+        if (!exchanger || !badge || !bypass || !figure) throw new Error(`a text is missing at ${where}`);
+        const texts = { badge, figure, bypass };
+        for (const [name, element] of Object.entries(texts)) {
+          for (const track of tracks(root)) {
+            const gap = clearance(track, inkBoxes(element));
+            const allowed = name === 'figure' && width < FIGURE_CLEAR_FROM ? -FIGURE_TOUCH : 0;
+            expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(allowed);
+          }
+        }
+        // The streams cross the badge, which hides them with its fill; they stay clear of the other two texts.
+        const toDrawing = exchanger.getScreenCTM()?.inverse();
+        const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
+        for (const rect of [textBox(figure), textBox(bypass)]) {
+          for (let i = 0; i <= 10; i++) {
+            for (const y of [rect.top, rect.bottom]) {
+              const point = new DOMPoint(rect.left + (rect.width * i) / 10, y).matrixTransform(toDrawing);
+              expect(
+                streams.some((stream) => stream.isPointInStroke(point)),
+                where,
+              ).toBe(false);
+            }
+          }
+        }
+        // What is behind the text: the exchanger's fill for the bypass position and the figure, the badge's own fill.
+        const fill = getComputedStyle(exchanger).fill;
+        expect(contrast(fill, getComputedStyle(bypass).color), `bypass position, ${where}`).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(fill, getComputedStyle(figure).color), `moisture figure, ${where}`).toBeGreaterThanOrEqual(4.5);
+        const badgeFill = getComputedStyle(badge, '::before').backgroundColor;
+        expect(contrast(badgeFill, getComputedStyle(badge).color), `badge, ${where}`).toBeGreaterThanOrEqual(4.5);
+        document.body.innerHTML = '';
+      }
+    });
+  }
+
+  test('airflow-diagram-card "Both layouts": the rings and their tracks are drawn at 320 px in the compact layout', async () => {
+    const { root } = await show(320, 'light', 'auto', VALUES, RINGS);
+    expect(root.querySelector('.status')).toBeNull();
+    for (const selector of ['.ring.moisture', '.ring.temperature', '.ring-track.moisture', '.ring-track.temperature']) {
+      const element = root.querySelector(`svg ${selector}`);
+      if (!element) throw new Error(`no ${selector}`);
+      const rect = element.getBoundingClientRect();
+      expect(rect.width, selector).toBeGreaterThan(20);
+      expect(rect.height, selector).toBeGreaterThan(40);
+      expect(getComputedStyle(element).visibility, selector).toBe('visible');
+    }
+  });
+});
+
 declare module 'vitest/browser' {
   interface BrowserCommands {
     emulateReducedMotion: (reducedMotion: 'reduce' | 'no-preference' | null) => Promise<void>;
