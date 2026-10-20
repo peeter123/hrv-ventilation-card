@@ -5,9 +5,9 @@ Ideas for later OpenSpec changes, outside the change in progress. Pick one up wi
 Order (decided 2026-10-15): first a v0.2 of the cards with improvements; the integration and packaging below wait
 until after that.
 
-v0.2 was released on 2026-10-15. Next is v0.3 (OpenSpec change `v0-3-preheater-and-effectiveness`: the editor's
-shown defaults, the pre-heater on the airflow card and the effectiveness rings), then the integration, then
-packaging.
+v0.2 was released on 2026-10-15 and v0.3 on 2026-10-20 (OpenSpec change `v0-3-preheater-and-effectiveness`: the
+editor's shown defaults, the pre-heater on the airflow card and the effectiveness rings). Next is the integration,
+then packaging.
 
 - **Exchanger inlet after the pre-heater** (before the integration, which copies the formulas). While a
   pre-heater runs, the recovery calculation counts its electric heat as recovered: it takes the outdoor air
@@ -36,3 +36,9 @@ packaging.
   table: choose it from `hass.language` with English as the fallback, and test that every language has every key.
   Dutch first.
 - **Device auto-fill.** Pick a ComfoAir device in the editor and fill in all its entities.
+- **Non-breaking space in entity tooltips.** The tooltips built by `roleTitle` with `formatState` (`src/lib/hass.ts`)
+  show Home Assistant's `formatEntityState` output, which joins the number and the unit with a plain space (for
+  example "Pre-heater: 0 W"), and the fallback in `formatState` does the same. That breaks the rule from
+  `src/strings.ts` that a number and its unit stay together with a non-breaking space. Possible fix: replace the
+  space between the number and the unit with a non-breaking space in `formatState`. Found during the v0.3 live
+  check; not a regression.
