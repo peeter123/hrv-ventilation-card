@@ -142,7 +142,7 @@
   sensors, binary sensors and switches (a new field helper), an energy picker and the maximum power as an advanced
   number, and the labels in `src/strings.ts`; verify the editor tests for "Editing the card" and "Advanced settings
   on"
-- [ ] 6.5 Add `pre_heater.power` (0 W) and `pre_heater.energy` (8 kWh) to `src/lib/sample.ts`; verify the
+- [x] 6.5 Add `pre_heater.power` (0 W) and `pre_heater.energy` (8 kWh) to `src/lib/sample.ts`; verify the
   card-preview tests (every full-layout role in the sample, no tap targets) and `npm run check:ids`
 - [ ] 6.6 Document the top row figure, the energy cell and the editor section in `README.md` and the top row and
   status grid points in `docs/hrv-ventilation.md` (why the figure is left out rather than kept invisible, why no
