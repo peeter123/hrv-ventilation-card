@@ -72,7 +72,7 @@ export class HrvCardEditor extends LitElement {
   private _shown: CardConfig = {};
 
   // The fields the user just cleared. They stay empty instead of showing their default again (the box would refill
-  // and typing 5 would give 105) until the config is set from outside.
+  // and typing 5 would give 105) until the config is set from outside or the switch changes.
   private _emptied = new Set<string>();
 
   constructor() {
@@ -109,6 +109,8 @@ export class HrvCardEditor extends LitElement {
 
   private _toggleAdvanced = (event: CustomEvent<{ value: { advanced?: boolean } }>): void => {
     event.stopPropagation();
+    // A field cleared before the switch changed shows its default again, as the card uses it.
+    this._emptied = new Set();
     this._switch = { advanced: event.detail.value.advanced === true || this._locked };
   };
 

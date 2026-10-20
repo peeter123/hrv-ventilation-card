@@ -312,6 +312,65 @@ describe('hrv-card-editor shown defaults (airflow diagram schema)', () => {
     expect(form.data).toMatchObject({ smoothing: 10 });
   });
 
+  test('typing the default back after a clear shows the default again, and the field is no longer held empty', async () => {
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    form.change(cleared(form.data, 'smoothing'));
+    await editor.updateComplete;
+    form.change({ ...form.data, smoothing: 10 });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ smoothing: 10 });
+  });
+
+  test('a cleared field inside a section stays empty', async () => {
+    const config = { ...card, animation: { nominal_flow: 300 } };
+    const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    form.change(cleared(form.data, 'animation.nominal_flow'));
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ animation: { enabled: true } });
+    expect(form.data['animation']).not.toHaveProperty('nominal_flow');
+  });
+
+  test('the advanced switch going off and on shows the default of a cleared field again', async () => {
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    form.change(cleared(form.data, 'smoothing'));
+    await editor.updateComplete;
+    expect(form.data).not.toHaveProperty('smoothing');
+    toggle.change({ advanced: false });
+    await editor.updateComplete;
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ smoothing: 10 });
+  });
+
+  test('a config from outside that sets a cleared field shows that value', async () => {
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    form.change(cleared(form.data, 'smoothing'));
+    await editor.updateComplete;
+    editor.setConfig({ ...card, smoothing: 7 });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ smoothing: 7 });
+  });
+
+  test.each([
+    ['recovery', RECOVERY_SCHEMA, 'custom:hrv-recovery-balance-card'],
+    ['moisture', MOISTURE_SCHEMA, 'custom:hrv-moisture-balance-card'],
+  ])('a cleared field stays empty in the %s card editor', async (_name, schema, type) => {
+    const { editor, toggle, form } = await openEditor({ type }, schema);
+    const saved = collectSaved(editor);
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    form.change(cleared(form.data, 'smoothing'));
+    await editor.updateComplete;
+    expect(form.data).not.toHaveProperty('smoothing');
+    expect(saved).toStrictEqual([{ type }]);
+  });
+
   test('card-bundle "Default already set": exchanger_type hrv stays when another field changes', async () => {
     const config = { ...card, exchanger_type: 'hrv' };
     const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);

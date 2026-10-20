@@ -180,12 +180,13 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   also when its last field is removed (`withValueAt` removes only parents it created). A default the config sets is
   never touched. To pin a default, the user sets it in YAML.
   Clearing a field: `ha-form` reports it as `{ name: undefined }` (not as a removed key). The editor drops undefined
-  values at any depth before it fires `config-changed` (`withoutUndefined`, so an emptied section saves as `{}`), and
-  remembers the cleared paths (`clearedPaths`, `_emptied`): a cleared field is not refilled with its default,
-  because the box would show 10 again and typing 5 would give 105. It stays empty until the config is set from
-  outside with a different value (`setConfig`, e.g. the code editor); `setConfig` with the config the editor just
-  fired does not count. Do not change the config anywhere else than at the edited field, and keep the editor's tests
-  for these cases (`test/editor/`) passing.
+  values from the config and its nested sections (not from arrays) before it fires `config-changed`
+  (`withoutUndefined`, so an emptied section saves as `{}`), and remembers the cleared paths (`clearedPaths`,
+  `_emptied`): a cleared field is not refilled with its default, because the box would show 10 again and typing 5
+  would give 105. It stays empty until the config is set from outside with a different value (`setConfig`, e.g. the
+  code editor) or the advanced switch changes, so a field that is hidden and shown again shows its default;
+  `setConfig` with the config the editor just fired does not count. Do not change the config anywhere else than at
+  the edited field, and keep the editor's tests for these cases (`test/editor/`) passing.
 - **Sample mode.** A card whose config sets no entity role at all (only `type`, optionally options) renders the
   built-in sample values of `src/lib/sample.ts`: a heating day (outdoor 2 °C, supply 18.5 °C, extract 21.5 °C,
   exhaust 5.5 °C, 200 m³/h, bypass closed, house drying) on made-up IDs in the non-HA domain `hrv_sample.*`, so
