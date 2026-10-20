@@ -36,7 +36,7 @@ then packaging.
   table: choose it from `hass.language` with English as the fallback, and test that every language has every key.
   Dutch first.
 - **Device auto-fill.** Pick a ComfoAir device in the editor and fill in all its entities.
-- **Non-breaking space in entity tooltips.** The tooltips built by `roleTitle` with `formatState` (`src/lib/hass.ts`)
+- **Non-breaking space in entity tooltips.** The tooltips built by `roleTitle` (`src/cards/ventilation-card.ts`) with `formatState` (`src/lib/hass.ts`)
   show Home Assistant's `formatEntityState` output, which joins the number and the unit with a plain space (for
   example "Pre-heater: 0 W"), and the fallback in `formatState` does the same. That breaks the rule from
   `src/strings.ts` that a number and its unit stay together with a non-breaking space. Possible fix: replace the

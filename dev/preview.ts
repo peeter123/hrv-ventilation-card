@@ -58,10 +58,12 @@ const SCENARIOS: Readonly<Record<string, Scenario>> = {
     bypass: 50,
     season: 'between',
   },
-  // Frost: the pre-heater warms the outdoor air before the exchanger. Pick a kind and a maximum power to see the coil.
+  // Frost: the pre-heater warms the outdoor air before the exchanger: 600 W at 180 m³/h is +10 K, so the exchanger's
+  // inlet is about 2 °C and the exhaust and supply air lie between that and the extract air. Pick a kind and a maximum
+  // power to see the coil.
   'frost (pre-heater on)': {
-    temperature: { outdoor: -8, supply: 17.4, extract: 21.5, exhaust: -2.5 },
-    humidity: { outdoor: 90, supply: 40, extract: 50, exhaust: 95 },
+    temperature: { outdoor: -8, supply: 18.5, extract: 21.5, exhaust: 5 },
+    humidity: { outdoor: 90, supply: 40, extract: 50, exhaust: 85 },
     flow: 180,
     bypass: 0,
     preHeater: 600,

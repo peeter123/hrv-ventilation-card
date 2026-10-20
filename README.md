@@ -649,12 +649,15 @@ npm run capture                  # README images of the three cards from the pre
 ```
 
 **README images:** `npm run capture` (`scripts/capture.mjs`) starts its own Vite server, drives the preview page
-with Playwright and writes the diagram in light and dark theme, the compact layout, on an ERV (plain and with the effectiveness rings) and in frost (coil glowing), the recovery bar,
-the moisture bar and the animated GIF of the bypass opening and closing (encoded in Node with `gifenc`, at most
-3 MB). Every GIF frame is checked while capturing: the supply and exhaust temperatures must lie between the
-outdoor and the extract temperature (heating or cooling), or the script fails. The mock states keep installation identifiers out of view. Two images are taken by hand from a live
-dashboard: `editor.png` (the diagram card's visual editor, opened from the card picker so no sensor is chosen) and
-`card-picker.png`; check them for entity IDs with a device serial and for host names before committing.
+with Playwright and writes the diagram in light and dark theme, the compact layout, on an ERV (plain and with the
+effectiveness rings) and in frost (coil glowing), the recovery bar, the moisture bar and the animated GIF of the
+bypass opening and closing (encoded in Node with `gifenc`, at most 3 MB). The air in the images must be physically
+possible, and the script fails otherwise: the supply and exhaust temperature and absolute humidity lie between the
+exchanger's inlet (the outdoor air, warmed by the pre-heater when it runs) and the extract air, in heating and in
+cooling. The GIF is checked at its closed and open endpoints, which cover every frame. The mock states keep
+installation identifiers out of view. Two images are taken by hand from a live dashboard: `editor.png` (the diagram
+card's visual editor, opened from the card picker so no sensor is chosen) and `card-picker.png`; check them for
+entity IDs with a device serial and for host names before committing.
 
 Only `npm run release` writes `dist/`; `npm run build` writes `build/`, so a work-in-progress bundle cannot end up
 in the deployed folder. `dist/` is committed, because deploys and HACS read it from the repo. `npm run release`
@@ -710,6 +713,8 @@ Planned with OpenSpec (CLI `openspec`, installed globally with npm).
   from the card config, visual editors, the drawn diagram, and the migration of the author's dashboards.
 - **Done: calculation in the card.** The cards calculate from the unit's raw sensors and need no helpers.
 - **Done: v0.2 of the cards** (released), with improvements to the cards themselves.
+- **Done: v0.3 of the cards** (released 2026-10-20): the effectiveness rings on the exchanger, the pre-heater coil with its
+  figure in the top row and its energy in the status grid, and the shown defaults in the editor.
 - **Next: a custom integration for history and energy statistics.** The cards show the present only. Power,
   energy, effectiveness and moisture rate sensors for charts and the energy dashboard come from template, filter
   and Riemann helpers in the author's installation today (a Jinja macro hard-coded to one unit); an integration
