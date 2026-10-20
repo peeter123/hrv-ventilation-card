@@ -179,7 +179,7 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     low saving) mixed with `--primary-text-color` (`TOTAL_RING_SHARE`, 50 %): darker on a light theme, lighter on a
     dark one. The rule, measured by the browser test in the light and the dark preview theme, on the HRV and the ERV
     fill: the total ring has at least 3:1 (the WCAG contrast for graphics) against the core fill and against the
-    moisture ring, and the filled rim at least 1.2:1 against the empty rim. The share is the smallest that meets it for
+    moisture ring, and the filled rim at least 1.2:1 against the empty rim. The mode colour's share (50 %) is the largest, so the text colour's the smallest, that meets it for
     the default warm and cold colours (the unmixed cold colour on the ERV fill was about 1.9:1). Colours are set
     inline on the elements.
   - **Tooltip box.** `.on-drawing.effectiveness` is an HTML box over the exchanger (x 145 to 255, y 26 to 174),

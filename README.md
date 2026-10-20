@@ -116,7 +116,7 @@ supply air (bottom right, into the house), extract air (top right) to the exhaus
 shows its temperature and humidities and is coloured by its temperature; the supply and exhaust flow show below
 the tips of their arrows, the bypass position at the top of the exchanger and the saving badge, shaped like the
 exchanger, on its centre. On an energy recovery unit (`exchanger_type: erv`) the exchanger is blue-grey instead of
-grey and shows the moisture it recovers at its bottom. A top row holds the season (left), the power (centred) and
+grey and shows the moisture it recovers right of the exchanger. A top row holds the season (left), the power (centred) and
 the running mean outdoor temperature (right), and a status grid below the drawing the fan level, the bypass mode
 and the unit's status.
 Every label there has an icon in front (lightning bolt for power, fan, crossing arrows for the bypass, timer, cog,
@@ -130,7 +130,7 @@ switch is on.
 |---|---|---|
 | ![Diagram card in a light theme, heating in winter](docs/images/diagram-light.png) | ![Diagram card in a dark theme](docs/images/diagram-dark.png) | ![Diagram card in the compact layout](docs/images/diagram-compact.png) |
 
-![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture recovery at its bottom](docs/images/diagram-erv.png)
+![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture recovery right of it](docs/images/diagram-erv.png)
 
 Only the four stream temperatures are required. Every other role is optional and leaves its label out when not
 configured. The top row is shown while power, the running mean outdoor temperature or a season sensor is configured,
