@@ -54,6 +54,14 @@ const SCENARIOS: Readonly<Record<string, Scenario>> = {
     bypass: 50,
     season: 'between',
   },
+  // Outdoor and extract 2 K and 0.7 g/m³ apart: below the effectiveness gradients, so the rings are empty tracks.
+  'small gradient': {
+    temperature: { outdoor: 16, supply: 17.4, extract: 18, exhaust: 16.6 },
+    humidity: { outdoor: 58, supply: 55, extract: 56, exhaust: 58 },
+    flow: 150,
+    bypass: 0,
+    season: 'between',
+  },
   'bypass 100 % (night cooling)': {
     temperature: { outdoor: 14, supply: 14.5, extract: 24, exhaust: 23.8 },
     humidity: { outdoor: 80, supply: 78, extract: 50, exhaust: 51 },
@@ -76,6 +84,7 @@ function applyScenario(scenario: Scenario): void {
 const options = {
   config: 'full',
   exchanger: 'hrv',
+  showEffectiveness: false,
   layout: 'auto',
   showUnavailable: false,
   animation: true,
@@ -114,6 +123,7 @@ function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
   return {
     ...shared,
     exchanger_type: options.exchanger,
+    show_effectiveness: options.showEffectiveness,
     layout: options.layout,
     show_unavailable: options.showUnavailable,
     animation: {
@@ -260,6 +270,10 @@ function renderControls(): void {
         })}
         ${select('exchanger', ['hrv', 'erv'], options.exchanger, (value) => {
           options.exchanger = value;
+          updateConfig();
+        })}
+        ${checkbox('show effectiveness', options.showEffectiveness, (checked) => {
+          options.showEffectiveness = checked;
           updateConfig();
         })}
         ${select('layout', ['auto', 'full', 'compact'], options.layout, (value) => {

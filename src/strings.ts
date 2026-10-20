@@ -135,6 +135,7 @@ export const EDITOR = {
     warm: 'Warm colour',
     enabled: 'Animate the air flow',
     nominal_flow: 'Nominal flow (in the unit of the flow entities)',
+    show_effectiveness: 'Show effectiveness rings',
     layout: 'Layout',
     show_unavailable: 'Show unavailable values',
   },

@@ -6,11 +6,13 @@ import {
   fieldsWithPaths,
   hasAdvancedValue,
   visibleSchema,
+  withoutShownDefaults,
+  withShownDefaults,
   type FormSchema,
   type FormSection,
 } from '../../src/editor/schema';
 import type { RolePath } from '../../src/lib/config';
-import { ROLE_LABELS } from '../../src/strings';
+import { EDITOR, ROLE_LABELS } from '../../src/strings';
 
 const sections = (schema: FormSchema): Map<string, string[]> =>
   new Map(
@@ -26,7 +28,7 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(paths).toHaveLength(new Set(paths).size);
   });
 
-  test('airflow-diagram-card "Editing the card": the exchanger type, roles per group, then the animation switch', () => {
+  test('airflow-diagram-card "Editing the card": the exchanger type, roles per group, then the animation and effectiveness switches', () => {
     const shown = visibleSchema(DIAGRAM_SCHEMA, false);
     expect(shown.map((item) => item.name)).toEqual([
       'exchanger_type',
@@ -49,6 +51,27 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('status')).toEqual(['operating_mode', 'filter_days', 'power', 'rmot']);
     expect(named.get('seasons')).toEqual(['heating', 'cooling']);
     expect(named.get('animation')).toEqual(['enabled']);
+  });
+
+  test('airflow-diagram-card "Editing the card": the effectiveness switch is basic, after the animation section, off by default and not written', () => {
+    const field = DIAGRAM_SCHEMA.find((item) => item.name === 'show_effectiveness');
+    expect(field).toEqual({ name: 'show_effectiveness', default: false, selector: { boolean: {} } });
+    expect(field).not.toHaveProperty('advanced');
+    expect(DIAGRAM_SCHEMA.findIndex((item) => item.name === 'show_effectiveness')).toBe(
+      DIAGRAM_SCHEMA.findIndex((item) => item.name === 'animation') + 1,
+    );
+    expect(EDITOR.fields.show_effectiveness).toBe('Show effectiveness rings');
+    // The editor shows the default off without the config having it, and a change elsewhere does not write it.
+    const config = { exchanger_type: 'erv' };
+    const shown = withShownDefaults(visibleSchema(DIAGRAM_SCHEMA, false), config);
+    expect(shown).toMatchObject({ show_effectiveness: false });
+    expect(withoutShownDefaults(DIAGRAM_SCHEMA, config, { ...shown, exchanger_type: 'hrv' })).toEqual({
+      exchanger_type: 'hrv',
+    });
+    expect(withoutShownDefaults(DIAGRAM_SCHEMA, config, { ...shown, show_effectiveness: true })).toEqual({
+      exchanger_type: 'erv',
+      show_effectiveness: true,
+    });
   });
 
   test('the four temperatures are required; season pickers offer binary sensors, the others sensors', () => {
