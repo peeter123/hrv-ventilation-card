@@ -191,7 +191,7 @@ describe('hrv-card-editor', () => {
     expect(saved[2]).toEqual({ type: 'custom:x', other: 3, exchanger_type: 'hrv' });
   });
 
-  test('card-bundle "Default already set": a default the config already sets stays in the saved config', async () => {
+  test('a default the config already sets stays in the saved config, in a section too', async () => {
     const config = { type: 'custom:x', exchanger_type: 'erv', calculation: { mode: 'auto' } };
     const { editor, form } = await openEditor(config, CHOICE_SCHEMA);
     const saved: CardConfig[] = [];
@@ -213,42 +213,65 @@ function collectSaved(editor: HrvCardEditor): CardConfig[] {
 }
 
 describe('hrv-card-editor shown defaults (airflow diagram schema)', () => {
+  const card = { type: 'custom:hrv-ventilation-card' };
+
   test('card-bundle "Shown default": an unset exchanger type shows HRV and an unset layout shows automatic', async () => {
-    const { editor, toggle, form } = await openEditor({ type: 'custom:hrv-ventilation-card' }, DIAGRAM_SCHEMA);
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
+    expect(fieldNames(form.schema)).toContain('exchanger_type');
+    expect(fieldNames(form.schema)).not.toContain('layout');
     expect(form.data).toMatchObject({ exchanger_type: 'hrv' });
     // The layout is an advanced setting: it is drawn, with its default, once the switch shows it.
     toggle.change({ advanced: true });
     await editor.updateComplete;
+    expect(fieldNames(form.schema)).toContain('layout');
     expect(form.data).toMatchObject({ exchanger_type: 'hrv', layout: 'auto' });
   });
 
   test('card-bundle "Unrelated edit writes no default": picking the supply flow saves no default', async () => {
-    const config = { type: 'custom:hrv-ventilation-card' };
-    const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
     const saved = collectSaved(editor);
+    // With the advanced settings on, the form holds every default, so a leak of any of them would show.
+    toggle.change({ advanced: true });
+    await editor.updateComplete;
+    expect(form.data).toMatchObject({ exchanger_type: 'hrv', layout: 'auto', smoothing: 10, air_density: 1.2 });
     form.change({ ...form.data, fans: { supply_flow: 'sensor.supply_flow' } });
-    expect(saved).toEqual([{ type: 'custom:hrv-ventilation-card', fans: { supply_flow: 'sensor.supply_flow' } }]);
-    expect(saved[0]).not.toHaveProperty('exchanger_type');
-    expect(saved[0]).not.toHaveProperty('layout');
+    expect(saved).toEqual([{ ...card, fans: { supply_flow: 'sensor.supply_flow' } }]);
+    for (const key of ['exchanger_type', 'layout', 'smoothing', 'air_density', 'animation', 'colors']) {
+      expect(saved[0]).not.toHaveProperty(key);
+    }
   });
 
   test('card-bundle "Empty section kept": clearing the only key of the animation section keeps the section', async () => {
-    const config = { type: 'custom:hrv-ventilation-card', animation: { nominal_flow: 300 } };
+    const config = { ...card, animation: { nominal_flow: 300 } };
     const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
     const saved = collectSaved(editor);
     // Clearing a number field removes its key; the section's shown default (animation on) must not be written.
     form.change({ ...form.data, animation: { enabled: true } });
-    expect(saved).toEqual([{ type: 'custom:hrv-ventilation-card', animation: {} }]);
+    expect(saved).toEqual([{ ...card, animation: {} }]);
   });
 
   test('card-bundle "Typing the default into an unset field": entering 10 as smoothing saves no smoothing', async () => {
-    const config = { type: 'custom:hrv-ventilation-card' };
-    const { editor, toggle, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    const { editor, toggle, form } = await openEditor(card, DIAGRAM_SCHEMA);
     const saved = collectSaved(editor);
     toggle.change({ advanced: true });
     await editor.updateComplete;
     expect(form.data).toMatchObject({ smoothing: 10 });
+    // The user empties the field, then types the default.
+    const { smoothing: _shown, ...cleared } = form.data;
+    form.change(cleared);
+    await editor.updateComplete;
     form.change({ ...form.data, smoothing: 10 });
-    expect(saved).toEqual([config]);
+    expect(saved).toHaveLength(2);
+    expect(saved.at(-1)).not.toHaveProperty('smoothing');
+    expect(saved.at(-1)).toEqual(card);
+  });
+
+  test('card-bundle "Default already set": exchanger_type hrv stays when another field changes', async () => {
+    const config = { ...card, exchanger_type: 'hrv' };
+    const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    const saved = collectSaved(editor);
+    form.change({ ...form.data, fans: { supply_flow: 'sensor.supply_flow' } });
+    expect(saved).toEqual([{ ...config, fans: { supply_flow: 'sensor.supply_flow' } }]);
+    expect(saved[0]).toHaveProperty('exchanger_type', 'hrv');
   });
 });
