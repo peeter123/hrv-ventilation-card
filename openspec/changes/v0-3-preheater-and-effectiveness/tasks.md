@@ -49,7 +49,7 @@
   page a `show_effectiveness` switch and the "small gradient" scenario (design: "Preview page"); verify the editor
   test for "Editing the card" and a screenshot of the preview page with HRV and ERV, bypass 0 % and 50 % and the
   small gradient, inspected by an agent
-- [ ] 3.5 Document the rings in `README.md` (options table: `show_effectiveness`; what the rings show, the gates,
+- [x] 3.5 Document the rings in `README.md` (options table: `show_effectiveness`; what the rings show, the gates,
   HRV versus ERV) and in the diagram section of `docs/hrv-ventilation.md` (geometry, colours, why the streams cover
   them, the tooltip box); verify the README tests pass
 - [ ] 3.6 Review the group: run `/code-review` and `/simplify` on this group's changes and fix every confirmed
