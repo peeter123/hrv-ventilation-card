@@ -178,7 +178,7 @@
   they have never been above 0, the rollback to v0.2.0) and the release line in `BACKLOG.md`; verify no tracked
   file holds an entity ID with the device serial, a helper or a dashboard ID (`npm run check:ids` and a `git grep`
   for the serial prefix)
-- [ ] 7.6 Feedback round: show screenshots of both live dashboards after the migration (desktop and phone width,
+- [x] 7.6 Feedback round: show screenshots of both live dashboards after the migration (desktop and phone width,
   light and dark) inspected by an agent, and apply the user's feedback; verify the user approves before the review
 - [ ] 7.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
