@@ -22,11 +22,15 @@ interface Vector {
     recovered_w: { sensible: number; latent: number };
     lost_w: { sensible: number; latent: number };
     moisture_gh: { extracted: number; recovered: number; outside: number };
+    /** The macro's whole percentages; null where it gives None (bypass open, or the gradient under its gate) */
+    eff_sensible: number | null;
+    eff_moisture: number | null;
   };
 }
 
 const vectors = golden.vectors as Vector[];
 const { w: TOLERANCE_W, gh: TOLERANCE_GH } = golden.tolerance;
+const TOLERANCE_PCT = 1; // the macro rounds to whole percentages
 const near = (actual: number | undefined, expected: number, tolerance: number): void => {
   expect(actual).toBeDefined();
   expect(Math.abs((actual ?? NaN) - expected)).toBeLessThanOrEqual(tolerance);
@@ -76,6 +80,22 @@ describe('golden vectors (recovery-calculation "Golden vectors")', () => {
     near(result.moisture?.extracted, expected.moisture_gh.extracted, TOLERANCE_GH);
     near(result.moisture?.recovered, expected.moisture_gh.recovered, TOLERANCE_GH);
     near(result.moisture?.outside, expected.moisture_gh.outside, TOLERANCE_GH);
+  });
+
+  // The macro rounds to whole percentages, does not cap and has a bypass gate the calculation lacks: compare only
+  // where the macro gives a value from 0 to 100.
+  const inRange = (value: number | null): value is number => value !== null && value >= 0 && value <= 100;
+
+  test.each(vectors.map((vector) => [vector.name, vector] as const))('%s: effectiveness', (_name, vector) => {
+    const { effectiveness } = calculate(toInputs(vector));
+    const { eff_sensible: sensible, eff_moisture: moisture } = vector.expected;
+    if (inRange(sensible)) near(effectiveness.temperature, sensible, TOLERANCE_PCT);
+    if (inRange(moisture)) near(effectiveness.moisture, moisture, TOLERANCE_PCT);
+  });
+
+  test('the macro gives a value from 0 to 100 on several sets', () => {
+    const compared = vectors.filter((v) => inRange(v.expected.eff_sensible) || inRange(v.expected.eff_moisture));
+    expect(compared.length).toBeGreaterThanOrEqual(10);
   });
 });
 

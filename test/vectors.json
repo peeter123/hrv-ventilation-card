@@ -1,5 +1,5 @@
 {
-  "description": "Golden vectors for the recovery calculation: fixed inputs and the results of the formulas of the author's template macro comfoair_q450.jinja (not published), rendered in Home Assistant 2026.10.1 on 2026-10-13 (the macro body inline, with the eight inputs as variables). Power in W, moisture in g/h, unrounded; units of the inputs: degrees C, g/m3, m3/h, %. Air density 1.2 kg/m3 (the macro's fixed value). The history vectors hold the inputs recorded at that moment; helpers_recorded lists the template helpers' recorded values (kW, g/h) that the expected figures match within the helpers' rounding. The 2026-09 moments predate the averaged humidity and the sensible/latent helpers (2026-10-04), so they use the raw absolute humidity; on 2026-09-30 the totals helper already existed and matches; on 2026-09-27 it still used an older formula, so that moment has no helper check.",
+  "description": "Golden vectors for the recovery calculation: fixed inputs and the results of the formulas of the author's template macro comfoair_q450.jinja (not published), rendered in Home Assistant 2026.10.1 on 2026-10-13 (the macro body inline, with the eight inputs as variables). eff_sensible and eff_moisture (supply-side effectiveness in %, rounded to an integer) were rendered the same way on 2026-10-20 (the two expressions inline, the temperatures, humidities and bypass as variables); null where the macro gives None (bypass above 0, or the extract-outdoor gradient under 3 K / 1.5 g/m3). The macro does not cap to 0-100, so the test compares only the values from 0 to 100, within 1 percentage point. Power in W, moisture in g/h, unrounded; units of the inputs: degrees C, g/m3, m3/h, %. Air density 1.2 kg/m3 (the macro's fixed value). The history vectors hold the inputs recorded at that moment; helpers_recorded lists the template helpers' recorded values (kW, g/h) that the expected figures match within the helpers' rounding. The 2026-09 moments predate the averaged humidity and the sensible/latent helpers (2026-10-04), so they use the raw absolute humidity; on 2026-09-30 the totals helper already existed and matches; on 2026-09-27 it still used an older formula, so that moment has no helper check.",
   "tolerance": {
     "w": 1,
     "gh": 1
@@ -39,7 +39,9 @@
           "extracted": 805.0,
           "recovered": 575.0,
           "outside": 230.0
-        }
+        },
+        "eff_sensible": 81,
+        "eff_moisture": 71
       }
     },
     {
@@ -76,7 +78,9 @@
           "extracted": 774.0,
           "recovered": 486.0,
           "outside": 288.0
-        }
+        },
+        "eff_sensible": 81,
+        "eff_moisture": 63
       }
     },
     {
@@ -113,7 +117,9 @@
           "extracted": 170.0,
           "recovered": 90.0,
           "outside": 80.0
-        }
+        },
+        "eff_sensible": 77,
+        "eff_moisture": 53
       }
     },
     {
@@ -150,7 +156,9 @@
           "extracted": 675.0,
           "recovered": 450.0,
           "outside": 225.0
-        }
+        },
+        "eff_sensible": 84,
+        "eff_moisture": 67
       }
     },
     {
@@ -187,7 +195,9 @@
           "extracted": 1575.0,
           "recovered": 900.0,
           "outside": 675.0
-        }
+        },
+        "eff_sensible": 80,
+        "eff_moisture": 57
       }
     },
     {
@@ -224,7 +234,9 @@
           "extracted": 345.0,
           "recovered": 115.0,
           "outside": 230.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -261,7 +273,9 @@
           "extracted": 230.0,
           "recovered": 92.0,
           "outside": 138.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -298,7 +312,9 @@
           "extracted": 100.0,
           "recovered": 40.0,
           "outside": 60.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -335,7 +351,9 @@
           "extracted": 460.0,
           "recovered": 23.0,
           "outside": 437.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -372,7 +390,9 @@
           "extracted": -690.0,
           "recovered": -345.0,
           "outside": -345.0
-        }
+        },
+        "eff_sensible": 75,
+        "eff_moisture": 50
       }
     },
     {
@@ -409,7 +429,9 @@
           "extracted": -1200.0,
           "recovered": -600.0,
           "outside": -600.0
-        }
+        },
+        "eff_sensible": 70,
+        "eff_moisture": 50
       }
     },
     {
@@ -446,7 +468,9 @@
           "extracted": 920.0,
           "recovered": 690.0,
           "outside": 230.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": 75
       }
     },
     {
@@ -483,7 +507,9 @@
           "extracted": -230.0,
           "recovered": -115.0,
           "outside": -115.0
-        }
+        },
+        "eff_sensible": 78,
+        "eff_moisture": null
       }
     },
     {
@@ -520,7 +546,9 @@
           "extracted": 0.0,
           "recovered": 0.0,
           "outside": 0.0
-        }
+        },
+        "eff_sensible": 81,
+        "eff_moisture": 71
       }
     },
     {
@@ -557,7 +585,9 @@
           "extracted": 46.0,
           "recovered": 23.0,
           "outside": 23.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -594,7 +624,9 @@
           "extracted": 600.0,
           "recovered": 30.0,
           "outside": 570.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -631,7 +663,9 @@
           "extracted": 230.0,
           "recovered": -46.0,
           "outside": 276.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -668,7 +702,9 @@
           "extracted": -690.0,
           "recovered": -230.0,
           "outside": -460.0
-        }
+        },
+        "eff_sensible": 75,
+        "eff_moisture": 33
       }
     },
     {
@@ -705,7 +741,9 @@
           "extracted": -920.0,
           "recovered": -460.0,
           "outside": -460.0
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -742,7 +780,9 @@
           "extracted": 104.9567,
           "recovered": 50.4935,
           "outside": 54.4632
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       }
     },
     {
@@ -779,7 +819,9 @@
           "extracted": 186.46,
           "recovered": 112.5375,
           "outside": 73.9225
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       },
       "helpers_recorded": {
         "heating_power_kw": 0.026,
@@ -820,7 +862,9 @@
           "extracted": -216.189,
           "recovered": -106.029,
           "outside": -110.16
-        }
+        },
+        "eff_sensible": 92,
+        "eff_moisture": null
       },
       "helpers_recorded": {
         "heating_power_kw": 0.294,
@@ -866,7 +910,9 @@
           "extracted": 603.0127,
           "recovered": 272.7147,
           "outside": 330.298
-        }
+        },
+        "eff_sensible": null,
+        "eff_moisture": null
       },
       "helpers_recorded": {
         "heating_power_kw": 0,
