@@ -10,7 +10,7 @@
 - [x] 1.2 Describe the shown defaults in the editor part of `README.md` (an unset option shows its default and stays
   unset) and in `docs/hrv-ventilation.md` (points that matter when changing the editor); verify the README tests
   pass
-- [ ] 1.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 1.3 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 2. Effectiveness in the calculation
