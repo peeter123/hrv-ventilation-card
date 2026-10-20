@@ -166,7 +166,7 @@
 - [x] 7.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; verify with
   Playwright (service workers blocked) on both dashboards that the existing cards render as in v0.2, apart from the moved moisture figure and flow
   labels
-- [ ] 7.4 With the user's choice of energy sensor and maximum power (design: "Open Questions"), add
+- [x] 7.4 With the user's choice of energy sensor and maximum power (design: "Open Questions"), add
   `show_effectiveness: true`, `pre_heater.power`, `pre_heater.energy` and, if known, `pre_heater.max_power` to the
   diagram cards on both dashboards (`python_transform`, cards located by type, IDs from `private/installation.md`);
   verify with Playwright, reading the card and `hass.states` in one `page.evaluate`, that the inner ring
