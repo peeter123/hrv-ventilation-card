@@ -89,6 +89,15 @@ export interface RecoveryResult {
 }
 
 /**
+ * The recovered total and the potential in W (sensible plus latent, each part rounded to whole W): the figures of the
+ * recovery card's header and the effectiveness tooltip. Signed as the parts are.
+ */
+export function recoveryTotals(result: RecoveryResult): { recovered: number; potential: number } {
+  const recovered = Math.round(result.recovered.sensible) + Math.round(result.recovered.latent);
+  return { recovered, potential: recovered + Math.round(result.lost.sensible) + Math.round(result.lost.latent) };
+}
+
+/**
  * The supply-side ratio (supply - outdoor) / (extract - outdoor) in %, capped to 0-100; undefined below the gradient.
  */
 const effectivenessRatio = ({ outdoor, supply, extract }: Streams<number>, minGradient: number): number | undefined => {

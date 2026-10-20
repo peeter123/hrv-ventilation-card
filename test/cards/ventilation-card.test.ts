@@ -1,8 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { checkDiagramConfig, HrvVentilationCard } from '../../src/cards/ventilation-card';
-import type { Effectiveness } from '../../src/calc/recovery';
 import type { CardHass } from '../../src/cards/base-card';
-import { effectivenessLabel } from '../../src/diagram/badge';
 import type { CardConfig } from '../../src/lib/config';
 import type { HassEntityState } from '../../src/lib/hass';
 import { nb } from '../nbsp';
@@ -478,23 +476,6 @@ describe('the effectiveness rings', () => {
       .map((element) => element.getAttribute('class') ?? '')
       .sort();
   const box = (root: ShadowRoot): HTMLElement | null => root.querySelector<HTMLElement>('.on-drawing.effectiveness');
-  /** What effectivenessLabel writes for these figures (heating mode). */
-  const label = (effectiveness: Effectiveness, bypass: number, moisture = true): string =>
-    effectivenessLabel(
-      {
-        mode: 'heating',
-        freeCooling: false,
-        saving: 0,
-        recovered: { sensible: 0, latent: 0 },
-        lost: { sensible: 0, latent: 0 },
-        latentKnown: true,
-        effectiveness,
-      },
-      bypass,
-      moisture,
-      { language: 'en', number_format: 'language' },
-    );
-
   test('airflow-diagram-card "Heating with both figures": the rings run 78.14 and 65 of 100 on pathLength 100', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', EFFECTIVE);
     expect(dash(root, 'total')).toBe('78.14 100');
@@ -606,8 +587,7 @@ describe('the effectiveness rings', () => {
 
   test('airflow-diagram-card "Bypass closed": the box is an image named by effectivenessLabel', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', EFFECTIVE);
-    const text = label({ total: 78.14, moisture: 65 }, 0);
-    expect(text).toContain('78');
+    const text = nb('Effectiveness: heat 78 % (2,153 / 2,755 W), moisture 65 % (1,300 / 2,000 g/h)');
     expect(box(root)?.getAttribute('role')).toBe('img');
     expect(box(root)?.getAttribute('aria-label')).toBe(text);
     expect(box(root)?.title).toBe(text);
@@ -621,19 +601,18 @@ describe('the effectiveness rings', () => {
       state('sensor.hrv_ah_sup', '2', 'g/m³'),
       state('sensor.hrv_ah_ext', '2', 'g/m³'),
     ]);
-    const text = label({ total: 39 }, 40);
-    expect(text).toContain('bypass 40');
+    const text = nb('Effectiveness: free cooling 39 % (525 / 1,346 W), moisture not measurable (bypass 40 %)');
     expect(box(root)?.title).toBe(text);
   });
 
   test('airflow-diagram-card "Rings without a figure": the box says so when there is no calculation', async () => {
     const { root } = await renderInputs(ERV_RINGS, '0', [...EFFECTIVE, state('sensor.hrv_flow', 'unavailable')]);
-    expect(box(root)?.title).toBe(label({}, 0));
+    expect(box(root)?.title).toBe('Effectiveness: not measurable, moisture not measurable');
   });
 
   test('airflow-diagram-card "Rings by exchanger type": an HRV box names the temperature only', async () => {
     const { root } = await renderInputs({ ...ERV_RINGS, exchanger_type: 'hrv' }, '0', EFFECTIVE);
-    expect(box(root)?.title).toBe(label({ total: 78.14 }, 0, false));
+    expect(box(root)?.title).toBe(nb('Effectiveness: heat 78 % (2,153 / 2,755 W)'));
   });
 
   test('airflow-diagram-card "Rings are labelled": a tap on the box opens nothing, the badge and the figure keep theirs', async () => {

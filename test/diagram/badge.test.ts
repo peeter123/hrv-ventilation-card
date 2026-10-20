@@ -219,64 +219,78 @@ describe('savingTarget', () => {
 });
 
 describe('effectivenessLabel', () => {
-  const withFigures = (total?: number, moisture?: number): RecoveryResult => ({
-    ...result('heating', 100),
+  const withFigures = (
+    total?: number,
+    moisture?: number,
+    options: { mode?: 'heating' | 'cooling'; freeCooling?: boolean; rates?: [number, number] } = {},
+  ): RecoveryResult => ({
+    ...result(options.mode ?? 'heating', 100),
+    freeCooling: options.freeCooling ?? false,
+    recovered: { sensible: 1000.4, latent: 199.7 },
+    lost: { sensible: 80, latent: 24 },
+    ...(options.rates ? { moisture: { recovered: options.rates[0], extracted: options.rates[1], outside: 0 } } : {}),
     effectiveness: {
       ...(total === undefined ? {} : { total }),
       ...(moisture === undefined ? {} : { moisture }),
     },
   });
 
-  test('airflow-diagram-card "Bypass closed": both figures in whole percent, no bypass', () => {
-    expect(effectivenessLabel(withFigures(92.4, 65.2), 0, true, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 %, moisture 65 %'),
-    );
-    expect(effectivenessLabel(withFigures(92.4, 65.2), undefined, true, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 %, moisture 65 %'),
+  test('airflow-diagram-card "Bypass closed": both figures with their absolute values, no bypass', () => {
+    const closed = withFigures(92.4, 65.2, { rates: [390, 600] });
+    const text = nb('Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 % (390 / 600 g/h)');
+    expect(effectivenessLabel(closed, 0, true, LOCALE)).toBe(text);
+    expect(effectivenessLabel(closed, undefined, true, LOCALE)).toBe(text);
+  });
+
+  test('airflow-diagram-card "Bypass modulating": free cooling, a figure without a value is not measurable', () => {
+    const modulating = withFigures(61, undefined, { mode: 'cooling', freeCooling: true });
+    expect(effectivenessLabel(modulating, 40, true, LOCALE)).toBe(
+      nb('Effectiveness: free cooling 61 % (1,200 / 1,304 W), moisture not measurable (bypass 40 %)'),
     );
   });
 
-  test('airflow-diagram-card "Bypass modulating": a figure without a value is not measurable, the bypass follows', () => {
-    expect(effectivenessLabel(withFigures(61), 40, true, LOCALE)).toBe(
-      nb('Effectiveness: temperature 61 %, moisture not measurable (bypass 40 %)'),
+  test('airflow-diagram-card "Moisture kept out of the house": cooling, the rates as magnitudes', () => {
+    const keptOut = withFigures(76, 50, { mode: 'cooling', rates: [-200, -400] });
+    expect(effectivenessLabel(keptOut, 0, true, LOCALE)).toBe(
+      nb('Effectiveness: cooling 76 % (1,200 / 1,304 W), moisture 50 % (200 / 400 g/h)'),
     );
+  });
+
+  test('airflow-diagram-card "Figure not measurable": the mode alone, no absolute values', () => {
+    expect(effectivenessLabel(withFigures(), 0, false, LOCALE)).toBe('Effectiveness: heat not measurable');
   });
 
   test('airflow-diagram-card "Rings without a figure": no calculation leaves both not measurable', () => {
     expect(effectivenessLabel(undefined, 0, true, LOCALE)).toBe(
-      'Effectiveness: temperature not measurable, moisture not measurable',
+      'Effectiveness: not measurable, moisture not measurable',
+    );
+  });
+
+  test('a moisture figure without moisture rates has no absolute values', () => {
+    expect(effectivenessLabel(withFigures(92, 65), 0, true, LOCALE)).toBe(
+      nb('Effectiveness: heat 92 % (1,200 / 1,304 W), moisture 65 %'),
     );
   });
 
   test('airflow-diagram-card "Rings by exchanger type": without a moisture ring the text leaves moisture out', () => {
-    expect(effectivenessLabel(withFigures(92, 65), 25, false, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 % (bypass 25 %)'),
+    expect(effectivenessLabel(withFigures(92, 65, { rates: [390, 600] }), 25, false, LOCALE)).toBe(
+      nb('Effectiveness: heat 92 % (1,200 / 1,304 W) (bypass 25 %)'),
     );
   });
 
   test('any bypass above 0 is named, as it turns the calculation to cooling: one decimal below 1 %', () => {
-    expect(effectivenessLabel(withFigures(92), 0, false, LOCALE)).toBe(nb('Effectiveness: temperature 92 %'));
-    expect(effectivenessLabel(withFigures(92), 0.3, false, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 % (bypass 0.3 %)'),
-    );
-    expect(effectivenessLabel(withFigures(92), 0.6, false, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 % (bypass 0.6 %)'),
-    );
-    expect(effectivenessLabel(withFigures(92), 0.04, false, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 % (bypass 0.1 %)'),
-    );
-    expect(effectivenessLabel(withFigures(92), 1.4, false, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 % (bypass 1 %)'),
-    );
-    expect(effectivenessLabel(withFigures(92), 40, false, LOCALE)).toBe(
-      nb('Effectiveness: temperature 92 % (bypass 40 %)'),
-    );
+    const at = (bypass: number): string => effectivenessLabel(withFigures(92), bypass, false, LOCALE);
+    expect(at(0)).toBe(nb('Effectiveness: heat 92 % (1,200 / 1,304 W)'));
+    expect(at(0.3)).toBe(nb('Effectiveness: heat 92 % (1,200 / 1,304 W) (bypass 0.3 %)'));
+    expect(at(0.04)).toBe(nb('Effectiveness: heat 92 % (1,200 / 1,304 W) (bypass 0.1 %)'));
+    expect(at(1.4)).toBe(nb('Effectiveness: heat 92 % (1,200 / 1,304 W) (bypass 1 %)'));
   });
 
-  test('the percentages are formatted with the locale and joined to their unit by a no-break space', () => {
+  test('the numbers are formatted with the locale and joined to their unit by a no-break space', () => {
     // Arabic-Indic digits, so a label that ignored the locale would fail.
-    expect(effectivenessLabel(withFigures(92), 40, false, { language: 'ar-EG' })).toBe(
-      'Effectiveness: temperature ٩٢ % (bypass ٤٠ %)',
-    );
+    const text = effectivenessLabel(withFigures(92), 40, false, { language: 'ar-EG' });
+    expect(text).toContain('٩٢ %');
+    expect(text).toContain(' W)');
+    expect(text).toContain('(bypass ٤٠ %)');
   });
 });

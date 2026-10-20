@@ -188,11 +188,14 @@ describe('texts', () => {
     );
   });
 
-  test('airflow-diagram-card "Rings are labelled": the effectiveness texts have a no-break space before %', () => {
-    const { effectiveness, effectivenessPercent } = DIAGRAM;
-    expect(effectivenessPercent('92')).toBe('92 %');
-    expect(effectiveness('92')).toBe('Effectiveness: temperature 92');
-    expect(effectiveness('92', '65', '40')).toBe('Effectiveness: temperature 92, moisture 65 (bypass 40 %)');
+  test('airflow-diagram-card "Rings are labelled": the effectiveness texts have a no-break space before the units', () => {
+    const d = DIAGRAM;
+    expect(d.effectivenessPercent('92')).toBe('92 %');
+    expect(d.effectivenessWatts('1,200', '1,304')).toBe(' (1,200 / 1,304 W)');
+    expect(d.effectivenessRate('390', '600')).toBe(' (390 / 600 g/h)');
+    expect(d.effectivenessTotal('heat', '92', ' (1 / 2)')).toBe('heat 92 (1 / 2)');
+    expect(d.effectivenessTotal(undefined, 'not measurable')).toBe('not measurable');
+    expect(d.effectiveness('heat 92', '65', '40')).toBe('Effectiveness: heat 92, moisture 65 (bypass 40 %)');
   });
 
   test('the no-value text', () => {

@@ -1,6 +1,6 @@
 // The saving badge in the centre of the airflow diagram: the saving of the shared recovery calculation, in W; and on
 // an ERV the moisture recovery figure at the bottom of the exchanger, in g/h. Pure: the Lit element renders the result.
-import type { RecoveryResult } from '../calc/recovery';
+import { recoveryTotals, type RecoveryResult } from '../calc/recovery';
 import { missingRoles, type CardConfig, type Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
 import type { EntityStateLike } from '../lib/hass';
@@ -108,10 +108,12 @@ export function moistureFigure(
 }
 
 /**
- * The tooltip and accessible name of the effectiveness rings: both figures in whole percent, "not measurable" for one
- * without a value (or both without a calculation), and the bypass position while it is above 0 %, as the calculation
- * turns to cooling then (whole percent from 1 %, one decimal below). `moisture` is false where no moisture ring is
- * drawn (an HRV, or an ERV without humidity), so the text leaves the moisture figure out.
+ * The tooltip and accessible name of the effectiveness rings: the total figure named by the mode (heat, cooling, free
+ * cooling) and the moisture figure, each in whole percent with its absolute values as magnitudes (the recovered total
+ * and the potential in W, as the recovery card's header; the recovered and the extracted moisture in g/h), "not
+ * measurable" for one without a value (or both without a calculation), and the bypass position while it is above 0 %,
+ * as the calculation turns to cooling then (whole percent from 1 %, one decimal below). `moisture` is false where no
+ * moisture ring is drawn (an HRV, or an ERV without humidity), so the text leaves the moisture figure out.
  */
 export function effectivenessLabel(
   result: RecoveryResult | undefined,
@@ -121,11 +123,32 @@ export function effectivenessLabel(
 ): string {
   const figure = (value: number | undefined): string =>
     value === undefined ? DIAGRAM.effectivenessNoValue : DIAGRAM.effectivenessPercent(formatNumber(value, locale));
+  const magnitude = (value: number): string => formatNumber(Math.abs(value), locale);
+  const total = result?.effectiveness.total;
+  const totals = result && total !== undefined ? recoveryTotals(result) : undefined;
+  const rates = result?.effectiveness.moisture === undefined ? undefined : result.moisture;
+  const mode =
+    result === undefined
+      ? undefined
+      : result.freeCooling
+        ? 'free cooling'
+        : result.mode === 'cooling'
+          ? 'cooling'
+          : 'heat';
   // Any position above 0 turns the ring cold, so it is named; below 1 % with a decimal, never as "0".
   const open = bypass !== undefined && bypass > 0;
   return DIAGRAM.effectiveness(
-    figure(result?.effectiveness.total),
-    moisture ? figure(result?.effectiveness.moisture) : undefined,
+    DIAGRAM.effectivenessTotal(
+      mode,
+      figure(total),
+      totals && DIAGRAM.effectivenessWatts(magnitude(totals.recovered), magnitude(totals.potential)),
+    ),
+    moisture
+      ? DIAGRAM.effectivenessMoisture(
+          figure(result?.effectiveness.moisture),
+          rates && DIAGRAM.effectivenessRate(magnitude(rates.recovered), magnitude(rates.extracted)),
+        )
+      : undefined,
     open ? (bypass >= 1 ? formatNumber(bypass, locale) : formatNumber(Math.max(bypass, 0.1), locale, 1)) : undefined,
   );
 }

@@ -1,6 +1,6 @@
 // What the recovery balance card shows, as a pure function of the calculation, the options and the locale. The Lit
 // element only renders this.
-import type { RecoveryResult } from '../calc/recovery';
+import { recoveryTotals, type RecoveryResult } from '../calc/recovery';
 import { barScale, layoutSegments } from '../lib/bar';
 import type { Requirements } from '../lib/config';
 import { formatNumber, type LocaleLike } from '../lib/format';
@@ -75,8 +75,7 @@ export function recoveryView(
     layoutSegments(values, scale).map((segment, i) => ({ ...segment, background: backgrounds[i] ?? color })),
   );
 
-  const recoveredTotal = recovered.sensible + recovered.latent;
-  const potential = recoveredTotal + lost.sensible + lost.latent;
+  const { recovered: recoveredTotal, potential } = recoveryTotals(result);
   // Free cooling words the same figures as cooling delivered rather than recovered.
   const [withPotential, withoutPotential] = result.freeCooling
     ? [RECOVERY.headerFreeCooling, RECOVERY.headerFreeCoolingNoPotential]

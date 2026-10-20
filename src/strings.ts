@@ -229,11 +229,22 @@ export const DIAGRAM = {
   moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,
   moistureNoValue: `Moisture recovery: ${NO_VALUE}`,
-  /** The effectiveness rings' tooltip: each figure is `effectivenessPercent` or `effectivenessNoValue`. */
-  effectiveness: (temperature: string, moisture?: string, bypass?: string): string =>
-    `Effectiveness: temperature ${temperature}${moisture === undefined ? '' : `, moisture ${moisture}`}${
+  /**
+   * The effectiveness rings' tooltip. The total figure is `effectivenessTotal` (named by the mode, or without one while
+   * there is no calculation), the moisture figure `effectivenessMoisture`; each takes a `figure` (`effectivenessPercent`
+   * or `effectivenessNoValue`) and, for one with a value, its absolute values (`effectivenessWatts`, `effectivenessRate`).
+   */
+  effectiveness: (total: string, moisture?: string, bypass?: string): string =>
+    `Effectiveness: ${total}${moisture === undefined ? '' : `, moisture ${moisture}`}${
       bypass === undefined ? '' : ` (bypass ${bypass}${NBSP}%)`
     }`,
+  effectivenessTotal: (mode: 'heat' | 'cooling' | 'free cooling' | undefined, figure: string, absolute = ''): string =>
+    `${mode === undefined ? '' : `${mode} `}${figure}${absolute}`,
+  effectivenessMoisture: (figure: string, absolute = ''): string => `${figure}${absolute}`,
+  /** The total figure's absolute values: the recovered total of the potential, in W. */
+  effectivenessWatts: (recovered: string, potential: string): string => ` (${recovered} / ${potential}${NBSP}W)`,
+  /** The moisture figure's absolute values: the recovered of the extracted moisture, in g/h. */
+  effectivenessRate: (recovered: string, extracted: string): string => ` (${recovered} / ${extracted}${NBSP}g/h)`,
   effectivenessPercent: (percent: string): string => `${percent}${NBSP}%`,
   effectivenessNoValue: 'not measurable',
 } as const;
