@@ -653,6 +653,20 @@ describe('the pre-heater coil', () => {
     expect(root.querySelector('svg .coil.on')?.getAttribute('style')).toContain('47.5%');
   });
 
+  test('airflow-diagram-card "Pre-heater on": the top row shows power then the pre-heater; a tap opens its entity', async () => {
+    const config: CardConfig = { ...WITH_HEATER, status: { power: 'sensor.hrv_power' } };
+    const { card, root } = await render(config, '0', [
+      state('sensor.hrv_power', '32', 'W'),
+      state(HEATER, '1000', 'W'),
+    ]);
+    const labels = [...root.querySelectorAll<HTMLElement>('.top .centre .label')];
+    expect(labels.map((label) => label.textContent.trim())).toEqual(['32 W', '1000 W']);
+    expect(labels[1]?.title).toBe('Pre-heater: 1000 W');
+    const entities = opened(card);
+    labels[1]?.click();
+    expect(entities).toEqual([HEATER]);
+  });
+
   test('airflow-diagram-card "Partial glow": the warm share is 30 + 70 x level, 100 % at full', async () => {
     for (const [power, share, opacity, white] of [
       ['1000', '100%', '1', '55%'],

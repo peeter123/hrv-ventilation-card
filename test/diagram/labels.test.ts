@@ -268,6 +268,44 @@ describe('labelModel', () => {
     const model = labelModel(FULL, allStates(), { showUnavailable: false, compact: isCompact('full', 380) });
     expect(visibleRoles(model)).toHaveLength(25);
   });
+
+  describe('the pre-heater in the top row', () => {
+    const WITH_HEATER: CardConfig = { ...FULL, pre_heater: { power: 'sensor.hrv_heater' } };
+    const model = (config: CardConfig, heater: { state: string; unit?: string }) =>
+      labelModel(
+        config,
+        {
+          ...allStates(),
+          'sensor.hrv_heater': { state: heater.state, attributes: { unit_of_measurement: heater.unit } },
+        },
+        FULL_LAYOUT,
+      );
+
+    test('airflow-diagram-card "Pre-heater on": its label follows power, with the heating coil icon', () => {
+      const top = model(WITH_HEATER, { state: '1000', unit: 'W' }).top;
+      expect(roles(top)).toEqual(['status.power', 'pre_heater.power', 'status.rmot']);
+      expect(top?.[1]).toMatchObject({ entityId: 'sensor.hrv_heater', icon: 'mdi:heating-coil', visible: true });
+    });
+
+    test('airflow-diagram-card "On/off entity on": a binary sensor that is on gives the label', () => {
+      const config: CardConfig = { ...FULL, pre_heater: { power: 'binary_sensor.hrv_heater' } };
+      const states = { ...allStates(), 'binary_sensor.hrv_heater': { state: 'on' } };
+      expect(roles(labelModel(config, states, FULL_LAYOUT).top)).toContain('pre_heater.power');
+    });
+
+    test('airflow-diagram-card "Pre-heater off": no label while off, unavailable or missing', () => {
+      for (const heater of [{ state: '0', unit: 'W' }, { state: 'unavailable' }, { state: 'off' }]) {
+        expect(roles(model(WITH_HEATER, heater).top)).toEqual(['status.power', 'status.rmot']);
+      }
+      expect(roles(labelModel(WITH_HEATER, allStates(), FULL_LAYOUT).top)).toEqual(['status.power', 'status.rmot']);
+    });
+
+    test('airflow-diagram-card "Only pre-heater power, pre-heater off": the top row is shown, empty', () => {
+      const config: CardConfig = { ...TEMPERATURES_ONLY, pre_heater: { power: 'sensor.hrv_heater' } };
+      const states = { 'sensor.hrv_heater': { state: '0', attributes: { unit_of_measurement: 'W' } } };
+      expect(roles(labelModel(config, states, FULL_LAYOUT).top)).toEqual([]);
+    });
+  });
 });
 
 describe('isCompact', () => {

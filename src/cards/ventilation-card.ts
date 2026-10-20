@@ -126,6 +126,11 @@ export class HrvVentilationCard extends HrvCard {
       display: flex;
       align-items: center;
     }
+    /* Power, then the pre-heater while it is on: the pair widens around the middle. */
+    .top > .centre {
+      justify-content: center;
+      gap: 8px;
+    }
     .top > :last-child {
       justify-self: end;
     }
@@ -573,14 +578,15 @@ export class HrvVentilationCard extends HrvCard {
     >`;
   }
 
-  /** The top row: the season icon left, power centred on the card, RMOT right. */
+  /** The top row: the season icon left, power (then the pre-heater while on) centred on the card, RMOT right. */
   private topRow(labels: readonly DiagramLabel[], season: SeasonIcon | undefined): TemplateResult {
     const cell = (role: RolePath) => {
       const label = labels.find((candidate) => candidate.role === role);
       return label ? this.label(label) : nothing;
     };
     return html`<div class="row top">
-      <span>${this.season(season)}</span><span>${cell('status.power')}</span><span>${cell('status.rmot')}</span>
+      <span>${this.season(season)}</span><span class="centre">${cell('status.power')}${cell('pre_heater.power')}</span
+      ><span>${cell('status.rmot')}</span>
     </div>`;
   }
 
