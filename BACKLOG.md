@@ -5,19 +5,15 @@ Ideas for later OpenSpec changes, outside the change in progress. Pick one up wi
 Order (decided 2026-10-15): first a v0.2 of the cards with improvements; the integration and packaging below wait
 until after that.
 
-v0.2 was released on 2026-10-15; next is the integration, then packaging.
+v0.2 was released on 2026-10-15. Next is v0.3 (OpenSpec change `v0-3-preheater-and-effectiveness`: the editor's
+shown defaults, the pre-heater on the airflow card and the effectiveness rings), then the integration, then
+packaging.
 
 - **Integration for history and energy statistics.** A custom integration that creates power, energy,
   effectiveness and moisture rate sensors from the raw unit sensors with the same formulas as the cards, checked
   against the same `test/vectors.json`, replacing the `comfoair_q450.jinja` macro and the template, filter and
   Riemann helpers of the author's installation, with a plan to carry over the existing energy totals. The cards do
   not depend on it.
-- **Spec the editor's shown defaults** (in v0.3.0). Since the group 6 review of v0.2, the editors show each
-  option's default (for example the exchanger type and layout) on a card that does not set it, without writing the
-  default into the YAML, and keep a section that was in the config even when it ends up empty. No spec describes
-  this yet: add a requirement or scenarios to the cards' "Visual editor" requirements (shown default, nothing
-  written by an unrelated edit, an existing empty section kept, typing the default into an unset field leaves it
-  unset).
 - **Packaging** (after the integration). Inclusion in the HACS default list, README badges (HACS, release,
   downloads), release automation, and whether the integration ships the cards. HACS installation as a custom
   repository and manual releases exist since v0.1.0.
@@ -28,9 +24,3 @@ v0.2 was released on 2026-10-15; next is the integration, then packaging.
   table: choose it from `hass.language` with English as the fallback, and test that every language has every key.
   Dutch first.
 - **Device auto-fill.** Pick a ComfoAir device in the editor and fill in all its entities.
-- **Pre-heater energy in the bottom status bar.** Show the electricity used by the pre-heater (the frost-protection
-  heater on the fresh-air intake) in the status bar at the bottom of the airflow card, next to the existing strip.
-  Data check: the unit exposes the pre-heater's temperatures and humidity before and after, but no pre-heater power
-  or energy sensor. Only the unit's total power (W) and the energy totals (today, YTD, since start) are available,
-  so the pre-heater part needs a source first: a smart plug or a measured sensor on the heater, or an estimate from
-  the temperature rise. Seasonal: useful only in the heating season.
