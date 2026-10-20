@@ -339,6 +339,15 @@ describe('recovery-calculation scenarios', () => {
       expect(totalEffectiveness(20, 21, 22)).toBeUndefined();
       // Exactly at the gate it is given.
       expect(totalEffectiveness(19, 21, 22)).toBeCloseTo(66.67, 2);
+      // Also at other air densities, where float rounding could put the gradient a hair under the gate.
+      for (const airDensity of [0.7, 0.93, 1.0, 1.1, 1.13, 1.29]) {
+        const { total } = calculate({
+          ...temperaturesOnly,
+          temperature: { outdoor: 19.1, supply: 21, extract: 22.1 },
+          airDensity,
+        }).effectiveness;
+        expect(total, String(airDensity)).toBeDefined();
+      }
     });
 
     test('the gradient gate holds in both directions and at its boundaries', () => {

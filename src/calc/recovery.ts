@@ -160,7 +160,8 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
   // The total: recovered / (recovered + lost) = recovered / |extract - outdoor| per m³, before any rounding, capped to
   // 0-100 and left out below the enthalpy gradient of MIN_TEMPERATURE_GRADIENT K of dry air.
   const gradient = Math.abs(extract.h - outdoor.h);
-  if (gradient >= rho * CP_AIR * MIN_TEMPERATURE_GRADIENT) {
+  // A relative epsilon keeps a gradient of exactly 3 K inside the gate despite float rounding.
+  if (gradient >= rho * CP_AIR * MIN_TEMPERATURE_GRADIENT * (1 - 1e-9)) {
     result.effectiveness.total = Math.min(Math.max((recovered.total / gradient) * 100, 0), 100);
   }
   const moistureRatio = moistureEffectiveness(absoluteHumidity as Streams<number> | undefined);
