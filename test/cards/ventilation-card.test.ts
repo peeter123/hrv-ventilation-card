@@ -825,6 +825,18 @@ describe('checkDiagramConfig', () => {
   });
 });
 
+describe('the pre-heater energy cell', () => {
+  test('airflow-diagram-card "Pre-heater energy cell": a heating coil and the energy in the second column, third row', async () => {
+    const config: CardConfig = { ...CONFIG, pre_heater: { energy: 'sensor.hrv_heater_energy' } };
+    const { root } = await render(config, '0', [state('sensor.hrv_heater_energy', '12', 'kWh')]);
+    const label = root.querySelector<HTMLElement>('.status .label.energy');
+    expect(label?.textContent.trim()).toBe('12 kWh');
+    expect(label?.title).toBe('Pre-heater energy: 12 kWh');
+    expect(label?.querySelector<HTMLElement & { icon?: string }>('ha-icon')?.icon).toBe('mdi:heating-coil');
+    expect(label?.closest('.cell')?.getAttribute('style')).toMatch(/grid-column:\s*2.*grid-row:\s*3/);
+  });
+});
+
 describe('rows keep their size', () => {
   test('airflow-diagram-card "All status values unavailable": the strip keeps every label, invisible', async () => {
     const config = { ...CONFIG, status: { operating_mode: 'sensor.hrv_mode', filter_days: 'sensor.hrv_filter' } };

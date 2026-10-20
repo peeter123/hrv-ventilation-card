@@ -80,12 +80,14 @@ const STATUS_ROLES = [
   'status.temperature_profile',
   'status.next_fan_change',
   'status.filter_days',
+  'pre_heater.energy',
 ] as const satisfies readonly RolePath[];
 
 /**
  * The fixed cell of each status role in the three-column grid below the drawing, one subject per column: the fans
- * (level, next fan change, filter), the bypass (mode, next change) and comfort (operating mode, profile, target). A
- * role keeps its cell whatever the states, and an unconfigured role leaves its cell empty, so nothing shifts.
+ * (level, next fan change, filter), the bypass (mode, next change, then the pre-heater energy) and comfort (operating
+ * mode, profile, target). A role keeps its cell whatever the states, and an unconfigured role leaves its cell empty, so
+ * nothing shifts.
  */
 export const STATUS_CELLS: Readonly<Record<(typeof STATUS_ROLES)[number], { column: number; row: number }>> = {
   'fans.level': { column: 1, row: 1 },
@@ -93,6 +95,7 @@ export const STATUS_CELLS: Readonly<Record<(typeof STATUS_ROLES)[number], { colu
   'status.filter_days': { column: 1, row: 3 },
   'bypass.mode': { column: 2, row: 1 },
   'bypass.next_change': { column: 2, row: 2 },
+  'pre_heater.energy': { column: 2, row: 3 },
   'status.operating_mode': { column: 3, row: 1 },
   'status.temperature_profile': { column: 3, row: 2 },
   'status.target_temperature': { column: 3, row: 3 },

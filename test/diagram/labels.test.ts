@@ -245,6 +245,7 @@ describe('labelModel', () => {
     expect(model.status?.every((label) => label.role in STATUS_CELLS)).toBe(true);
     expect(STATUS_CELLS['fans.level']).toEqual({ column: 1, row: 1 });
     expect(STATUS_CELLS['bypass.next_change']).toEqual({ column: 2, row: 2 });
+    expect(STATUS_CELLS['pre_heater.energy']).toEqual({ column: 2, row: 3 });
     expect(STATUS_CELLS['status.target_temperature']).toEqual({ column: 3, row: 3 });
   });
 
@@ -267,6 +268,14 @@ describe('labelModel', () => {
     expect(isCompact('full', 380)).toBe(false);
     const model = labelModel(FULL, allStates(), { showUnavailable: false, compact: isCompact('full', 380) });
     expect(visibleRoles(model)).toHaveLength(25);
+  });
+
+  test('airflow-diagram-card "Pre-heater energy cell": the energy sits in the bypass column, below the next change', () => {
+    const config: CardConfig = { ...FULL, pre_heater: { energy: 'sensor.hrv_heater_energy' } };
+    const states = { ...allStates(), 'sensor.hrv_heater_energy': { state: '12' } };
+    const label = labelModel(config, states, FULL_LAYOUT).status?.find((item) => item.role === 'pre_heater.energy');
+    expect(label).toMatchObject({ entityId: 'sensor.hrv_heater_energy', icon: 'mdi:heating-coil', visible: true });
+    expect(STATUS_CELLS['pre_heater.energy']).toEqual({ column: 2, row: 3 });
   });
 
   describe('the pre-heater in the top row', () => {
