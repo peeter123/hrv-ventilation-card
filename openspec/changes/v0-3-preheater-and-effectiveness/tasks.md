@@ -37,7 +37,7 @@
   humidity for every stream, coloured by mode; verify unit tests for "Heating with both figures" (dash lengths 92
   and 65), "Option off" (no ring elements), "Not a boolean", "HRV with humidity sensors", "ERV without humidity",
   "Cooling mode", "Small temperature gradient" and "Input unavailable" (empty ring, track drawn)
-- [ ] 3.2 Add `effectivenessLabel` and the `.on-drawing.effectiveness` box with `title`, `aria-label` and
+- [x] 3.2 Add `effectivenessLabel` and the `.on-drawing.effectiveness` box with `title`, `aria-label` and
   `role="img"`, below the other boxes, with the texts in `src/strings.ts` (NBSP before %); verify unit tests for
   "Bypass closed" and "Bypass modulating", the strings and NBSP tests, and a card test that a tap on the box opens
   nothing while the badge and the moisture figure keep their taps
