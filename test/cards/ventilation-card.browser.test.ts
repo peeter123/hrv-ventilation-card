@@ -304,6 +304,51 @@ function streamCrossing(root: ShadowRoot): (rect: DOMRect) => boolean {
   };
 }
 
+/** The boxes of a node's text, one per text node (the browser's text boxes, not the label's line box). */
+const textNodes = (element: Element): { node: Node; box: DOMRect }[] => {
+  const found: { node: Node; box: DOMRect }[] = [];
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (!node.textContent?.trim()) continue;
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    found.push({ node, box: range.getBoundingClientRect() });
+  }
+  return found;
+};
+
+/**
+ * The ink of an element's text, one box per glyph (and per icon), measured with a canvas in the element's font:
+ * the empty corners of a line box, such as the space under "983 g/h" except for its "g", are not text, and a ring
+ * may pass through them. The baseline is where a zero-size inline box, put after the text for a moment, lands.
+ */
+function inkBoxes(element: Element): DOMRect[] {
+  const boxes = [...element.querySelectorAll('ha-icon')].map(drawnIcon);
+  for (const { node, box } of textNodes(element)) {
+    measuring.font = getComputedStyle(node.parentElement as Element).font;
+    const text = node.textContent ?? '';
+    const probe = document.createElement('span');
+    probe.style.cssText = 'display: inline-block; width: 0; height: 0';
+    node.parentNode?.insertBefore(probe, node.nextSibling);
+    const baseline = probe.getBoundingClientRect().bottom;
+    probe.remove();
+    for (let i = 0; i < text.length; i++) {
+      const glyph = measuring.measureText(text.charAt(i));
+      if (glyph.actualBoundingBoxRight + glyph.actualBoundingBoxLeft <= 0) continue; // a space
+      const x = box.left + measuring.measureText(text.slice(0, i)).width;
+      boxes.push(
+        new DOMRect(
+          x - glyph.actualBoundingBoxLeft,
+          baseline - glyph.actualBoundingBoxAscent,
+          glyph.actualBoundingBoxLeft + glyph.actualBoundingBoxRight,
+          glyph.actualBoundingBoxAscent + glyph.actualBoundingBoxDescent,
+        ),
+      );
+    }
+  }
+  return boxes;
+}
+
 describe('exchanger type', () => {
   /** Whether a point on the screen lies in the exchanger's hexagon, not only in its bounding box. */
   const inExchanger = (root: ShadowRoot) => {
@@ -352,29 +397,63 @@ describe('exchanger type', () => {
     expect(overlap(bypass, figure)).toBe(false);
   });
 
-  test('a four-digit kept-out figure stays between the exchanger and the house symbol, clear of the streams and the corner labels', async () => {
-    // No smoothing: the humidity history of the other tests would average this day away.
-    const shown = await show(280, 'light', 'auto', KEPT_OUT, { exchanger_type: 'erv', smoothing: 0 });
-    const { root } = shown;
-    for (const width of [280, 320, COMPACT_BELOW, 400, 600]) {
-      await resize(shown, width);
-      const figure = box(root, '.moisture-recovery .figure');
-      expect(root.querySelector('.moisture-recovery')?.textContent, `${String(width)} px`).toMatch(/\d,\d{3}/);
-      expect(root.querySelector('.moisture-recovery')?.textContent).not.toContain('−');
-      expect(root.querySelector<HTMLElement & { icon?: string }>('.moisture-recovery ha-icon')?.icon).toBe(
-        'mdi:water-minus',
-      );
-      const room = figureRoom(root);
-      expect(figure.left, `${String(width)} px`).toBeGreaterThan(room.left);
-      expect(figure.right, `${String(width)} px`).toBeLessThan(room.right);
-      expect(streamCrossing(root)(figure), `${String(width)} px`).toBe(false);
-      expect(overlap(box(root, '.saving .badge'), figure)).toBe(false);
-      for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
-        expect(overlap(corner.getBoundingClientRect(), figure), `${String(width)} px`).toBe(false);
-      const value = root.querySelector('.moisture-recovery .value');
-      if (!value) throw new Error('no figure value');
-      expect(parseFloat(getComputedStyle(value).fontSize)).toBeGreaterThanOrEqual(11);
+  const FIGURE_WIDTHS = [280, 320, COMPACT_BELOW, 360, 400, 401, 450, 500, 600];
+
+  for (const layout of ['full', 'compact'] as const) {
+    for (const [digits, values, pattern] of [
+      ['three digits', VALUES, /^\d{3}$/],
+      ['four digits', KEPT_OUT, /^\d,\d{3}$/],
+    ] as const) {
+      test(`airflow-diagram-card "Four-digit rate on a narrow card", ${layout} layout, ${digits}: the moisture figure is clear of the exchanger, the house symbol, the streams and the corner stacks, 280 to 600 px`, async () => {
+        // No smoothing: the humidity history of the other tests would average this day away.
+        const shown = await show(280, 'light', layout, values, { exchanger_type: 'erv', smoothing: 0 });
+        const { root } = shown;
+        for (const width of FIGURE_WIDTHS) {
+          await resize(shown, width);
+          const where = `${layout} ${digits} ${String(width)} px`;
+          const figure = box(root, '.moisture-recovery .figure');
+          const number = box(root, '.moisture-recovery .number');
+          const unit = box(root, '.moisture-recovery .unit');
+          expect(root.querySelector('.moisture-recovery .number')?.textContent, where).toMatch(pattern);
+          expect(root.querySelector('.moisture-recovery')?.textContent, where).not.toContain('−');
+          const room = figureRoom(root);
+          expect(figure.left, where).toBeGreaterThan(room.left);
+          expect(figure.right, where).toBeLessThan(room.right);
+          expect(streamCrossing(root)(figure), where).toBe(false);
+          expect(overlap(box(root, '.saving .badge'), figure), where).toBe(false);
+          for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
+            expect(overlap(corner.getBoundingClientRect(), figure), `${where} ${corner.textContent}`).toBe(false);
+          const value = root.querySelector('.moisture-recovery .value');
+          if (!value) throw new Error('no figure value');
+          expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
+          // The unit under the number at a container width of 400 px or less, on the number's line above it.
+          const gap = root.querySelector('.moisture-recovery .gap');
+          if (!gap) throw new Error('no gap');
+          if (width <= 400) {
+            expect(unit.top, where).toBeGreaterThanOrEqual(number.bottom - 0.5);
+            expect(Math.abs(unit.left + unit.width / 2 - (number.left + number.width / 2)), where).toBeLessThan(
+              number.width,
+            );
+            expect(getComputedStyle(gap).display, where).toBe('none');
+          } else {
+            expect(unit.left, where).toBeGreaterThanOrEqual(number.right - 0.5);
+            expect(Math.abs(middle(unit) - middle(number)), where).toBeLessThan(2);
+          }
+        }
+      });
     }
+  }
+
+  test('airflow-diagram-card "Four-digit rate on a narrow card": the two-line form fits the wedge at 280 px', async () => {
+    const { root } = await show(280, 'light', 'full', KEPT_OUT, { exchanger_type: 'erv', smoothing: 0 });
+    const number = box(root, '.moisture-recovery .number');
+    const unit = box(root, '.moisture-recovery .unit');
+    expect(unit.top).toBeGreaterThanOrEqual(number.bottom - 0.5);
+    // Both lines together, and the icon, between the exhaust stream above and the supply stream below.
+    const left = Math.min(number.left, unit.left);
+    const text = new DOMRect(left, number.top, Math.max(number.right, unit.right) - left, unit.bottom - number.top);
+    expect(streamCrossing(root)(text)).toBe(false);
+    expect(streamCrossing(root)(box(root, '.moisture-recovery .figure'))).toBe(false);
   });
 
   test('airflow-diagram-card "ERV on a phone": the compact layout shows the moisture figure', async () => {
@@ -403,51 +482,6 @@ describe('exchanger type', () => {
 
 describe('effectiveness rings', () => {
   const RINGS = { exchanger_type: 'erv', show_effectiveness: true, smoothing: 0 };
-
-  /** The boxes of a node's text, one per text node (the browser's text boxes, not the label's line box). */
-  const textNodes = (element: Element): { node: Node; box: DOMRect }[] => {
-    const found: { node: Node; box: DOMRect }[] = [];
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      if (!node.textContent?.trim()) continue;
-      const range = document.createRange();
-      range.selectNodeContents(node);
-      found.push({ node, box: range.getBoundingClientRect() });
-    }
-    return found;
-  };
-
-  /**
-   * The ink of an element's text, one box per glyph (and per icon), measured with a canvas in the element's font:
-   * the empty corners of a line box, such as the space under "983 g/h" except for its "g", are not text, and a ring
-   * may pass through them. The baseline is where a zero-size inline box, put after the text for a moment, lands.
-   */
-  function inkBoxes(element: Element): DOMRect[] {
-    const boxes = [...element.querySelectorAll('ha-icon')].map(drawnIcon);
-    for (const { node, box } of textNodes(element)) {
-      measuring.font = getComputedStyle(node.parentElement as Element).font;
-      const text = node.textContent ?? '';
-      const probe = document.createElement('span');
-      probe.style.cssText = 'display: inline-block; width: 0; height: 0';
-      node.parentNode?.insertBefore(probe, node.nextSibling);
-      const baseline = probe.getBoundingClientRect().bottom;
-      probe.remove();
-      for (let i = 0; i < text.length; i++) {
-        const glyph = measuring.measureText(text.charAt(i));
-        if (glyph.actualBoundingBoxRight + glyph.actualBoundingBoxLeft <= 0) continue; // a space
-        const x = box.left + measuring.measureText(text.slice(0, i)).width;
-        boxes.push(
-          new DOMRect(
-            x - glyph.actualBoundingBoxLeft,
-            baseline - glyph.actualBoundingBoxAscent,
-            glyph.actualBoundingBoxLeft + glyph.actualBoundingBoxRight,
-            glyph.actualBoundingBoxAscent + glyph.actualBoundingBoxDescent,
-          ),
-        );
-      }
-    }
-    return boxes;
-  }
 
   /** A ring track sampled along its path, in screen px, with half its drawn stroke width. */
   interface Track {
@@ -555,6 +589,220 @@ describe('effectiveness rings', () => {
       expect(getComputedStyle(element).visibility, selector).toBe('visible');
     }
   });
+});
+
+describe('ring colours and coverage', () => {
+  const RINGS = { show_effectiveness: true, smoothing: 0 };
+  // Heating (cold outdoors) and cooling (hot outdoors): the total ring takes the warm or the cold colour.
+  const MODES = { heating: { ...VALUES, bypass: 0 }, cooling: KEPT_OUT } as const;
+  /** The exchanger fully effective: the supply leaves as the extract air does, so both figures are 100 %. */
+  const FULL: MockValues = {
+    ...VALUES,
+    temperature: { outdoor: -12.5, supply: 21.4, extract: 21.4, exhaust: -12.5 },
+    humidity: { outdoor: 85, supply: 50, extract: 50, exhaust: 85 },
+    bypass: 0,
+  };
+
+  const element = (root: ShadowRoot, selector: string): Element => {
+    const found = root.querySelector(selector);
+    if (!found) throw new Error(`no ${selector}`);
+    return found;
+  };
+  const stroke = (root: ShadowRoot, selector: string): string => getComputedStyle(element(root, selector)).stroke;
+
+  for (const theme of ['light', 'dark'] as const) {
+    for (const [mode, values] of Object.entries(MODES)) {
+      for (const type of ['hrv', 'erv']) {
+        test(`airflow-diagram-card "Cooling mode", ${theme}, ${mode}, ${type}: the total ring keeps 3:1 against the core fill${type === 'erv' ? ' and the moisture ring' : ''}`, async () => {
+          const { root } = await show(400, theme, 'auto', values, { ...RINGS, exchanger_type: type });
+          const total = stroke(root, 'svg .ring.total');
+          const fill = getComputedStyle(element(root, 'svg .exchanger')).fill;
+          expect(contrast(total, fill), `${theme} ${mode} ${type} fill`).toBeGreaterThanOrEqual(3);
+          if (type === 'erv') {
+            const moisture = stroke(root, 'svg .ring.moisture');
+            expect(contrast(total, moisture), `${theme} ${mode} ${type} moisture ring`).toBeGreaterThanOrEqual(3);
+          } else {
+            expect(root.querySelector('svg .ring.moisture')).toBeNull();
+          }
+        });
+      }
+    }
+
+    test(`airflow-diagram-card "Moisture ring in both themes", ${theme}: the filled rim is at least 1.2:1 against the empty rim`, async () => {
+      const { root } = await show(400, theme, 'auto', VALUES, { ...RINGS, exchanger_type: 'erv' });
+      const filled = stroke(root, 'svg .ring.moisture');
+      const empty = getComputedStyle(element(root, 'svg .exchanger')).fill;
+      expect(contrast(filled, empty)).toBeGreaterThanOrEqual(1.2);
+      // Blue-grey, not the moisture bar's teal: the blue channel is the strongest.
+      const [r, g, b] = channels(filled);
+      expect(b).toBeGreaterThan(g);
+      expect(b).toBeGreaterThan(r);
+    });
+  }
+
+  test('the warm and the cold total ring differ', async () => {
+    const colors: number[][] = [];
+    for (const values of Object.values(MODES)) {
+      const { root } = await show(400, 'light', 'auto', values, { ...RINGS, exchanger_type: 'erv' });
+      colors.push(channels(stroke(root, 'svg .ring.total')));
+      document.body.innerHTML = '';
+    }
+    expect(colors[0]).not.toEqual(colors[1]);
+  });
+
+  /** A screenshot of the drawing as pixels, with the map from drawing units to its pixels. */
+  async function pixels(root: ShadowRoot) {
+    const art = element(root, 'svg.art') as SVGSVGElement;
+    const shot = await page.screenshot({ element: art, base64: true, save: false });
+    const image = new Image();
+    image.src = `data:image/png;base64,${shot}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    [canvas.width, canvas.height] = [image.width, image.height];
+    const pixelContext = canvas.getContext('2d', { willReadFrequently: true });
+    if (!pixelContext) throw new Error('no canvas');
+    pixelContext.drawImage(image, 0, 0);
+    const rect = art.getBoundingClientRect();
+    const toViewport = art.getScreenCTM();
+    if (!toViewport) throw new Error('no transform');
+    const scale = image.width / rect.width;
+    return (x: number, y: number): [number, number, number] => {
+      const point = new DOMPoint(x, y).matrixTransform(toViewport);
+      const [r = 0, g = 0, b = 0] = pixelContext.getImageData(
+        Math.round((point.x - rect.left) * scale),
+        Math.round((point.y - rect.top) * scale),
+        1,
+        1,
+      ).data;
+      return [r, g, b];
+    };
+  }
+
+  // The exchanger's outer and inner hexagon, in drawing units (see drawing.ts), vertex for vertex.
+  const OUTER: [number, number][] = [
+    [175.8, 26],
+    [224.2, 26],
+    [255, 100],
+    [224.2, 174],
+    [175.8, 174],
+    [145, 100],
+  ];
+  const INNER: [number, number][] = [
+    [181.3, 38],
+    [218.7, 38],
+    [240.7, 100],
+    [218.7, 162],
+    [181.3, 162],
+    [159.3, 100],
+  ];
+
+  for (const theme of ['light', 'dark'] as const) {
+    test(`airflow-diagram-card "Full moisture ring", ${theme}: the whole rim is filled from outline to outline and nothing outside or inside it is`, async () => {
+      const { root } = await show(900, theme, 'auto', FULL, { ...RINGS, exchanger_type: 'erv' });
+      const ring = element(root, 'svg .ring.moisture');
+      expect(ring.getAttribute('stroke-dasharray')).toBe('100 100');
+      const ringColor = channels(stroke(root, 'svg .ring.moisture'));
+      const at = await pixels(root);
+      const streams = [...root.querySelectorAll<SVGPathElement>('svg .stream')];
+      const covered = (x: number, y: number): boolean => {
+        const point = new DOMPoint(x, y);
+        return streams.some((stream) => stream.isPointInStroke(point));
+      };
+      const near = (a: number[], b: number[]): boolean => a.every((v, i) => Math.abs(v - (b[i] ?? 0)) <= 3);
+      const counted = { rim: 0, outside: 0, core: 0 };
+      for (let edge = 0; edge < 6; edge++) {
+        for (const t of [0.15, 0.3, 0.7, 0.85]) {
+          const [o1, o2] = [OUTER[edge], OUTER[(edge + 1) % 6]] as [[number, number], [number, number]];
+          const [i1, i2] = [INNER[edge], INNER[(edge + 1) % 6]] as [[number, number], [number, number]];
+          const outer = [o1[0] + (o2[0] - o1[0]) * t, o1[1] + (o2[1] - o1[1]) * t] as const;
+          const inner = [i1[0] + (i2[0] - i1[0]) * t, i1[1] + (i2[1] - i1[1]) * t] as const;
+          // A point at a fraction of the way from the outer to the inner outline; below 0 is outside, above 1 inside.
+          const along = (f: number): [number, number] => [
+            outer[0] + (inner[0] - outer[0]) * f,
+            outer[1] + (inner[1] - outer[1]) * f,
+          ];
+          // The streams are drawn over the rings, so the points they cover say nothing about the rim.
+          const free = (f: number): boolean => !covered(...along(f));
+          for (const f of [0.2, 0.5, 0.7]) {
+            if (!free(f)) continue;
+            counted.rim++;
+            expect(near(at(...along(f)), ringColor), `rim, edge ${String(edge)}, t ${String(t)}, f ${String(f)}`).toBe(
+              true,
+            );
+          }
+          // Outside the outer outline (stroke 2) and inside the inner outline and the total ring on it (3).
+          for (const [f, name] of [
+            [-0.45, 'outside'],
+            [-0.8, 'outside'],
+            [1.45, 'core'],
+          ] as const) {
+            if (!free(f)) continue;
+            counted[name]++;
+            expect(
+              near(at(...along(f)), ringColor),
+              `${name}, edge ${String(edge)}, t ${String(t)}, f ${String(f)}`,
+            ).toBe(false);
+          }
+        }
+      }
+      // Enough points of each kind were free of the streams to mean something.
+      expect(counted.rim).toBeGreaterThan(30);
+      expect(counted.outside).toBeGreaterThan(30);
+      expect(counted.core).toBeGreaterThan(10);
+    });
+  }
+});
+
+describe('flow labels', () => {
+  const FULL_BYPASS: MockValues = { ...VALUES, bypass: 100 };
+  const element = (root: ShadowRoot, selector: string): Element => {
+    const found = root.querySelector(selector);
+    if (!found) throw new Error(`no ${selector}`);
+    return found;
+  };
+  // From 320 px: the full layout shows the flow labels from 340 px by itself; forced at 280 px the supply label touches the
+  // bypass path by 1.5 px (measured in task 4.5, left to the placement decision in task 4.7).
+  const WIDTHS = [320, COMPACT_BELOW, 360, 400, 500, 600];
+
+  for (const type of ['hrv', 'erv']) {
+    test(`airflow-diagram-card "Flow labels", ${type}: below the arrowheads, clear of the bypass path at 100 % and of the corner stacks, 320 to 600 px`, async () => {
+      // The compact layout has no flow labels, so the full layout is forced at the narrow widths.
+      const shown = await show(280, 'light', 'full', FULL_BYPASS, { exchanger_type: type });
+      const { root } = shown;
+      for (const width of WIDTHS) {
+        await resize(shown, width);
+        const where = `${type} ${String(width)} px`;
+        const heads = [...root.querySelectorAll('svg .head')].map((head) => head.getBoundingClientRect());
+        const labels = ['.supply-flow .label', '.exhaust-flow .label'].map((selector) => {
+          const found = root.querySelector(selector)?.getBoundingClientRect();
+          if (!found) throw new Error(`no ${selector} at ${where}`);
+          return found;
+        });
+        expect(root.querySelector('svg .stream.bypass'), where).not.toBeNull();
+        expect(root.querySelector('svg .stream.supply'), where).toBeNull();
+        const crossed = streamCrossing(root);
+        const card = root.querySelector('ha-card')?.getBoundingClientRect();
+        if (!card) throw new Error('no card');
+        for (const [index, label] of labels.entries()) {
+          for (const head of heads) expect(overlap(label, head), `${where} label ${String(index)} / head`).toBe(false);
+          // The text itself (the label's box has empty corners) clear of the streams, the bypass path among them.
+          const ink = inkBoxes(element(root, index === 0 ? '.supply-flow .label' : '.exhaust-flow .label'));
+          expect(ink.length, where).toBeGreaterThan(0);
+          for (const glyph of ink) expect(crossed(glyph), `${where} label ${String(index)} / streams`).toBe(false);
+          for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
+            expect(
+              overlap(label, corner.getBoundingClientRect()),
+              `${where} label ${String(index)} / ${corner.textContent}`,
+            ).toBe(false);
+          expect(label.left, where).toBeGreaterThanOrEqual(card.left);
+          expect(label.right, where).toBeLessThanOrEqual(card.right);
+          // Below its own arrowhead.
+          const head = heads[index === 0 ? 0 : 1];
+          expect(label.top, where).toBeGreaterThanOrEqual((head?.bottom ?? 0) - 0.5);
+        }
+      }
+    });
+  }
 });
 
 declare module 'vitest/browser' {

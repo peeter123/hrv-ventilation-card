@@ -56,8 +56,8 @@ const RIM =
   'M 175.8 26 L 224.2 26 L 255 100 L 224.2 174 L 175.8 174 L 145 100 Z ' +
   'M 181.3 38 L 218.7 38 L 240.7 100 L 218.7 162 L 181.3 162 L 159.3 100 Z';
 
-/** Provisional share of the mode's colour in the total ring, the rest being the theme's text colour (task 4.5 tunes it). */
-const TOTAL_RING_SHARE = 70;
+/** Share of the mode's colour in the total ring, the rest being the theme's text colour: the largest that keeps 3:1 against the moisture ring in both preview themes (measured by the browser test). */
+const TOTAL_RING_SHARE = 50;
 
 // A cloud and a house, drawn in a 24 by 24 box like an icon.
 const CLOUD = 'M 6.5 18 A 4.5 4.5 0 0 1 6 9.05 A 6 6 0 0 1 17.5 10 A 4 4 0 0 1 17.5 18 Z';
