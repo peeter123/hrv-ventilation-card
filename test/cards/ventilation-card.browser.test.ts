@@ -358,12 +358,6 @@ describe('exchanger type', () => {
 
 describe('effectiveness rings', () => {
   const RINGS = { exchanger_type: 'erv', show_effectiveness: true, smoothing: 0 };
-  // Known limit, measured with the test font (the browser's serif fallback): below this width the moisture figure
-  // ("983 g/h", seven glyphs) is as wide as the hexagon is where it sits, so its last glyph meets the inner ring's
-  // slanted side by up to 1 px (and its first the moisture ring at 280 px). Moving the figure up clears it from 320 px
-  // but puts a four-digit figure into the streams at 280 px (see the kept-out test). From this width it clears both.
-  const FIGURE_CLEAR_FROM = 500;
-  const FIGURE_TOUCH = 1.5;
 
   /** The boxes of a node's text, one per text node (the browser's text boxes, not the label's line box). */
   const textNodes = (element: Element): { node: Node; box: DOMRect }[] => {
@@ -478,8 +472,7 @@ describe('effectiveness rings', () => {
         for (const [name, element] of Object.entries(texts)) {
           for (const track of tracks(root)) {
             const gap = clearance(track, inkBoxes(element));
-            const allowed = name === 'figure' && width < FIGURE_CLEAR_FROM ? -FIGURE_TOUCH : 0;
-            expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(allowed);
+            expect(gap, `${name} / ${track.getAttribute('class') ?? ''}, ${where}`).toBeGreaterThan(0);
           }
         }
         // The streams cross the badge, which hides them with its fill; they stay clear of the other two texts.

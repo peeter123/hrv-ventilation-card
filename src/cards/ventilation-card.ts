@@ -229,7 +229,7 @@ export class HrvVentilationCard extends HrvCard {
     }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {
-      top: 20.5%;
+      top: 21.5%;
     }
     /*
      * Low in the exchanger, under the crossing streams (bottom edge at y 152 of 200): high enough that a four-digit
@@ -237,6 +237,14 @@ export class HrvVentilationCard extends HrvCard {
      */
     .moisture-recovery {
       bottom: 24%;
+    }
+    /*
+     * With the rings, the figure shrinks on a narrow card so that its last glyphs stay clear of the rings' slanted
+     * sides, which the full-size figure meets below 500 px: 8.25 px (three quarters of the 11 px minimum) at 280 px,
+     * growing with the card to the 14 px of a card from 500 px. Without the rings the figure keeps its size.
+     */
+    .rings .moisture-recovery {
+      font-size: clamp(8.25px, calc(8.25px + (100cqi - 280px) * 0.0261), 14px);
     }
     /* On the exchanger's centre. */
     .saving {
@@ -612,7 +620,7 @@ export class HrvVentilationCard extends HrvCard {
 
     return html`<ha-card @click=${this.activate} @keydown=${this.activate}>
       ${model.top ? this.topRow(model.top, season) : nothing}
-      <div class="drawing ${settings.animate ? '' : 'still'}">
+      <div class="drawing ${settings.animate ? '' : 'still'} ${settings.rings ? 'rings' : ''}">
         ${art}
         ${STREAMS.map(
           (stream) =>
