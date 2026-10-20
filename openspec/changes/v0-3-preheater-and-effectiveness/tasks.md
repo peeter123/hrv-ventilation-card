@@ -27,7 +27,7 @@
 - [x] 2.3 Document the effectiveness of the unit in `docs/hrv-ventilation.md` ("Formulas": the cap, the gates, no
   bypass gate and why it then describes the unit rather than the exchanger, the difference from gated sensors);
   verify the doc no longer says the cards do not show effectiveness
-- [ ] 2.4 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 2.4 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 3. Effectiveness rings on the diagram
