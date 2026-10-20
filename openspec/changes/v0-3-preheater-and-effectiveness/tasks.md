@@ -135,7 +135,7 @@
 - [x] 6.2 Add `pre_heater.energy` to `STATUS_ROLES` at column 2, row 3, with `mdi:heating-coil`; verify tests for
   "Pre-heater energy cell" and that the existing "Status grid", "Unconfigured value" and "Centred cells" tests
   still pass
-- [ ] 6.3 Browser tests: the top row at 280 px with power 1032 W, the pre-heater at 1000 W and RMOT -3.5 °C has no
+- [x] 6.3 Browser tests: the top row at 280 px with power 1032 W, the pre-heater at 1000 W and RMOT -3.5 °C has no
   overlaps ("Narrow card"), and the coil icons are centred on their text at 400 and 600 px ("Icon centred on its
   text"); verify the tests pass
 - [ ] 6.4 Add the `pre_heater` section to `DIAGRAM_SCHEMA` after the status section, with a power picker for
