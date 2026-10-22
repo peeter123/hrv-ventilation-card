@@ -870,6 +870,15 @@ describe('checkDiagramConfig', () => {
       card.setConfig({ ...CONFIG, layout: 'wide' });
     }).toThrow('Invalid option layout');
   });
+
+  test('airflow-diagram-card "Editing the card": a fan or select fan level ID loads without error', () => {
+    for (const level of ['fan.hrv_unit', 'select.hrv_fan_level']) {
+      const card = document.createElement('hrv-ventilation-card');
+      expect(() => {
+        card.setConfig({ ...CONFIG, fans: { level } });
+      }, level).not.toThrow();
+    }
+  });
 });
 
 describe('the pre-heater energy cell', () => {
