@@ -983,6 +983,10 @@ describe('pre-heater coil centreline', () => {
     ] as const) {
       test(`airflow-diagram-card "Coil centreline", ${theme}, ${name}: the centreline is darker than the wire around it`, async () => {
         const { root } = await show(400, theme, 'auto', { ...VALUES, bypass: 0, preHeater: power }, HEATER);
+        // The coil is in the intended state: off sits in the dim group, on is the lit wire with no dim group.
+        expect(root.querySelector('svg g.coil.off path.coil') !== null, 'dim').toBe(power === 0);
+        expect(root.querySelector('svg g.coil.off') !== null, 'dim group').toBe(power === 0);
+        expect(root.querySelector('svg path.coil.on') !== null, 'lit').toBe(power > 0);
         const wire = element(root, 'svg path.coil');
         const core = element(root, 'svg path.coil-core');
         // The core is the wire's own path, drawn narrower on top of it; both share the off state's group opacity.
