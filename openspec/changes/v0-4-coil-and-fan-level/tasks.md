@@ -80,7 +80,7 @@
 - [x] 2.2 Browser tests: in the light and dark preview themes the centreline is darker (lower relative luminance)
   than the wire around it, off and at 250 and 1000 of 1000 W, and the off coil stays distinguishable from the stream
   (the existing "Off" test); verify the tests pass
-- [ ] 2.3 Document the centreline in the diagram section of `docs/hrv-ventilation.md` (its colours per state, why
+- [x] 2.3 Document the centreline in the diagram section of `docs/hrv-ventilation.md` (its colours per state, why
   the off opacity sits on a group, why darker and not a highlight) and, if the README describes the coil's look, in
   `README.md`; verify the README tests pass
 - [ ] 2.4 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
