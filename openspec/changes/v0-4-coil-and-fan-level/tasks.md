@@ -87,7 +87,7 @@
   250 of 1000 W and at full; the frost scenario; both layouts; 280, 400 and 600 px; light and dark) inspected by an
   agent, and apply the user's feedback (the shares, the width, or a highlight instead); verify the user approves
   before the review
-- [ ] 2.5 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 2.5 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 3. Release
