@@ -108,6 +108,9 @@ function applyScenario(scenario: Scenario): void {
 type PreHeaterKind = 'none' | 'power sensor' | 'on/off entity';
 const PRE_HEATER_KINDS: readonly PreHeaterKind[] = ['none', 'power sensor', 'on/off entity'];
 
+type VentilationChoice = 'active' | 'disabled';
+const VENTILATION_CHOICES: readonly VentilationChoice[] = ['active', 'disabled'];
+
 type FanLevelKind = 'sensor' | 'fan entity' | 'select';
 const FAN_LEVEL_KINDS: readonly FanLevelKind[] = ['sensor', 'fan entity', 'select'];
 const FAN_LEVEL_ENTITIES: Readonly<Record<FanLevelKind, string>> = {
@@ -331,6 +334,15 @@ function renderControls(): void {
           options.fanLevelKind = value;
           updateConfig();
         })}
+        ${select<VentilationChoice>(
+          'ventilation',
+          VENTILATION_CHOICES,
+          values.ventilationDisabled ? 'disabled' : 'active',
+          (value) => {
+            values.ventilationDisabled = value === 'disabled';
+            updateStates();
+          },
+        )}
         ${slider('bypass %', values.bypass, 100, (value) => {
           values.bypass = value;
         })}

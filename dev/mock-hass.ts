@@ -22,6 +22,8 @@ export interface MockValues {
   /** The pre-heater's energy in kWh, for the `pre_heater.energy` entity; 8 when left out. */
   preHeaterEnergy?: number;
   season: SeasonChoice;
+  /** The ventilation mode reads Disabled (service mode); the flows keep their values. Active when left out. */
+  ventilationDisabled?: boolean;
   /** Entity IDs reported as unavailable. */
   unavailable: ReadonlySet<string>;
 }
@@ -31,6 +33,8 @@ export const id = {
   humidity: (stream: Stream): string => `sensor.hrv_${stream}_humidity`,
   absoluteHumidity: (stream: Stream): string => `sensor.hrv_${stream}_absolute_humidity`,
   level: 'sensor.hrv_fan_level',
+  /** The ventilation mode text sensor (ESPHome wording: Active or Disabled). */
+  ventilationMode: 'sensor.hrv_ventilation_mode',
   /** The fan level as a fan entity (percentage in steps of a third) or as a select (the level name). */
   levelFan: 'fan.hrv_fan_level',
   levelSelect: 'select.hrv_fan_level',
@@ -67,7 +71,12 @@ export const CONFIGS: Readonly<Record<string, Record<string, unknown>>> = {
         },
       ]),
     ),
-    fans: { level: id.level, supply_flow: id.supplyFlow, exhaust_flow: id.exhaustFlow },
+    fans: {
+      level: id.level,
+      supply_flow: id.supplyFlow,
+      exhaust_flow: id.exhaustFlow,
+      ventilation_mode: id.ventilationMode,
+    },
     bypass: { position: id.bypass, mode: id.bypassMode, next_change: id.bypassNext },
     status: {
       operating_mode: id.operatingMode,
@@ -128,6 +137,7 @@ function readings(values: MockValues): Record<string, Reading> {
   const flow = (value: number): Reading => ({ state: value.toFixed(0), unit: 'm³/h', decimals: 0 });
   Object.assign(result, {
     [id.level]: { state: fanLevel(values.flow) },
+    [id.ventilationMode]: { state: values.ventilationDisabled ? 'Disabled' : 'Active' },
     [id.levelFan]: {
       state: values.flow <= 0 ? 'off' : 'on',
       attributes: { percentage: FAN_PERCENTAGES[fanLevelIndex(values.flow)] ?? 0, percentage_step: FAN_STEP },
