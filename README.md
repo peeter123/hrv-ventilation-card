@@ -367,11 +367,26 @@ absolute humidity is used; a relative humidity also needs the stream's temperatu
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
 | `level` | entity | | | Fan level (diagram card only, status grid). A sensor, fan or select entity. A fan entity's level is named from its `percentage` and `percentage_step`: Away, Low, Medium or High for a three-speed fan, otherwise the percentage. |
+| `ventilation_mode` | entity | | | Ventilation mode of the unit (diagram card only): a sensor, binary sensor or select entity that says whether the unit ventilates. Optional; without it the card never shows the unit as stopped. See below. |
+| `stopped_states` | list | `Disabled` | yes | States of `ventilation_mode` that mean the unit is not ventilating (diagram card only). Compared with the entity's state as is, ignoring case and surrounding spaces; blank entries are ignored and an empty list gives the default. |
 | `supply_flow` | entity | | | Supply air flow sensor. Optional on the diagram card, where it shows above the supply arrow, sets the supply air's animation speed and is needed for the badge. |
 | `exhaust_flow` | entity | | | Exhaust air flow sensor (diagram card only, above the exhaust arrow, and the exhaust air's animation speed). |
 
 With [michaelarnauts/home-assistant-comfoconnect](https://github.com/michaelarnauts/home-assistant-comfoconnect)
 there is no fan level sensor: pick the unit's fan entity as `level`.
+
+**Ventilation disabled.** With `ventilation_mode` set, the diagram shows when the unit does not ventilate. The
+entity's state is compared with `stopped_states`; on a match the fan level label reads "Stopped" (tapping it still
+opens the level entity), both air streams stop moving (the flow labels keep showing what the flow sensors report)
+and an alert with a warning icon and "Ventilation disabled" appears over the exchanger, also with the animation off.
+Hovering it shows "Ventilation disabled: " and the state as Home Assistant formats it; tapping it opens the
+`ventilation_mode` entity. An unavailable, unknown or missing entity never counts as disabled.
+
+- The ESPHome ventilation mode sensor has the states `Disabled`, `Active` and `Overruling`. `Disabled` means that
+  sensor-based control is off, which is seen in service mode, so the fans are stopped. Set the role only if the
+  entity reads `Active` or `Overruling` in normal use; `Overruling` is not a stop, because the fans modulate then.
+- A binary sensor needs `off` in `stopped_states`, as `stopped_states: [Disabled, 'off']`.
+- In the visual editor `stopped_states` is an advanced setting, a list of text boxes.
 
 #### Bypass object
 
@@ -479,6 +494,9 @@ exhaust:
 fans:
   level: sensor.hrv_fan_level
   supply_flow: sensor.hrv_supply_fan_flow
+  ventilation_mode: sensor.hrv_ventilation_mode
+  stopped_states:
+    - Disabled
   exhaust_flow: sensor.hrv_exhaust_fan_flow
 bypass:
   position: sensor.hrv_bypass_position

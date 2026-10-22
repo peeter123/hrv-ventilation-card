@@ -9,9 +9,6 @@ import { ROLE_LABELS } from '../../src/strings';
 import { cardSection, rowCells, subsections, tableNames, yamlExamples } from '../readme';
 
 const CARD = 'Airflow diagram card';
-// TODO(task 1.10): the README does not document the ventilation mode and the stopped states yet.
-const UNDOCUMENTED = new Set<string>(['fans.ventilation_mode', 'fans.stopped_states']);
-const documented = (path: string): boolean => !UNDOCUMENTED.has(path);
 
 describe('README: airflow diagram card', () => {
   // The table each config group is documented in: the stream, fans and bypass objects are shared with the bar cards
@@ -38,7 +35,7 @@ describe('README: airflow diagram card', () => {
   };
 
   test('every config key the card reads is a row of its own table, and each group a row of the main table', () => {
-    const read = [...Object.keys(ROLE_LABELS), ...DIAGRAM_OPTION_LIST.map((option) => option.path)].filter(documented);
+    const read = [...Object.keys(ROLE_LABELS), ...DIAGRAM_OPTION_LIST.map((option) => option.path)];
     const missing = read.filter((path) => {
       const { table, name } = tableOf(path);
       return !tableNames(table).has(name);
@@ -51,7 +48,6 @@ describe('README: airflow diagram card', () => {
   test('the Advanced column matches the editor (the stream pickers excepted, see the note on absolute humidity)', () => {
     for (const { field, path } of fieldsWithPaths(DIAGRAM_SCHEMA)) {
       if (/^(outdoor|supply|extract|exhaust)\./.test(path)) continue;
-      if (!documented(path)) continue;
       const { table, name } = tableOf(path);
       const [, , , advanced] = rowCells(table, name);
       expect(advanced, path).toBe(field.advanced === true ? 'yes' : '');
@@ -59,8 +55,10 @@ describe('README: airflow diagram card', () => {
   });
 
   test('every option row states the default (and for numbers the range) of the code', () => {
-    const text = cardSection('Options', CARD);
-    for (const option of DIAGRAM_OPTION_LIST.filter((option) => documented(option.path))) {
+    // The fans options are documented in the shared Fans object table.
+    const text = `${cardSection('Options', CARD)}
+${subsections(cardSection('Options', 'Recovery balance card')).get('Fans object') ?? ''}`;
+    for (const option of DIAGRAM_OPTION_LIST) {
       const [, , defaultCell, , description] = rowCells(text, option.path.split('.').at(-1) ?? '');
       // An option without a default (the nominal flow) has an empty Default cell.
       expect(defaultCell, option.path).toBe(option.default === undefined ? '' : `\`${String(option.default)}\``);
@@ -76,9 +74,7 @@ describe('README: airflow diagram card', () => {
   test('the full example sets every role and every option', () => {
     const [, full] = yamlExamples(cardSection('Examples', CARD));
     const json = JSON.stringify(full);
-    for (const path of [...Object.keys(ROLE_LABELS), ...DIAGRAM_OPTION_LIST.map((option) => option.path)].filter(
-      documented,
-    )) {
+    for (const path of [...Object.keys(ROLE_LABELS), ...DIAGRAM_OPTION_LIST.map((option) => option.path)]) {
       expect(valueAt(full ?? {}, path), path).toBeDefined();
     }
     expect(json).toContain('"type":"custom:hrv-ventilation-card"');

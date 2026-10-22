@@ -305,6 +305,24 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   Medium or High when the fan has three speeds (`round(100 / step) == 3`), else the rounded percentage; it returns
   undefined (falling back to `formatState`) for a non-fan, an unavailable state or missing attributes. A fan that is on below half a step shows Low (Away only at 0 %). Step 0 is
   "Away" because the unit still ventilates at away, and Zehnder's own sensors say "Away", not "Off".
+- **Ventilation disabled.** One decision, `ventilationDisabled(stateObj, stoppedStates)` in `src/diagram/flow.ts`,
+  drives three effects. It is true only while `fans.ventilation_mode` exists, is not unavailable or unknown, and its
+  raw state, trimmed, equals one of `fans.stopped_states` ignoring case (default `['Disabled']`; an empty or
+  non-list value falls back to it, blank entries are dropped).
+  - **Effects.** The fan level label reads "Stopped" (value, aria label and tooltip) ahead of `fanLevelText`; its
+    visibility rules and tap still use the level entity. Both stream speeds are 0, so the streams pause while the
+    paths, the bypass strength and the colours are drawn as before. An alert (`mdi:alert` in `--warning-color`
+    with "Ventilation disabled") sits centred over the exchanger between the status row and its top edge (without a top row, between the
+    drawing's top and the exchanger's top), with the
+    tooltip "Ventilation disabled: <formatted state>" and a tap that opens the mode entity. It shows with the
+    animation off too: it reports the unit, not the motion. The role is an input only and gets no label.
+  - **Why the raw state.** The formatted state depends on the user's language; the raw one does not.
+  - **Why unavailable is not disabled.** A missing reading says nothing about the unit, and the card does not claim
+    a stop it cannot see.
+  - **Why not the flows or the fan speeds.** The exhaust flow sensor read about 21 m³/h with the fans stopped, so a
+    flow threshold would be guesswork per unit. Fan speed (rpm) sensors measure the fans on any integration, but
+    need two more roles and a threshold; the mode entity was chosen and is opted into per card.
+  - **Why a list of states.** Other integrations word it differently, and a binary sensor reports `off`.
 - **Seasons.** With both season sensors configured and both off, the top row shows the "between seasons" icon.
 - **Layout.** `layout: auto` switches to compact below 340 px card width. A narrow desktop sections column is about
   350 px and a full-width card on a 360 px phone about 344 px, so both show the full layout.
