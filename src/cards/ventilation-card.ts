@@ -19,7 +19,7 @@ import {
   type MoistureFigure,
 } from '../diagram/badge';
 import { coilBox, drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
-import { flowSpeed } from '../diagram/flow';
+import { flowSpeed, ventilationDisabled } from '../diagram/flow';
 import {
   COMPACT_BELOW,
   isCompact,
@@ -45,9 +45,9 @@ import {
 } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
-import { fanLevelText, formatState, stateOf } from '../lib/hass';
+import { fanLevelText, formatState, stateOf, type HassLike } from '../lib/hass';
 import { optionValue } from '../lib/options';
-import { DIAGRAM, ROLE_LABELS } from '../strings';
+import { DIAGRAM, FAN_STOPPED, ROLE_LABELS, VENTILATION_DISABLED } from '../strings';
 import { checkConfig, HrvCard, sampleStyles } from './base-card';
 
 export const DIAGRAM_CARD_TAG = 'hrv-ventilation-card';
@@ -80,6 +80,9 @@ interface DiagramSettings {
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
   flows: { supply?: string; exhaust?: string };
+  /** The `fans.ventilation_mode` entity, and the states of it that count as stopped. */
+  ventilationMode?: string;
+  stoppedStates: readonly string[];
   animate: boolean;
   nominalFlow?: number;
 }
@@ -274,6 +277,23 @@ export class HrvVentilationCard extends HrvCard {
       .coil-glow {
         animation: none;
       }
+    }
+    /*
+     * The ventilation alert: centred over the exchanger, its bottom just above the exchanger's top edge (y 26 of 200),
+     * in the strip between the outdoor and extract corner stacks, over the bypass path's rise only at the very top.
+     */
+    .alert {
+      top: 12.5%;
+      left: 50%;
+      transform: translate(-50%, -100%);
+      line-height: 0;
+      color: var(--warning-color, #ffa600);
+    }
+    .alert ha-icon {
+      --mdc-icon-size: 1.4em;
+      display: flex;
+      width: var(--mdc-icon-size);
+      height: var(--mdc-icon-size);
     }
     /* Just below the exchanger's inner outline (y 38). */
     .bypass-position {
@@ -498,6 +518,8 @@ export class HrvVentilationCard extends HrvCard {
       temperatures: mapStreams((stream) => entityAt(config, `${stream}.temperature`)),
       bypass: entityAt(config, 'bypass.position'),
       flows: { supply: entityAt(config, 'fans.supply_flow'), exhaust: entityAt(config, 'fans.exhaust_flow') },
+      ventilationMode: entityAt(config, 'fans.ventilation_mode'),
+      stoppedStates: optionValue(config, DIAGRAM_OPTIONS.stoppedStates),
       animate: optionValue(config, DIAGRAM_OPTIONS.animation),
       nominalFlow: optionValue(config, DIAGRAM_OPTIONS.nominalFlow),
     };
@@ -560,7 +582,13 @@ export class HrvVentilationCard extends HrvCard {
   private label(label: DiagramLabel): TemplateResult {
     const hass = this.shownHass;
     // A fan entity set as the fan level shows its level name; the label and the tooltip share the text.
-    const level = hass && label.role === 'fans.level' ? fanLevelText(hass.states[label.entityId]) : undefined;
+    // While ventilation is disabled it says "Stopped" instead; the label stays on the level entity.
+    const level =
+      hass && label.role === 'fans.level'
+        ? this.disabled(hass.states)
+          ? FAN_STOPPED
+          : fanLevelText(hass.states[label.entityId])
+        : undefined;
     const text = level ?? (hass ? formatState(hass, label.entityId) : '');
     const tap = this.tap(label.entityId, 'img');
     // The pre-heater's roles get their own class: `pre_heater.power` must not match `.power` of the unit's power.
@@ -580,6 +608,28 @@ export class HrvVentilationCard extends HrvCard {
       data-entity=${ifDefined(tap.entity)}
       >${icon}${value}</span
     >`;
+  }
+
+  /** Ventilation is disabled: the ventilation mode entity is in one of the stopped states. */
+  private disabled(states: HassLike['states']): boolean {
+    const { ventilationMode, stoppedStates } = this.settings ?? { stoppedStates: [] };
+    return ventilationMode !== undefined && ventilationDisabled(states[ventilationMode], stoppedStates);
+  }
+
+  /** The alert over the exchanger: an icon named and explained by the mode entity's state; tapping opens that entity. */
+  private alert(entityId: string, text: string): TemplateResult {
+    const tap = this.tap(entityId, 'img');
+    const title = `${VENTILATION_DISABLED}: ${text}`;
+    return html`<div
+      class="on-drawing alert"
+      role=${ifDefined(tap.role)}
+      tabindex=${ifDefined(tap.tabindex)}
+      aria-label=${title}
+      title=${title}
+      data-entity=${ifDefined(tap.entity)}
+    >
+      <ha-icon icon="mdi:alert" aria-hidden="true"></ha-icon>
+    </div>`;
   }
 
   /** The top row: the season icon left, power (then the pre-heater while on) centred on the card, RMOT right. */
@@ -710,7 +760,8 @@ export class HrvVentilationCard extends HrvCard {
     const ringsLabel = rings
       ? effectivenessLabel(result, calculation?.inputs.bypass, rings.moisture, locale)
       : undefined;
-    const { preHeater } = settings;
+    const { preHeater, ventilationMode } = settings;
+    const disabled = this.disabled(states);
     const art = drawing({
       ids: this.ids,
       exchanger: settings.exchanger,
@@ -720,8 +771,9 @@ export class HrvVentilationCard extends HrvCard {
       ),
       bypass: bypassStrength(stateOf(states, settings.bypass)),
       speeds: {
-        supply: flowSpeed(stateOf(states, flows.supply), settings.nominalFlow),
-        exhaust: flowSpeed(stateOf(states, flows.exhaust), settings.nominalFlow),
+        // While ventilation is disabled the streams stand still, whatever the flow sensors still report.
+        supply: disabled ? 0 : flowSpeed(stateOf(states, flows.supply), settings.nominalFlow),
+        exhaust: disabled ? 0 : flowSpeed(stateOf(states, flows.exhaust), settings.nominalFlow),
       },
       rings: rings
         ? {
@@ -752,6 +804,7 @@ export class HrvVentilationCard extends HrvCard {
             : html`<div class="on-drawing effectiveness" role="img" aria-label=${ringsLabel} title=${ringsLabel}></div>`
         }
         ${preHeater ? this.coilBox(preHeater.entityId, formatState(hass, preHeater.entityId)) : nothing}
+        ${disabled && ventilationMode ? this.alert(ventilationMode, formatState(hass, ventilationMode)) : nothing}
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
         ${badge ? html`<div class="on-drawing saving">${this.badge(badge, savingTarget(result, settings.savings, states))}</div>` : nothing}
         ${this.moistureFigure(moisture)}

@@ -501,6 +501,120 @@ describe('the animated flow', () => {
   });
 });
 
+describe('ventilation disabled', () => {
+  const MODE = 'sensor.hrv_mode';
+  const LEVEL = 'sensor.hrv_level';
+  const config = (extra: Partial<CardConfig> = {}): CardConfig => ({
+    ...CONFIG,
+    fans: {
+      level: LEVEL,
+      ventilation_mode: MODE,
+      supply_flow: 'sensor.hrv_supply_flow',
+      exhaust_flow: 'sensor.hrv_exhaust_flow',
+    },
+    ...extra,
+  });
+  const readings = (mode: string): HassEntityState[] => [
+    state(LEVEL, 'Medium'),
+    state(MODE, mode),
+    state('sensor.hrv_supply_flow', '21', 'm³/h'),
+    state('sensor.hrv_exhaust_flow', '21', 'm³/h'),
+  ];
+  const alert = (root: ShadowRoot): HTMLElement | null => root.querySelector<HTMLElement>('.on-drawing.alert');
+  const level = (root: ShadowRoot): HTMLElement | null => root.querySelector<HTMLElement>('.label.level');
+  const style = (root: ShadowRoot): string => root.querySelector('svg')?.getAttribute('style') ?? '';
+  const opened = (card: HTMLElement): string[] => {
+    const entities: string[] = [];
+    card.addEventListener('hass-more-info', (event) => {
+      entities.push((event as CustomEvent<{ entityId: string }>).detail.entityId);
+    });
+    return entities;
+  };
+
+  test('airflow-diagram-card "Service mode on an ESPHome unit": Stopped, both streams paused, the alert', async () => {
+    const { root } = await render(config(), '50', readings('Disabled'));
+    expect(level(root)?.textContent.trim()).toBe('Stopped');
+    expect(level(root)?.title).toBe('Fan level: Stopped');
+    expect(level(root)?.getAttribute('aria-label')).toBe('fan level: Stopped');
+    expect(style(root)).toMatch(/--supply-state:\s*paused/);
+    expect(style(root)).toMatch(/--exhaust-state:\s*paused/);
+    expect(root.querySelectorAll('.stream')).toHaveLength(3);
+    expect(alert(root)?.querySelector('ha-icon')?.getAttribute('icon')).toBe('mdi:alert');
+    expect(alert(root)?.getAttribute('aria-label')).toBe('Ventilation disabled: Disabled');
+  });
+
+  test('airflow-diagram-card "Ventilation disabled with flow readings": the bypass path stands still too', async () => {
+    const { root } = await render(config(), '100', readings('Disabled'));
+    const overlays = [...root.querySelectorAll('.flow')].map((overlay) => overlay.getAttribute('class'));
+    // At 100 % bypass the supply side is the bypass path alone, and it follows the supply speed.
+    expect(overlays).toEqual(['flow supply-air', 'flow exhaust-air']);
+    expect(style(root)).toMatch(/--supply-state:\s*paused/);
+    expect(style(root)).toMatch(/--exhaust-state:\s*paused/);
+  });
+
+  test('airflow-diagram-card "Ventilating normally": the level, moving air and no alert', async () => {
+    for (const mode of ['Active', 'Overruling']) {
+      const { root } = await render(config(), '50', readings(mode));
+      expect(level(root)?.textContent.trim()).toBe('Medium');
+      expect(style(root)).toMatch(/--supply-state:\s*running/);
+      expect(style(root)).toMatch(/--exhaust-state:\s*running/);
+      expect(alert(root)).toBeNull();
+    }
+  });
+
+  test('airflow-diagram-card "Mode entity unavailable": the card behaves as without the role', async () => {
+    for (const mode of ['unavailable', 'unknown']) {
+      const { root } = await render(config(), '50', readings(mode));
+      expect(level(root)?.textContent.trim()).toBe('Medium');
+      expect(style(root)).toMatch(/--supply-state:\s*running/);
+      expect(alert(root)).toBeNull();
+    }
+  });
+
+  test('airflow-diagram-card "Tapping the alert": opens the mode entity, the tooltip carries its state', async () => {
+    const { card, root } = await render(config(), '50', readings('Disabled'));
+    const entities = opened(card);
+    alert(root)?.click();
+    expect(entities).toEqual([MODE]);
+    expect(alert(root)?.title).toBe('Ventilation disabled: Disabled');
+    expect(alert(root)?.getAttribute('role')).toBe('button');
+  });
+
+  test('airflow-diagram-card "Tapping the stopped fan level": opens the level entity', async () => {
+    const { card, root } = await render(config(), '50', readings('Disabled'));
+    const entities = opened(card);
+    level(root)?.click();
+    expect(entities).toEqual([LEVEL]);
+  });
+
+  test('airflow-diagram-card "Animation off": the alert and Stopped are still shown', async () => {
+    const { root } = await render(config({ animation: { enabled: false } }), '50', readings('Disabled'));
+    expect(root.querySelector('.drawing')?.classList.contains('still')).toBe(true);
+    expect(alert(root)).not.toBeNull();
+    expect(level(root)?.textContent.trim()).toBe('Stopped');
+  });
+
+  test('airflow-diagram-card "Custom stopped states": a binary sensor that is off counts only when listed', async () => {
+    const off = [state(LEVEL, 'Medium'), state(MODE, 'off')];
+    const listed = await render(
+      config({ fans: { level: LEVEL, ventilation_mode: MODE, stopped_states: ['off'] } }),
+      '50',
+      off,
+    );
+    expect(alert(listed.root)).not.toBeNull();
+    const unlisted = await render(config(), '50', off);
+    expect(alert(unlisted.root)).toBeNull();
+  });
+
+  test('airflow-diagram-card "No mode entity": no alert, the level and the streams as before', async () => {
+    const without: CardConfig = { ...config(), fans: { level: LEVEL } };
+    const { root } = await render(without, '50', readings('Disabled'));
+    expect(alert(root)).toBeNull();
+    expect(level(root)?.textContent.trim()).toBe('Medium');
+    expect(style(root)).toMatch(/--supply-state:\s*running/);
+  });
+});
+
 describe('the effectiveness rings', () => {
   // The ERV with every input of the calculation and the rings on. By default the temperatures give 85.71 % and the
   // absolute humidities 50 %.

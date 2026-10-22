@@ -1070,3 +1070,39 @@ describe('animated flow', () => {
     expect(root.querySelectorAll('.flow')).toHaveLength(3);
   });
 });
+
+describe('ventilation disabled alert', () => {
+  const MODE = 'sensor.hrv_ventilation_mode';
+  const FANS = { level: id.level, supply_flow: id.supplyFlow, exhaust_flow: id.exhaustFlow, ventilation_mode: MODE };
+
+  for (const layout of ['full', 'compact'] as const) {
+    test(`airflow-diagram-card "Service mode on an ESPHome unit", ${layout} layout: the alert lies inside the card and above the exchanger's top, 280 and 600 px`, async () => {
+      const shown = await show(280, 'light', layout, VALUES, { fans: FANS });
+      const { card, root } = shown;
+      const base = card.hass;
+      if (!base) throw new Error('no hass');
+      card.hass = {
+        ...base,
+        states: {
+          ...base.states,
+          [MODE]: { entity_id: MODE, state: 'Disabled', attributes: {}, last_updated: '2026-10-22T12:00:00Z' },
+        },
+      };
+      for (const width of [280, 600]) {
+        await resize(shown, width);
+        const where = `${String(width)} px`;
+        const alert = box(root, '.on-drawing.alert');
+        const drawn = drawnIcon(element(root, '.on-drawing.alert ha-icon'));
+        const cardBox = box(root, 'ha-card');
+        const exchanger = box(root, 'svg .exchanger');
+        expect(drawn.width, where).toBeGreaterThan(0);
+        expect(alert.left, where).toBeGreaterThanOrEqual(cardBox.left);
+        expect(alert.right, where).toBeLessThanOrEqual(cardBox.right);
+        expect(alert.top, where).toBeGreaterThanOrEqual(box(root, '.drawing').top);
+        expect(alert.bottom, where).toBeLessThanOrEqual(exchanger.top + 0.5);
+        // Centred over the exchanger.
+        expect(alert.left + alert.width / 2, where).toBeCloseTo(exchanger.left + exchanger.width / 2, 0);
+      }
+    });
+  }
+});

@@ -11,6 +11,12 @@ export const NBSP = ' ';
 /** The names of a three-speed fan's levels, indexed by step (0 is the lowest, 3 the highest). */
 export const FAN_LEVELS: readonly string[] = ['Away', 'Low', 'Medium', 'High'];
 
+/** The fan level label's text while ventilation is disabled. */
+export const FAN_STOPPED = 'Stopped';
+
+/** The alert over the exchanger while ventilation is disabled: its name, and the start of its tooltip. */
+export const VENTILATION_DISABLED = 'Ventilation disabled';
+
 /** Shown for a figure whose inputs have no value. */
 export const NO_VALUE = 'n/a';
 
