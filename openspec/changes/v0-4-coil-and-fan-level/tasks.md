@@ -77,7 +77,7 @@
   `<g class="coil off">` carrying the 0.5 opacity; move the CSS in `src/cards/ventilation-card.ts` to match; verify
   unit tests for "Off coil", "Glowing coil" (the glow path and its attributes unchanged), "Inside the wire" (same
   `d`, width below the wire's) and "No pre-heater", and that `coilBox()` is unchanged
-- [ ] 2.2 Browser tests: in the light and dark preview themes the centreline is darker (lower relative luminance)
+- [x] 2.2 Browser tests: in the light and dark preview themes the centreline is darker (lower relative luminance)
   than the wire around it, off and at 250 and 1000 of 1000 W, and the off coil stays distinguishable from the stream
   (the existing "Off" test); verify the tests pass
 - [ ] 2.3 Document the centreline in the diagram section of `docs/hrv-ventilation.md` (its colours per state, why
