@@ -41,7 +41,7 @@
   "Animation off", "No mode entity" (no alert, nothing else changed) and "Ventilation disabled with flow readings"
   (the bypass path paused too), and a browser test that the alert lies inside the card and above the exchanger's top
   in both layouts at 280 and 600 px
-- [ ] 1.8 Add the editor fields (`src/editor/fields.ts`, `src/editor/diagram-schema.ts`): a `ventilation_mode`
+- [x] 1.8 Add the editor fields (`src/editor/fields.ts`, `src/editor/diagram-schema.ts`): a `ventilation_mode`
   picker in the fans section after `level` (sensor, binary sensor, select) and `stopped_states` in the fans section
   as an advanced setting; first check that Home Assistant's `text` selector with `multiple: true` edits a list in the
   card editor (in the preview page's editor and the live editor), else use a comma-separated text field that the
