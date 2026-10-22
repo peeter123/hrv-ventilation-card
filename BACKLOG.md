@@ -42,3 +42,22 @@ then packaging.
   `src/strings.ts` that a number and its unit stay together with a non-breaking space. Possible fix: replace the
   space between the number and the unit with a non-breaking space in `formatState`. Found during the v0.3 live
   check; not a regression.
+- **Darker centreline on the pre-heater coil.** The coil (the wave wire on the outdoor lead, `coilPoints` in
+  `src/diagram/drawing.ts`, styled by `.coil` in `src/cards/ventilation-card.ts`) looks flat and a bit ugly. Draw a
+  thin, darker line along the wire's centre so it reads as a wire with depth. Check it on and off, with the glow,
+  and in light and dark themes.
+- **Fan level from a `fan` entity.** Reported by a user (2026-10-22, ComfoAir Q350 ERV) with
+  [michaelarnauts/home-assistant-comfoconnect](https://github.com/michaelarnauts/home-assistant-comfoconnect): with
+  `fans.level: fan.comfoairq` the status strip shows "On" or "Off", not the level. Cause: `formatState`
+  (`src/lib/hass.ts`) shows `formatEntityState`, and a fan's state is only `on`/`off`. That integration has no fan
+  level sensor; its fan entity carries the level as `percentage` with 3 speeds (0 % away, 33 low, 66 medium, 100
+  high, by HA's `ordered_list_item_to_percentage`) and auto/manual as `preset_mode`. The editor's picker allows only
+  `sensor` (`sensorField('level')` in `src/editor/diagram-schema.ts`), so it was set in YAML. The author's
+  installation (ESPHome, yoziru/esphome-zehnder-comfoair) has a text sensor `Away`/`Low`/`Medium`/`High`, plus a
+  fan entity of the same shape (`percentage: 66`, `percentage_step: 33.33`, no presets) and a select with those four
+  options, so it can test all three. A fan entity's attributes have `percentage_step` (100 / speed count), not
+  `speed_count`. Possible fix: for a `fan.*` level entity, the step is `round(percentage / percentage_step)`, shown
+  as Away/Low/Medium/High (in `src/strings.ts`, matching the sensor; Away rather than Off, since the unit still
+  ventilates), `formatEntityState` while it is unavailable or has no percentage, and allow the `fan` domain (and
+  perhaps `select`, which already formats right) in the picker. Docs: the roles table in `docs/hrv-ventilation.md` and the
+  README (supported integrations). Check with a sample state in `src/lib/sample.ts` and a unit test.
