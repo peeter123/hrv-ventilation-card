@@ -121,6 +121,8 @@ export const EDITOR = {
     humidity: 'Relative humidity',
     absolute_humidity: 'Absolute humidity',
     level: 'Fan level',
+    ventilation_mode: 'Ventilation mode',
+    stopped_states: 'Stopped states (states of the ventilation mode that mean the fans are off)',
     supply_flow: 'Supply flow',
     exhaust_flow: 'Exhaust flow',
     position: 'Bypass position',

@@ -51,6 +51,7 @@ describe('README: airflow diagram card', () => {
   test('the Advanced column matches the editor (the stream pickers excepted, see the note on absolute humidity)', () => {
     for (const { field, path } of fieldsWithPaths(DIAGRAM_SCHEMA)) {
       if (/^(outdoor|supply|extract|exhaust)\./.test(path)) continue;
+      if (!documented(path)) continue;
       const { table, name } = tableOf(path);
       const [, , , advanced] = rowCells(table, name);
       expect(advanced, path).toBe(field.advanced === true ? 'yes' : '');

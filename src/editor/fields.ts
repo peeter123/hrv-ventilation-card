@@ -2,7 +2,7 @@
 // and the calculation's options. Each card's schema adds its own options.
 import { CALCULATION_OPTIONS } from '../calc/inputs';
 import type { Stream } from '../lib/config';
-import type { BooleanOption, ChoiceOption, NumberOption } from '../lib/options';
+import type { BooleanOption, ChoiceOption, ListOption, NumberOption } from '../lib/options';
 import type { EditorField, EditorSection } from './schema';
 
 /** An entity picker that only offers sensors. */
@@ -32,6 +32,20 @@ export const switchableField = (name: string): EditorField => ({
 export const fanLevelField = (name: string): EditorField => ({
   name,
   selector: { entity: { domain: ['sensor', 'fan', 'select'] } },
+});
+
+/** The ventilation mode picker: a sensor, a binary sensor or a select whose state says whether the unit ventilates. */
+export const ventilationModeField = (name: string): EditorField => ({
+  name,
+  selector: { entity: { domain: ['sensor', 'binary_sensor', 'select'] } },
+});
+
+/** An advanced list of texts from a list option, edited as Home Assistant's add and remove list of text boxes. */
+export const listField = (name: string, option: ListOption): EditorField => ({
+  name,
+  advanced: true,
+  default: option.default,
+  selector: { text: { multiple: true } },
 });
 
 /**

@@ -22,12 +22,7 @@ const sections = (schema: FormSchema): Map<string, string[]> =>
 describe('DIAGRAM_SCHEMA', () => {
   test("the schema's field paths are exactly the config keys the card reads", () => {
     // The diagram reads every role (ROLE_LABELS lists them all) and every option of its table.
-    // TODO(task 1.8): the pickers for the ventilation mode and the stopped states are not in the editor yet.
-    const later = new Set<string>(['fans.ventilation_mode', 'fans.stopped_states']);
-    const read = [
-      ...(Object.keys(ROLE_LABELS) as RolePath[]),
-      ...DIAGRAM_OPTION_LIST.map((option) => option.path),
-    ].filter((path) => !later.has(path));
+    const read = [...(Object.keys(ROLE_LABELS) as RolePath[]), ...DIAGRAM_OPTION_LIST.map((option) => option.path)];
     const paths = fieldsWithPaths(DIAGRAM_SCHEMA).map(({ path }) => path);
     expect(new Set(paths)).toEqual(new Set(read));
     expect(paths).toHaveLength(new Set(paths).size);
@@ -52,7 +47,7 @@ describe('DIAGRAM_SCHEMA', () => {
     const named = sections(shown);
     for (const stream of ['outdoor', 'supply', 'extract', 'exhaust'])
       expect(named.get(stream)).toEqual(['temperature', 'humidity', 'absolute_humidity']);
-    expect(named.get('fans')).toEqual(['level', 'supply_flow', 'exhaust_flow']);
+    expect(named.get('fans')).toEqual(['level', 'ventilation_mode', 'supply_flow', 'exhaust_flow']);
     expect(named.get('bypass')).toEqual(['position', 'mode']);
     expect(named.get('status')).toEqual(['operating_mode', 'filter_days', 'power', 'rmot']);
     expect(named.get('pre_heater')).toEqual(['power', 'energy']);
@@ -96,9 +91,11 @@ describe('DIAGRAM_SCHEMA', () => {
           ? ['sensor', 'binary_sensor', 'switch']
           : path === 'fans.level'
             ? ['sensor', 'fan', 'select']
-            : path.startsWith('seasons.')
-              ? 'binary_sensor'
-              : 'sensor';
+            : path === 'fans.ventilation_mode'
+              ? ['sensor', 'binary_sensor', 'select']
+              : path.startsWith('seasons.')
+                ? 'binary_sensor'
+                : 'sensor';
       expect(field.selector, path).toEqual({ entity: { domain } });
     }
   });
@@ -118,6 +115,7 @@ describe('DIAGRAM_SCHEMA', () => {
       'moisture_recovery',
     ]);
     expect(named.get('bypass')).toEqual(['position', 'mode', 'next_change']);
+    expect(named.get('fans')).toEqual(['level', 'ventilation_mode', 'stopped_states', 'supply_flow', 'exhaust_flow']);
     expect(named.get('animation')).toEqual(['enabled', 'nominal_flow']);
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('colors')).toEqual(['cold', 'warm']);
@@ -136,6 +134,33 @@ describe('DIAGRAM_SCHEMA', () => {
       'layout',
       'show_unavailable',
     ]);
+  });
+
+  test('airflow-diagram-card "Advanced settings on": the stopped states are an advanced list of texts that shows Disabled and round-trips as a list', () => {
+    const field = fieldsWithPaths(DIAGRAM_SCHEMA).find(({ path }) => path === 'fans.stopped_states')?.field;
+    expect(field).toEqual({
+      name: 'stopped_states',
+      advanced: true,
+      default: ['Disabled'],
+      selector: { text: { multiple: true } },
+    });
+    expect(EDITOR.fields.stopped_states).toContain('Stopped states');
+    expect(EDITOR.fields.ventilation_mode).toBe('Ventilation mode');
+    const advanced = visibleSchema(DIAGRAM_SCHEMA, true);
+    expect(withShownDefaults(advanced, {})).toMatchObject({ fans: { stopped_states: ['Disabled'] } });
+    // The default list does not turn the switch on, another list does.
+    expect(hasAdvancedValue(DIAGRAM_SCHEMA, { fans: { stopped_states: ['Disabled'] } })).toBe(false);
+    expect(hasAdvancedValue(DIAGRAM_SCHEMA, { fans: { stopped_states: ['off'] } })).toBe(true);
+    // A list edited in the form (a string array, as the text selector reports it) lands in the config as a list.
+    const config = { fans: { level: 'sensor.hrv_level' } };
+    const shown = withShownDefaults(advanced, config);
+    const edited = { ...shown, fans: { ...(shown['fans'] as object), stopped_states: ['Disabled', 'off'] } };
+    expect(withoutShownDefaults(DIAGRAM_SCHEMA, config, edited)).toEqual({
+      fans: { level: 'sensor.hrv_level', stopped_states: ['Disabled', 'off'] },
+    });
+    // Editing another field does not write the default list.
+    const other = { ...shown, fans: { ...(shown['fans'] as object), level: 'fan.hrv' } };
+    expect(withoutShownDefaults(DIAGRAM_SCHEMA, config, other)).toEqual({ fans: { level: 'fan.hrv' } });
   });
 
   test('the exchanger type is a basic choice of HRV and ERV, HRV by default', () => {

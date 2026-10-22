@@ -12,9 +12,11 @@ import {
   colorField,
   fanLevelField,
   numberField,
+  listField,
   sensorField,
   streamSection,
   switchableField,
+  ventilationModeField,
 } from './fields';
 import type { EditorSchema } from './schema';
 
@@ -29,7 +31,13 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
   {
     type: 'expandable',
     name: 'fans',
-    schema: [fanLevelField('level'), sensorField('supply_flow'), sensorField('exhaust_flow')],
+    schema: [
+      fanLevelField('level'),
+      ventilationModeField('ventilation_mode'),
+      listField('stopped_states', DIAGRAM_OPTIONS.stoppedStates),
+      sensorField('supply_flow'),
+      sensorField('exhaust_flow'),
+    ],
   },
   {
     type: 'expandable',
