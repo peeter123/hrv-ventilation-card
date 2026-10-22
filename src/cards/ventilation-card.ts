@@ -45,7 +45,7 @@ import {
 } from '../lib/config';
 import { defineOnce } from '../lib/define';
 import { localeFromHass } from '../lib/format';
-import { formatState, stateOf } from '../lib/hass';
+import { fanLevelText, formatState, stateOf } from '../lib/hass';
 import { optionValue } from '../lib/options';
 import { DIAGRAM, ROLE_LABELS } from '../strings';
 import { checkConfig, HrvCard, sampleStyles } from './base-card';
@@ -559,7 +559,9 @@ export class HrvVentilationCard extends HrvCard {
    */
   private label(label: DiagramLabel): TemplateResult {
     const hass = this.shownHass;
-    const text = hass ? formatState(hass, label.entityId) : '';
+    // A fan entity set as the fan level shows its level name; the label and the tooltip share the text.
+    const level = hass && label.role === 'fans.level' ? fanLevelText(hass.states[label.entityId]) : undefined;
+    const text = level ?? (hass ? formatState(hass, label.entityId) : '');
     const tap = this.tap(label.entityId, 'img');
     // The pre-heater's roles get their own class: `pre_heater.power` must not match `.power` of the unit's power.
     const [group = '', name = ''] = label.role.split('.');

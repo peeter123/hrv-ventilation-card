@@ -8,7 +8,7 @@
   `percentage_step`; verify unit tests for "Three-speed fan at medium" (66 and 33.333333333333336, the live shape),
   "Three-speed fan at the lowest level", "Rounded percentage" (33, 67, 100, and a clamp above 100), "Fan with
   another number of speeds" (NBSP), "Fan without a percentage", and the strings and NBSP tests
-- [ ] 1.2 Use it in `label()` in `src/cards/ventilation-card.ts` for `fans.level` only, for the value and the
+- [x] 1.2 Use it in `label()` in `src/cards/ventilation-card.ts` for `fans.level` only, for the value and the
   tooltip; verify card tests for "Three-speed fan at medium" (label "Medium", title "Fan level: Medium"), "Tapping a
   fan level from a fan entity" (opens the fan entity), "Fan level sensor" (unchanged), an unavailable fan entity
   (hidden as any unavailable label, and shown as unavailable with `show_unavailable`), and that a fan entity set as

@@ -220,6 +220,53 @@ describe('the labels', () => {
     expect(opened).toEqual(['sensor.hrv_supply_t']);
   });
 
+  describe('the fan level', () => {
+    const fan = (value: string, attributes: Record<string, unknown> = {}): HassEntityState => ({
+      ...state('fan.hrv_unit', value),
+      attributes,
+    });
+    const MEDIUM = fan('on', { percentage: 66, percentage_step: 33.333333333333336 });
+    const withLevel = (entity: string): CardConfig => ({ ...CONFIG, fans: { level: entity } });
+    const levelLabel = (root: ShadowRoot): HTMLElement | null => root.querySelector<HTMLElement>('.label.level');
+
+    test('airflow-diagram-card "Three-speed fan at medium": the level name, in the label and the tooltip', async () => {
+      const { root } = await render(withLevel('fan.hrv_unit'), '0', [MEDIUM]);
+      expect(levelLabel(root)?.textContent.trim()).toBe('Medium');
+      expect(levelLabel(root)?.title).toBe('Fan level: Medium');
+      expect(levelLabel(root)?.getAttribute('aria-label')).toBe('fan level: Medium');
+    });
+
+    test('airflow-diagram-card "Tapping a fan level from a fan entity" opens that fan entity', async () => {
+      const { card, root } = await render(withLevel('fan.hrv_unit'), '0', [MEDIUM]);
+      const opened = moreInfo(card);
+      levelLabel(root)?.click();
+      expect(opened).toEqual(['fan.hrv_unit']);
+    });
+
+    test('airflow-diagram-card "Fan level sensor": the state as Home Assistant formats it', async () => {
+      const { root } = await render(withLevel('sensor.hrv_level'), '0', [state('sensor.hrv_level', 'Medium')]);
+      expect(levelLabel(root)?.textContent.trim()).toBe('Medium');
+      expect(levelLabel(root)?.title).toBe('Fan level: Medium');
+    });
+
+    test('an unavailable fan entity is hidden, or shown as unavailable with show_unavailable', async () => {
+      const unavailable = fan('unavailable');
+      const hidden = await render(withLevel('fan.hrv_unit'), '0', [unavailable]);
+      expect(levelLabel(hidden.root)?.classList.contains('hidden')).toBe(true);
+      const shown = await render({ ...withLevel('fan.hrv_unit'), show_unavailable: true }, '0', [unavailable]);
+      expect(levelLabel(shown.root)?.classList.contains('hidden')).toBe(false);
+      expect(levelLabel(shown.root)?.textContent.trim()).not.toBe('');
+    });
+
+    test('a fan entity set as another role shows the state as Home Assistant formats it', async () => {
+      const config: CardConfig = { ...CONFIG, fans: { supply_flow: 'fan.hrv_unit' } };
+      const { root } = await render(config, '0', [MEDIUM]);
+      const label = root.querySelector<HTMLElement>('.label.supply_flow');
+      expect(label?.textContent).not.toContain('Medium');
+      expect(label?.textContent.trim()).toBe('on');
+    });
+  });
+
   test('Enter and Space on a label open the dialog too; other keys do not', async () => {
     const { card, root } = await render(CONFIG, '50');
     const opened = moreInfo(card);
