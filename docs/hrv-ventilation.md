@@ -186,6 +186,18 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     55 % glow colour and 45 % white (a hot, light core), at a quarter 11 % white (still clearly partial). The halo copy
     stays the pure glow colour, so the glow colour option drives both. Checked in light and dark: the pale core reads
     against the orange halo and against the blue stream on both themes.
+  - **Centreline.** A second path `path.coil-core` with the same `d` as the wire lies over it (after it in the SVG),
+    stroke width 1 (a third of the wire's 3), round caps, so the coil reads as a tube with a dark line along its
+    middle. Its colour is the wire's own colour mixed with black. Off: `color-mix(in srgb,
+    var(--secondary-text-color) 55%, black)`. On: `color-mix(in srgb, <wire stroke> 60%, black)`, so it follows
+    the wire colour and stays darker than the lightened core at every level. The off opacity of 0.5 sits on a group,
+    `<g class="coil off">` around wire and centreline, not on each path: with the opacity on the centreline alone
+    it would be as opaque as the text colour and look heavier than the wire, so the group makes it darker than the
+    wire as drawn. It is darker, not a highlight, because the lit core of the glowing coil is already lighter than
+    its halo and a light line would blur into that core; a lighter line could read as a groove, so it is the
+    first thing to change if the dark line does not look right. The centreline is narrower than the wire and
+    follows its path, so it stays inside the wire and inside `coilArea()`: the tap box and the glow filter region are
+    unchanged. `.coil` keeps the round caps for both paths and `.coil.off` sits on the group.
   - **Pulse.** While the coil is on and the card's animation is on, the glow copy pulses: `.coil-glow` runs the
     keyframes `hrv-glow` (2.5 s, ease-in-out, infinite) from its level down to 60 % of it and back. The level is the
     CSS custom property `--glow-opacity` set on the glow path (the same value as its `opacity` attribute, which

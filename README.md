@@ -188,7 +188,8 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 
 A unit with a pre-heater (a heating coil that warms the outdoor air against frost) gets a coil drawn along the
 outdoor stream, on the straight inlet before the bypass splits off (so it stays on the stream with the bypass open),
-when `pre_heater.power` is configured. The coil is a smooth wave from one border of the stream to the other. It is dim (the secondary text
+when `pre_heater.power` is configured. The coil is a smooth wave from one border of the stream to the other, with a
+thin darker line along its middle so it reads as a tube. It is dim (the secondary text
 colour) while the heater is off or its entity is unavailable or unknown, and glows in `glow_color` (orange by
 default) when it heats. The glow starts bright: the share of the glow colour is 30 % plus 70 % of the level, so a
 heater at a quarter of its power already glows clearly orange. While the coil is on and the animation is on, the glow
