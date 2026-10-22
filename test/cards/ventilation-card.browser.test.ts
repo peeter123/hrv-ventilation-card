@@ -368,15 +368,17 @@ function channels(color: string): [number, number, number] {
   return [r, g, b];
 }
 
+/** The WCAG relative luminance of a colour. */
+function luminance(color: string): number {
+  const [r, g, b] = channels(color).map((channel) => {
+    const c = channel / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  }) as [number, number, number];
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 /** The WCAG contrast ratio of two colours. */
 function contrast(a: string, b: string): number {
-  const luminance = (color: string): number => {
-    const [r, g, b] = channels(color).map((channel) => {
-      const c = channel / 255;
-      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    }) as [number, number, number];
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  };
   const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
   return (light + 0.05) / (dark + 0.05);
 }
@@ -968,6 +970,30 @@ describe('pre-heater coil', () => {
       expect(distanceOver(stream), 'over the stream').toBeGreaterThan(30);
       expect(distanceOver(background), 'over the card').toBeGreaterThan(30);
     });
+  }
+});
+
+describe('pre-heater coil centreline', () => {
+  const HEATER = { pre_heater: { power: id.preHeater, max_power: 1000 } };
+  for (const theme of ['light', 'dark'] as const) {
+    for (const [name, power] of [
+      ['off', 0],
+      ['250 of 1000 W', 250],
+      ['1000 of 1000 W', 1000],
+    ] as const) {
+      test(`airflow-diagram-card "Coil centreline", ${theme}, ${name}: the centreline is darker than the wire around it`, async () => {
+        const { root } = await show(400, theme, 'auto', { ...VALUES, bypass: 0, preHeater: power }, HEATER);
+        const wire = element(root, 'svg path.coil');
+        const core = element(root, 'svg path.coil-core');
+        // The core is the wire's own path, drawn narrower on top of it; both share the off state's group opacity.
+        expect(core.getAttribute('d')).toBe(wire.getAttribute('d'));
+        const [wireStroke, coreStroke] = [getComputedStyle(wire).stroke, getComputedStyle(core).stroke];
+        expect(luminance(coreStroke), `${coreStroke} against ${wireStroke}`).toBeLessThan(luminance(wireStroke));
+        console.info(
+          `centreline ${theme} ${name}: wire ${luminance(wireStroke).toFixed(3)}, core ${luminance(coreStroke).toFixed(3)}`,
+        );
+      });
+    }
   }
 });
 
