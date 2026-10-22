@@ -1100,6 +1100,14 @@ describe('ventilation disabled alert', () => {
         expect(alert.right, where).toBeLessThanOrEqual(cardBox.right);
         expect(alert.top, where).toBeGreaterThanOrEqual(box(root, '.drawing').top);
         expect(alert.bottom, where).toBeLessThanOrEqual(exchanger.top + 0.5);
+        expect(element(root, '.on-drawing.alert span').textContent, where).toBe('Ventilation disabled');
+        // Clear of every visible label, the badge, the season icon and the arrowheads.
+        for (const { name, box: other } of shownBoxes(root)) {
+          expect(
+            overlap(alert, other),
+            `${layout} ${where}: alert ${JSON.stringify(alert)} / ${name} ${JSON.stringify(other)}`,
+          ).toBe(false);
+        }
         // Centred over the exchanger.
         expect(alert.left + alert.width / 2, where).toBeCloseTo(exchanger.left + exchanger.width / 2, 0);
       }

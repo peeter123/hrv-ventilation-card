@@ -286,12 +286,17 @@ export class HrvVentilationCard extends HrvCard {
       top: 12.5%;
       left: 50%;
       transform: translate(-50%, -100%);
-      line-height: 0;
+      flex-direction: row;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+      font-size: max(11px, 0.9em);
       color: var(--warning-color, #ffa600);
     }
     .alert ha-icon {
-      --mdc-icon-size: 1.4em;
+      --mdc-icon-size: 1.3em;
       display: flex;
+      flex: none;
       width: var(--mdc-icon-size);
       height: var(--mdc-icon-size);
     }
@@ -616,7 +621,7 @@ export class HrvVentilationCard extends HrvCard {
     return ventilationMode !== undefined && ventilationDisabled(states[ventilationMode], stoppedStates);
   }
 
-  /** The alert over the exchanger: an icon named and explained by the mode entity's state; tapping opens that entity. */
+  /** The alert over the exchanger: an icon with its text, explained by the mode entity's state in the tooltip; tapping opens that entity. */
   private alert(entityId: string, text: string): TemplateResult {
     const tap = this.tap(entityId, 'img');
     const title = `${VENTILATION_DISABLED}: ${text}`;
@@ -628,7 +633,7 @@ export class HrvVentilationCard extends HrvCard {
       title=${title}
       data-entity=${ifDefined(tap.entity)}
     >
-      <ha-icon icon="mdi:alert" aria-hidden="true"></ha-icon>
+      <ha-icon icon="mdi:alert" aria-hidden="true"></ha-icon><span>${VENTILATION_DISABLED}</span>
     </div>`;
   }
 
