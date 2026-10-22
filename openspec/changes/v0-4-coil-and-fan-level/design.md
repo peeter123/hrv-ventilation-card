@@ -141,13 +141,15 @@ caps, after the wire, in both states. Its stroke is a darker shade of the glow c
 - off: `oklch(from var(--secondary-text-color) calc(l * 0.9) c h)`; the off wire's 0.5 opacity moves from the path to
   a `<g class="coil off">` around wire and centreline, so the centreline is darker than the wire as drawn rather than
   as opaque as the text colour;
-- on: `oklch(from <glow color> calc(l * 0.9) c h)`, based on the `color` option and not on the whitened wire, so it
-  stays a warm amber and stays darker than the lightened core at every level.
+- on: `oklch(from <heated> calc(l * 0.9) c h)`, where `<heated>` is the wire's glow colour before the white
+  lightening (the `color` option toward the text colour by the level; the pure glow colour at full level). It follows
+  the level, stays a warm amber, and is darker than the wire (that colour mixed with white) at every level.
 
 The first version mixed the wire's colour with black (55 % and 60 %). The feedback round dropped that because it
 looked muddy and brown and clashed with the glow; a darker shade of the glow colour keeps its hue and saturation, and
 0.9 (after trying 0.75, which was too dark) keeps it visibly darker than the wire. Relative colour syntax is
-supported by current Chrome and Edge, Safari 16.4+ and Firefox 128+, which is what Home Assistant frontends run.
+supported by current Chrome and Edge, Safari 16.4+ and Firefox 128+, which is what Home Assistant frontends run. Older browsers get a `color-mix` fallback (the base 80 % with black: a
+`stroke` attribute on the lit path, a preceding declaration in the off rule) that the relative colour overrides.
 Because the centreline follows the wire's path and is narrower, it stays inside the wire and inside `coilArea()`, so
 the box, the glow filter region and the tap are unchanged. The class names keep the existing CSS: `.coil` keeps the
 round caps for both paths, `.coil.off` moves to the group.

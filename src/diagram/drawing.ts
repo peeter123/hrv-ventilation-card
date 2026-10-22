@@ -255,18 +255,25 @@ export const glowShare = (level: number): number => 30 + 70 * level;
 const CORE_WIDTH = 1;
 
 /**
- * The centreline's lightness as a factor of its base colour's (OKLCH relative colour, same hue and chroma): the glow
- * colour while lit, the secondary text colour while off. 0.9 keeps a warm amber instead of a brown, and stays darker
- * than the lit wire, which is lightened towards white.
+ * The centreline's lightness as a factor of its base colour's (OKLCH relative colour, same hue and chroma): the wire's
+ * glow colour before the white lightening while lit, the secondary text colour while off. 0.9 keeps a warm amber
+ * instead of a brown, and stays darker than the lit wire, which is that colour lightened towards white.
  */
 export const CORE_LIGHTNESS = 0.9;
 
 /** A darker shade of a colour: lower lightness, same chroma and hue (no mixing with black, which greys it). */
 export const darker = (color: string): string => `oklch(from ${color} calc(l * ${String(CORE_LIGHTNESS)}) c h)`;
 
+/** Percent of the base colour in the centreline's fallback, for browsers without relative colour syntax (the rest is black). */
+const CORE_FALLBACK_SHARE = 80;
+
+/** The centreline's fallback: the card's existing colour mixing, used where `darker` is not understood. */
+export const darkerFallback = (color: string): string =>
+  `color-mix(in srgb, ${color} ${String(CORE_FALLBACK_SHARE)}%, black)`;
+
 /**
  * The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. Either way
- * a thin centreline (`coil-core`) in a darker shade of the base colour follows the wire's path; its colour while off
+ * a thin centreline (`coil-core`) in a darker shade of the wire's colour before the whitening follows the wire's path; its colour while off
  * is in the card's CSS (see `darker`), with the off group's opacity.
  */
 function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
@@ -288,7 +295,7 @@ function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>
     <path class="coil-core" d=${COIL} fill="none" stroke-width=${CORE_WIDTH} stroke-linejoin="round"
-      style=${styleMap({ stroke: darker(color) })}></path>`;
+      stroke=${darkerFallback(heated)} style=${styleMap({ stroke: darker(heated) })}></path>`;
 }
 
 /** The blur of the coil's glow, over the coil's area (the default filter region is too small for a thin wave). */

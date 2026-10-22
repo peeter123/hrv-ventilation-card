@@ -975,14 +975,19 @@ describe('pre-heater coil', () => {
 
 describe('pre-heater coil centreline', () => {
   const HEATER = { pre_heater: { power: id.preHeater, max_power: 1000 } };
+  /** The least WCAG contrast between the centreline and the wire around it (measured 1.27 to 1.85 over the cases below; the weakest is the off coil in light). */
+  const MIN_CONTRAST = 1.2;
+  const CASES = [
+    ['off', 0, HEATER],
+    ['50 of 1000 W', 50, HEATER],
+    ['250 of 1000 W', 250, HEATER],
+    ['1000 of 1000 W', 1000, HEATER],
+    ['250 of 1000 W, light glow colour', 250, { pre_heater: { ...HEATER.pre_heater, glow_color: '#ffeb3b' } }],
+  ] as const;
   for (const theme of ['light', 'dark'] as const) {
-    for (const [name, power] of [
-      ['off', 0],
-      ['250 of 1000 W', 250],
-      ['1000 of 1000 W', 1000],
-    ] as const) {
+    for (const [name, power, extra] of CASES) {
       test(`airflow-diagram-card "Coil centreline", ${theme}, ${name}: the centreline is darker than the wire around it`, async () => {
-        const { root } = await show(400, theme, 'auto', { ...VALUES, bypass: 0, preHeater: power }, HEATER);
+        const { root } = await show(400, theme, 'auto', { ...VALUES, bypass: 0, preHeater: power }, extra);
         // The coil is in the intended state: off sits in the dim group, on is the lit wire with no dim group.
         expect(root.querySelector('svg g.coil.off path.coil') !== null, 'dim').toBe(power === 0);
         expect(root.querySelector('svg g.coil.off') !== null, 'dim group').toBe(power === 0);
@@ -991,11 +996,12 @@ describe('pre-heater coil centreline', () => {
         const core = element(root, 'svg path.coil-core');
         // The core is the wire's own path, drawn narrower on top of it; both share the off state's group opacity.
         expect(core.getAttribute('d')).toBe(wire.getAttribute('d'));
+        // The computed colours must be resolved ones (the helper reads them through a canvas and throws on a colour
+        // the canvas does not understand, or that is not opaque).
         const [wireStroke, coreStroke] = [getComputedStyle(wire).stroke, getComputedStyle(core).stroke];
+        const ratio = contrast(coreStroke, wireStroke);
         expect(luminance(coreStroke), `${coreStroke} against ${wireStroke}`).toBeLessThan(luminance(wireStroke));
-        console.info(
-          `centreline ${theme} ${name}: wire ${luminance(wireStroke).toFixed(3)}, core ${luminance(coreStroke).toFixed(3)}`,
-        );
+        expect(ratio, `${coreStroke} against ${wireStroke}`).toBeGreaterThanOrEqual(MIN_CONTRAST);
       });
     }
   }
@@ -1030,7 +1036,7 @@ describe('coil glow pulse', () => {
       expect(value).toBeGreaterThanOrEqual(0.6 - 0.01);
       expect(value).toBeLessThanOrEqual(1);
     }
-    console.info('pulse opacities (on)', values.map((v) => v.toFixed(3)).join(' '));
+    console.error('pulse opacities (on)', values.map((v) => v.toFixed(3)).join(' '));
   });
 
   test('airflow-diagram-card "Glow pulse": the glow opacity stays constant with animation off', async () => {
@@ -1044,7 +1050,7 @@ describe('coil glow pulse', () => {
     );
     const values = await sample(root);
     expect(new Set(values).size).toBe(1);
-    console.info('pulse opacities (off)', values.map((v) => v.toFixed(3)).join(' '));
+    console.error('pulse opacities (off)', values.map((v) => v.toFixed(3)).join(' '));
   });
 });
 

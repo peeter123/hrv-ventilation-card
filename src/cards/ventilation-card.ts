@@ -2,7 +2,7 @@
 // drawing band with the stream labels, the saving badge and on an ERV the moisture figure over the drawing, and a
 // status grid of fixed cells. What
 // to show comes from the pure functions in src/diagram/; this element only renders it.
-import { css, html, nothing, type TemplateResult } from 'lit';
+import { css, html, nothing, unsafeCSS, type TemplateResult } from 'lit';
 import { state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -18,7 +18,7 @@ import {
   type Badge,
   type MoistureFigure,
 } from '../diagram/badge';
-import { coilBox, drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
+import { coilBox, darker, darkerFallback, drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
 import { flowSpeed, normalizedState, ventilationDisabled } from '../diagram/flow';
 import {
   COMPACT_BELOW,
@@ -270,7 +270,8 @@ export class HrvVentilationCard extends HrvCard {
       opacity: 0.5;
     }
     .coil.off .coil-core {
-      stroke: oklch(from var(--secondary-text-color) calc(l * 0.9) c h);
+      stroke: ${unsafeCSS(darkerFallback('var(--secondary-text-color)'))};
+      stroke: ${unsafeCSS(darker('var(--secondary-text-color)'))};
     }
     .coil-glow {
       animation: hrv-glow 2.5s ease-in-out infinite;

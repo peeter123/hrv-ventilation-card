@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'vitest';
 import { checkDiagramConfig, HrvVentilationCard } from '../../src/cards/ventilation-card';
+import { darker, darkerFallback } from '../../src/diagram/drawing';
 import type { CardHass } from '../../src/cards/base-card';
 import { entityAt, type CardConfig } from '../../src/lib/config';
 import type { HassEntityState } from '../../src/lib/hass';
@@ -952,9 +953,11 @@ describe('the pre-heater coil', () => {
       .map((style) => ('cssText' in style ? style.cssText : ''))
       .join('');
     expect(css).toMatch(/\.coil\.off\s*\{[^}]*opacity: 0\.5/);
-    expect(css).toMatch(
-      /\.coil\.off \.coil-core\s*\{[^}]*oklch\(from var\(--secondary-text-color\) calc\(l \* 0\.9\) c h\)/,
-    );
+    const off = /\.coil\.off \.coil-core\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+    // The fallback comes first, so a browser that understands relative colour takes the second declaration.
+    const [fallback = '', relative = ''] = off.split(';').map((declaration) => declaration.trim());
+    expect(fallback).toBe(`stroke: ${darkerFallback('var(--secondary-text-color)')}`);
+    expect(relative).toBe(`stroke: ${darker('var(--secondary-text-color)')}`);
   });
 
   test('airflow-diagram-card "Glowing coil": a centreline darker than the lit wire follows it, the glow is unchanged', async () => {
@@ -962,8 +965,11 @@ describe('the pre-heater coil', () => {
     const wire = root.querySelector('svg path.coil.on');
     const core = root.querySelector('svg path.coil-core');
     expect(core?.previousElementSibling).toBe(wire);
-    // A darker shade of the glow colour itself (not of the whitened wire), keeping hue and chroma.
-    expect(core?.getAttribute('style')).toContain('oklch(from #ff9800 calc(l * 0.9) c h)');
+    // A darker shade of the wire's glow colour before the white lightening (so it follows the level), keeping hue and
+    // chroma, with a color-mix fallback attribute for browsers without relative colour.
+    const heated = 'color-mix(in srgb, #ff9800 47.5%, var(--secondary-text-color))';
+    expect(core?.getAttribute('style')).toContain(darker(heated));
+    expect(core?.getAttribute('stroke')).toBe(darkerFallback(heated));
     expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.475');
     expect(root.querySelector('svg .coil-glow')?.getAttribute('stroke-width')).toBe('4.5');
   });

@@ -189,10 +189,13 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   - **Centreline.** A second path `path.coil-core` with the same `d` as the wire lies over it (after it in the SVG),
     stroke width 1 (a third of the wire's 3), round caps, so the coil reads as a tube with a dark line along its
     middle. Its colour is a darker shade of the glow colour, in OKLCH relative colour that keeps hue and chroma:
-    `oklch(from <base> calc(l * 0.9) c h)` (`CORE_LIGHTNESS`), with the glow colour option as the base while lit
-    (not the whitened wire, so it stays a warm amber and darker than the wire at every level) and the secondary
-    text colour while off. It was first a mix with black, which looked muddy and clashed with the glow. Relative
-    colour needs Chrome and Edge, Safari 16.4+ or Firefox 128+, as Home Assistant frontends run. The off opacity of 0.5 sits on a group,
+    `oklch(from <base> calc(l * 0.9) c h)` (`CORE_LIGHTNESS`), with the wire's glow colour before the white
+    lightening as the base while lit (the glow colour toward the text colour by the level, so it follows the level,
+    stays a warm amber and is darker than the wire at every level: the wire is that colour mixed with white) and the
+    secondary text colour while off. It was first a mix with black, which looked muddy and clashed with the glow.
+    Relative colour needs Chrome and Edge, Safari 16.4+ or Firefox 128+, as Home Assistant frontends run; older
+    browsers get a `color-mix` fallback (the base 80 % with black, a `stroke` attribute on the lit path and a
+    preceding declaration for the off one) that the relative colour overrides where supported. The off opacity of 0.5 sits on a group,
     `<g class="coil off">` around wire and centreline, not on the wire alone: with the opacity on the wire only, the
     centreline would be drawn at full opacity, as solid as the text colour, while the wire around it is dimmed. On
     the group, both dim together and the centreline is darker than the wire as drawn. It is darker, not a highlight
