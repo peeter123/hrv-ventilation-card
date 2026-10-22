@@ -72,7 +72,7 @@
 
 ## 2. Pre-heater coil centreline
 
-- [ ] 2.1 Add the `coil-core` path to `coilWire` in `src/diagram/drawing.ts` (design: "Coil centreline"): stroke
+- [x] 2.1 Add the `coil-core` path to `coilWire` in `src/diagram/drawing.ts` (design: "Coil centreline"): stroke
   width 1 along the wire's path, after the wire, in both states, with the off wire and centreline in a
   `<g class="coil off">` carrying the 0.5 opacity; move the CSS in `src/cards/ventilation-card.ts` to match; verify
   unit tests for "Off coil", "Glowing coil" (the glow path and its attributes unchanged), "Inside the wire" (same
