@@ -366,9 +366,12 @@ absolute humidity is used; a relative humidity also needs the stream's temperatu
 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
-| `level` | entity | | | Fan level (diagram card only, status grid). |
+| `level` | entity | | | Fan level (diagram card only, status grid). A sensor, fan or select entity. A fan entity's level is named from its `percentage` and `percentage_step`: Away, Low, Medium or High for a three-speed fan, otherwise the percentage. |
 | `supply_flow` | entity | | | Supply air flow sensor. Optional on the diagram card, where it shows above the supply arrow, sets the supply air's animation speed and is needed for the badge. |
 | `exhaust_flow` | entity | | | Exhaust air flow sensor (diagram card only, above the exhaust arrow, and the exhaust air's animation speed). |
+
+With [michaelarnauts/home-assistant-comfoconnect](https://github.com/michaelarnauts/home-assistant-comfoconnect)
+there is no fan level sensor: pick the unit's fan entity as `level`.
 
 #### Bypass object
 

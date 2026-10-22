@@ -21,7 +21,7 @@
   mock fan entity whose `percentage` follows the flow's level (design: "Preview page"); verify a screenshot of the
   preview page with each kind at away, low, medium and high, inspected by an agent, showing the same level name for
   all three kinds
-- [ ] 1.5 Document it in `README.md` (the `level` row of the fans table: a sensor, fan or select entity, and how a fan
+- [x] 1.5 Document it in `README.md` (the `level` row of the fans table: a sensor, fan or select entity, and how a fan
   entity's level is named; a note for michaelarnauts/home-assistant-comfoconnect users to pick the fan entity) and in
   the status grid part of `docs/hrv-ventilation.md` (the formatter, why it is limited to the role, why "Away");
   verify the README tests pass
