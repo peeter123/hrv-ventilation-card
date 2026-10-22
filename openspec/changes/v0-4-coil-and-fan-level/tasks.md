@@ -67,7 +67,7 @@
   repeat it on the new bundle), then with `fans.ventilation_mode` set to the installation's ventilation mode sensor:
   as it reports (`Active`: no alert), and with a copy of `hass` whose state of that sensor is `Disabled` ("Stopped",
   streams paused, the alert); verify they agree (IDs from `private/installation.md`, none written to a tracked file)
-- [ ] 1.12 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 1.12 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 2. Pre-heater coil centreline
