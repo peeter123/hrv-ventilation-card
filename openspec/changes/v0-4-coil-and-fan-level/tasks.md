@@ -25,7 +25,7 @@
   entity's level is named; a note for michaelarnauts/home-assistant-comfoconnect users to pick the fan entity) and in
   the status grid part of `docs/hrv-ventilation.md` (the formatter, why it is limited to the role, why "Away");
   verify the README tests pass
-- [ ] 1.6 Add the option kind `list` to `src/lib/options.ts`, the option `fans.stopped_states` (default
+- [x] 1.6 Add the option kind `list` to `src/lib/options.ts`, the option `fans.stopped_states` (default
   `['Disabled']`) to `DIAGRAM_OPTIONS`, the role `fans.ventilation_mode` to the config roles (left out of every
   label list in `src/diagram/labels.ts`), and `ventilationDisabled(stateObj, stoppedStates)` to
   `src/diagram/flow.ts` (design: "Ventilation disabled"); verify unit tests for the option (default, a custom list,
