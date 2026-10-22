@@ -92,7 +92,7 @@
 
 ## 3. Release
 
-- [ ] 3.1 Retake the README images that show the coil (`diagram-frost.png`, and any other with a pre-heater) with
+- [x] 3.1 Retake the README images that show the coil (`diagram-frost.png`, and any other with a pre-heater) with
   `npm run capture`; verify every image the README links exists and the frost image shows the centreline
 - [ ] 3.2 Set the version to `0.4.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
