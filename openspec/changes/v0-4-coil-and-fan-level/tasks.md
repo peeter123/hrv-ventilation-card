@@ -102,7 +102,7 @@
   v0.3 apart from the coil's centreline, the fan level label still shows the sensor's state, no alert shows while
   the mode is `Active`, and the coil's tooltip and tap work; screenshots at desktop and phone width, light and dark,
   inspected by an agent
-- [ ] 3.4 Update `private/installation.md` (resource `?v=`, the fan entity and select as alternative fan level
+- [x] 3.4 Update `private/installation.md` (resource `?v=`, the fan entity and select as alternative fan level
   sources, the ventilation mode role in both cards and what the unit reported in service mode, the rollback to
   v0.3.0), remove the two entries from `BACKLOG.md` and update its release line; verify no
   tracked file holds an entity ID with the device serial, a helper or a dashboard ID (`npm run check:ids` and a
