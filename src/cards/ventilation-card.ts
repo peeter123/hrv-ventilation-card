@@ -102,6 +102,8 @@ export class HrvVentilationCard extends HrvCard {
     :host {
       display: block;
       container-type: inline-size;
+      /* The space between the separator under the top row and the drawing. */
+      --top-gap: 6px;
     }
     ha-card {
       padding: 8px 12px;
@@ -120,7 +122,7 @@ export class HrvVentilationCard extends HrvCard {
     .top {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
-      margin-bottom: 6px;
+      margin-bottom: var(--top-gap);
       padding-bottom: 4px;
       border-bottom: 1px solid var(--divider-color);
     }
@@ -279,13 +281,14 @@ export class HrvVentilationCard extends HrvCard {
       }
     }
     /*
-     * The ventilation alert: centred over the exchanger, its bottom just above the exchanger's top edge (y 26 of 200),
-     * in the strip between the outdoor and extract corner stacks, over the bypass path's rise only at the very top.
+     * The ventilation alert: centred over the exchanger, and vertically halfway between the separator under the top
+     * row (--top-gap above the drawing) and the exchanger's top edge (y 26 of 200, 13 %), in the strip between the
+     * outdoor and extract corner stacks.
      */
     .alert {
-      top: 12.5%;
+      top: calc((13% - var(--top-gap)) / 2);
       left: 50%;
-      transform: translate(-50%, -100%);
+      transform: translate(-50%, -50%);
       flex-direction: row;
       align-items: center;
       gap: 3px;

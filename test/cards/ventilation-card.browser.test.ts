@@ -1098,7 +1098,7 @@ describe('ventilation disabled alert', () => {
         expect(drawn.width, where).toBeGreaterThan(0);
         expect(alert.left, where).toBeGreaterThanOrEqual(cardBox.left);
         expect(alert.right, where).toBeLessThanOrEqual(cardBox.right);
-        expect(alert.top, where).toBeGreaterThanOrEqual(box(root, '.drawing').top);
+        expect(alert.top, where).toBeGreaterThanOrEqual(box(root, '.top').bottom);
         expect(alert.bottom, where).toBeLessThanOrEqual(exchanger.top + 0.5);
         expect(element(root, '.on-drawing.alert span').textContent, where).toBe('Ventilation disabled');
         // Clear of every visible label, the badge, the season icon and the arrowheads.
@@ -1108,6 +1108,12 @@ describe('ventilation disabled alert', () => {
             `${layout} ${where}: alert ${JSON.stringify(alert)} / ${name} ${JSON.stringify(other)}`,
           ).toBe(false);
         }
+        // Vertically halfway between the separator under the top row and the exchanger's top edge.
+        const separator = box(root, '.top').bottom;
+        expect(
+          Math.abs(alert.top + alert.height / 2 - (separator + exchanger.top) / 2),
+          `${layout} ${where}`,
+        ).toBeLessThanOrEqual(1.5);
         // Centred over the exchanger.
         expect(alert.left + alert.width / 2, where).toBeCloseTo(exchanger.left + exchanger.width / 2, 0);
       }

@@ -1,6 +1,7 @@
 // Stand-ins for the Home Assistant elements the cards use, for the preview page only: `ha-card` (the card frame with
 // the theme's background) and `ha-icon` (the season and label icons, drawn from @mdi/js).
 import {
+  mdiAlert,
   mdiAirFilter,
   mdiCogOutline,
   mdiFan,
@@ -27,6 +28,7 @@ const ICONS: Readonly<Record<string, string>> = {
   'mdi:sun-snowflake-variant': mdiSunSnowflakeVariant,
   'mdi:lightning-bolt': mdiLightningBolt,
   'mdi:thermometer-lines': mdiThermometerLines,
+  'mdi:alert': mdiAlert,
   'mdi:fan': mdiFan,
   'mdi:heat-wave': mdiHeatWave,
   'mdi:shuffle-variant': mdiShuffleVariant,
