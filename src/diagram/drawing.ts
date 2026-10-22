@@ -254,13 +254,20 @@ export const glowShare = (level: number): number => 30 + 70 * level;
 /** The centreline's width: a third of the wire's, so it stays inside the wire. */
 const CORE_WIDTH = 1;
 
-/** Percent of the wire's colour in the lit coil's centreline (the rest is black). */
-const CORE_SHARE = 60;
+/**
+ * The centreline's lightness as a factor of its base colour's (OKLCH relative colour, same hue and chroma): the glow
+ * colour while lit, the secondary text colour while off. 0.75 keeps a deep amber instead of a brown, and stays darker
+ * than the lit wire, which is lightened towards white.
+ */
+export const CORE_LIGHTNESS = 0.75;
+
+/** A darker shade of a colour: lower lightness, same chroma and hue (no mixing with black, which greys it). */
+export const darker = (color: string): string => `oklch(from ${color} calc(l * ${String(CORE_LIGHTNESS)}) c h)`;
 
 /**
  * The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. Either way
- * a thin darker centreline (`coil-core`) follows the wire's path; its colour while off is in the card's CSS, with the
- * off group's opacity.
+ * a thin centreline (`coil-core`) in a darker shade of the base colour follows the wire's path; its colour while off
+ * is in the card's CSS (see `darker`), with the off group's opacity.
  */
 function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
   if (level <= 0) {
@@ -281,7 +288,7 @@ function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>
     <path class="coil-core" d=${COIL} fill="none" stroke-width=${CORE_WIDTH} stroke-linejoin="round"
-      style=${styleMap({ stroke: `color-mix(in srgb, ${stroke} ${String(CORE_SHARE)}%, black)` })}></path>`;
+      style=${styleMap({ stroke: darker(color) })}></path>`;
 }
 
 /** The blur of the coil's glow, over the coil's area (the default filter region is too small for a thin wave). */

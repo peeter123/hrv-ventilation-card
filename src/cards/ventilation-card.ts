@@ -270,7 +270,7 @@ export class HrvVentilationCard extends HrvCard {
       opacity: 0.5;
     }
     .coil.off .coil-core {
-      stroke: color-mix(in srgb, var(--secondary-text-color) 55%, black);
+      stroke: oklch(from var(--secondary-text-color) calc(l * 0.75) c h);
     }
     .coil-glow {
       animation: hrv-glow 2.5s ease-in-out infinite;
