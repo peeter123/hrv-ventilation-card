@@ -82,6 +82,39 @@ describe('hrv-card-editor stopped states list', () => {
   });
 });
 
+describe('hrv-card-editor stopped states row', () => {
+  test('airflow-diagram-card "Advanced settings on": the added row stays in the form until it is typed into, and no blank is saved', async () => {
+    const config = { fans: { level: 'sensor.hrv_level', stopped_states: ['Disabled'] } };
+    const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    const saved = collectSaved(editor);
+    const rows = (): unknown => (form.data as { fans: { stopped_states: unknown } }).fans.stopped_states;
+    const report = (stopped_states: string[]): void => {
+      form.change({ ...form.data, fans: { ...(form.data['fans'] as object), stopped_states } });
+    };
+
+    report(['Disabled', '']);
+    await editor.updateComplete;
+    expect(rows()).toEqual(['Disabled', '']);
+    expect(saved.at(-1)).toEqual(config);
+
+    // Home Assistant hands the saved config back: that is not a change from outside.
+    editor.setConfig(saved[saved.length - 1] ?? {});
+    await editor.updateComplete;
+    expect(rows()).toEqual(['Disabled', '']);
+
+    report(['Disabled', 'off']);
+    await editor.updateComplete;
+    expect(saved.at(-1)).toEqual({ fans: { level: 'sensor.hrv_level', stopped_states: ['Disabled', 'off'] } });
+    expect(rows()).toEqual(['Disabled', 'off']);
+
+    // A config set from outside replaces what the form held.
+    report(['Disabled', 'off', '']);
+    editor.setConfig(config);
+    await editor.updateComplete;
+    expect(rows()).toEqual(['Disabled']);
+  });
+});
+
 describe('hrv-card-editor', () => {
   test('card-bundle "Default editor": the switch is off and no advanced setting is shown', async () => {
     const { toggle, form } = await openEditor(BASIC_CONFIG);

@@ -72,6 +72,11 @@ export class HrvCardEditor extends LitElement {
   // Rebuilt only when the config or the schema changes, so ha-form is not handed new data on every render.
   private _shown: CardConfig = {};
 
+  // What ha-form last reported while it held a blank text row (the user pressed "add" on a text list and has not typed
+  // yet). The form keeps showing it, so the row is not taken away, while the saved config is free of blank texts.
+  // Dropped when a report has no blank row or when the config is set from outside.
+  @state() private _draft?: CardConfig;
+
   // The fields the user just cleared. They stay empty instead of showing their default again (the box would refill
   // and typing 5 would give 105) until the config is set from outside or the switch changes.
   private _emptied = new Set<string>();
@@ -93,7 +98,9 @@ export class HrvCardEditor extends LitElement {
   /** Called by Home Assistant with the card's config, also after edits in the code editor. */
   setConfig(config: CardConfig): void {
     // Home Assistant may hand back the config this editor just fired: that is not a change from outside.
-    if (this._emptied.size > 0 && JSON.stringify(config) !== JSON.stringify(this._config)) this._emptied = new Set();
+    const fromOutside = JSON.stringify(config) !== JSON.stringify(this._config);
+    if (this._emptied.size > 0 && fromOutside) this._emptied = new Set();
+    if (fromOutside) this._draft = undefined;
     this._config = config;
     if (this._locked && !this._switch.advanced) this._switch = { advanced: true };
   }
@@ -103,8 +110,11 @@ export class HrvCardEditor extends LitElement {
     if (changed.has('schema') || changed.has('_switch')) {
       this._formSchema = visibleSchema(this.schema, this._switch.advanced);
     }
-    if (this._config && (changed.has('schema') || changed.has('_config') || changed.has('_switch'))) {
-      this._shown = withShownDefaults(this._formSchema, this._config, this._emptied);
+    if (
+      this._config &&
+      (changed.has('schema') || changed.has('_config') || changed.has('_switch') || changed.has('_draft'))
+    ) {
+      this._shown = withShownDefaults(this._formSchema, this._draft ?? this._config, this._emptied);
     }
   }
 
@@ -119,7 +129,9 @@ export class HrvCardEditor extends LitElement {
     event.stopPropagation();
     // ha-form reports the whole data it displays, defaults included: keep out those the config did not have, and
     // the keys of cleared fields (reported as undefined).
-    const value = withoutBlankTexts(this.schema, withoutUndefined(event.detail.value));
+    const reported = withoutUndefined(event.detail.value);
+    const value = withoutBlankTexts(this.schema, reported);
+    this._draft = value === reported ? undefined : reported;
     const cleared = clearedPaths(this.schema, this._shown, value);
     this._emptied = new Set([...this._emptied, ...cleared].filter((path) => valueAt(value, path) === undefined));
     const config = this._config ? withoutShownDefaults(this.schema, this._config, value) : value;
