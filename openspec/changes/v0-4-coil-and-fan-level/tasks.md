@@ -83,7 +83,7 @@
 - [x] 2.3 Document the centreline in the diagram section of `docs/hrv-ventilation.md` (its colours per state, why
   the off opacity sits on a group, why darker and not a highlight) and, if the README describes the coil's look, in
   `README.md`; verify the README tests pass
-- [ ] 2.4 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
+- [x] 2.4 Feedback round: start `npm run dev` for the user, show screenshots of the preview page (the coil off, at
   250 of 1000 W and at full; the frost scenario; both layouts; 280, 400 and 600 px; light and dark) inspected by an
   agent, and apply the user's feedback (the shares, the width, or a highlight instead); verify the user approves
   before the review
