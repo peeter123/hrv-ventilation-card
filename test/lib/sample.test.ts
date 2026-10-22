@@ -8,7 +8,10 @@ import { SAMPLE_CONFIG, SAMPLE_STATES } from '../../src/lib/sample';
 import { ROLE_LABELS } from '../../src/strings';
 
 // The absolute humidities are left out on purpose: the sample gives relative humidity and the cards derive the rest.
-const SAMPLE_ROLES = (Object.keys(ROLE_LABELS) as RolePath[]).filter((role) => !role.endsWith('absolute_humidity'));
+// The ventilation mode is left out too: it is an input of the stopped state, which the sample never shows.
+const SAMPLE_ROLES = (Object.keys(ROLE_LABELS) as RolePath[]).filter(
+  (role) => !role.endsWith('absolute_humidity') && role !== 'fans.ventilation_mode',
+);
 
 const calculate = (): ReturnType<ReturnType<typeof createCalculator>> =>
   createCalculator(

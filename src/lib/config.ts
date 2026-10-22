@@ -20,7 +20,7 @@ export const mapStreams = <T>(fn: (stream: Stream) => T): Record<Stream, T> => (
 /** Every entity role of the cards, as a config path. Typed, so a misspelled role does not compile. */
 export type RolePath =
   | `${Stream}.${'temperature' | 'humidity' | 'absolute_humidity'}`
-  | `fans.${'level' | 'supply_flow' | 'exhaust_flow'}`
+  | `fans.${'level' | 'supply_flow' | 'exhaust_flow' | 'ventilation_mode'}`
   | `bypass.${'position' | 'mode' | 'next_change'}`
   | `status.${'operating_mode' | 'target_temperature' | 'temperature_profile' | 'next_fan_change' | 'filter_days' | 'power' | 'rmot' | 'heating_saving' | 'cooling_saving' | 'moisture_recovery'}`
   | `pre_heater.${'power' | 'energy'}`

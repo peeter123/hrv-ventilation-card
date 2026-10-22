@@ -30,16 +30,23 @@ export interface ChoiceOption extends BaseOption<string> {
   choices: readonly string[];
 }
 
-export type OptionSpec = NumberOption | ColorOption | BooleanOption | ChoiceOption;
+/** A list of texts (such as the states that count as stopped); an empty list or a non-list value uses the default. */
+export interface ListOption extends BaseOption<readonly string[]> {
+  kind: 'list';
+}
 
-/** The type of an option's value: a number (or undefined without a default), a string, a boolean or a choice. */
+export type OptionSpec = NumberOption | ColorOption | BooleanOption | ChoiceOption | ListOption;
+
+/** The type of an option's value: a number (or undefined without a default), a string, a boolean, a choice or a list. */
 export type OptionValue<T extends OptionSpec> = T extends NumberOption
   ? number | Extract<T['default'], undefined>
   : T extends BooleanOption
     ? boolean
     : T extends ChoiceOption
       ? T['choices'][number]
-      : string;
+      : T extends ListOption
+        ? readonly string[]
+        : string;
 
 // One CSS colour as configs write it: a hex value (3, 4, 6 or 8 digits), a colour name, a colour function such as
 // rgb(), hsl() or oklch() (units, `none` and var() inside are fine, e.g. Home Assistant's rgb(var(--rgb-primary-color)))
@@ -241,6 +248,8 @@ function accepts(option: OptionSpec): string {
       return OPTIONS.boolean;
     case 'choice':
       return OPTIONS.choice(option.choices);
+    case 'list':
+      return OPTIONS.list;
   }
 }
 
@@ -254,6 +263,8 @@ function isValid(option: OptionSpec, value: unknown): boolean {
       return typeof value === 'boolean';
     case 'choice':
       return typeof value === 'string' && option.choices.includes(value);
+    case 'list':
+      return Array.isArray(value) && value.every((item) => typeof item === 'string');
   }
 }
 
@@ -279,8 +290,9 @@ export function invalidOptions(config: CardConfig, options: readonly OptionSpec[
   return [...new Set(messages)];
 }
 
-/** The option's value, or its default when it is left out. Call after invalidOptions found no problem. */
+/** The option's value, or its default when it is left out (or, for a list, empty). Call after invalidOptions found no problem. */
 export function optionValue<T extends OptionSpec>(config: CardConfig, option: T): OptionValue<T> {
   const value = valueAt(config, option.path);
-  return (isLeftOut(value) || !isValid(option, value) ? option.default : value) as OptionValue<T>;
+  const empty = option.kind === 'list' && Array.isArray(value) && value.length === 0;
+  return (isLeftOut(value) || empty || !isValid(option, value) ? option.default : value) as OptionValue<T>;
 }

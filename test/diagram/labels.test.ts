@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { isCompact, labelModel, STATUS_CELLS, type DiagramLabel, type LabelModel } from '../../src/diagram/labels';
 import type { StateLike } from '../../src/lib/availability';
-import type { CardConfig } from '../../src/lib/config';
+import { entityAt, type CardConfig } from '../../src/lib/config';
 
 const FULL: CardConfig = {
   type: 'custom:hrv-ventilation-card',
@@ -117,6 +117,17 @@ describe('labelModel', () => {
       visible: true,
     });
     expect(visibleRoles(model)).toHaveLength(25);
+  });
+
+  test('airflow-diagram-card "Role without a label": the ventilation mode role loads in a config and gets no label', () => {
+    const config = { ...FULL, fans: { ...(FULL['fans'] as object), ventilation_mode: 'sensor.hrv_ventilation_mode' } };
+    expect(entityAt(config, 'fans.ventilation_mode')).toBe('sensor.hrv_ventilation_mode');
+    const states = allStates({ 'sensor.hrv_ventilation_mode': 'Disabled' });
+    const model = labelModel(config, states, FULL_LAYOUT);
+    expect(roles(model.flows)).toEqual(['fans.supply_flow', 'fans.exhaust_flow']);
+    expect(visibleRoles(model)).toEqual(visibleRoles(labelModel(FULL, allStates(), FULL_LAYOUT)));
+    const all = [model.top, ...Object.values(model.corners), model.centre, model.flows, model.status];
+    expect(all.flatMap((labels) => roles(labels) ?? [])).not.toContain('fans.ventilation_mode');
   });
 
   test('airflow-diagram-card "Optional role missing": a config without power has no power label', () => {

@@ -34,6 +34,7 @@ export const ROLE_LABELS: Readonly<Record<RolePath, string>> = {
   'fans.level': 'fan level',
   'fans.supply_flow': 'supply flow',
   'fans.exhaust_flow': 'exhaust flow',
+  'fans.ventilation_mode': 'ventilation mode',
   'bypass.position': 'bypass position',
   'bypass.mode': 'bypass mode',
   'bypass.next_change': 'next bypass change',
@@ -65,6 +66,7 @@ export const OPTIONS = {
   boolean: 'true or false',
   object: 'a group of options',
   choice: (choices: readonly string[]): string => `one of ${choices.join(', ')}`,
+  list: 'a list of texts',
 } as const;
 
 /** The note on a card that shows the sample instead of the user's sensors. */

@@ -6,7 +6,8 @@ const DENSITY = { kind: 'number', path: 'air_density', min: 0.5, max: 1.5, defau
 const COLOR = { kind: 'color', path: 'heating.color', default: '#db4437' } as const;
 const ENABLED = { kind: 'boolean', path: 'animation.enabled', default: true } as const;
 const LAYOUT = { kind: 'choice', path: 'layout', choices: ['auto', 'full', 'compact'], default: 'auto' } as const;
-const ALL: OptionSpec[] = [SMOOTHING, DENSITY, COLOR, ENABLED, LAYOUT];
+const STOPPED = { kind: 'list', path: 'fans.stopped_states', default: ['Disabled'] } as const;
+const ALL: OptionSpec[] = [SMOOTHING, DENSITY, COLOR, ENABLED, LAYOUT, STOPPED];
 
 describe('invalidOptions', () => {
   test('card-bundle "Negative smoothing window": names the smoothing window and its allowed range', () => {
@@ -115,5 +116,24 @@ describe('optionValue', () => {
     expect(optionValue({ heating: { color: 'orange' } }, COLOR)).toBe('orange');
     expect(optionValue({}, ENABLED)).toBe(true);
     expect(optionValue({ layout: 'full' }, LAYOUT)).toBe('full');
+  });
+
+  test('airflow-diagram-card "Custom stopped states": a list option gives the configured list, the default when left out', () => {
+    expect(optionValue({}, STOPPED)).toEqual(['Disabled']);
+    expect(optionValue({ fans: { stopped_states: ['off'] } }, STOPPED)).toEqual(['off']);
+    expect(optionValue({ fans: { stopped_states: ['off', 'Disabled'] } }, STOPPED)).toEqual(['off', 'Disabled']);
+    expect(invalidOptions({ fans: { stopped_states: ['off'] } }, ALL)).toEqual([]);
+  });
+
+  test('a list option falls back to the default for an empty list or a value that is not a list of texts', () => {
+    expect(optionValue({ fans: { stopped_states: [] } }, STOPPED)).toEqual(['Disabled']);
+    expect(invalidOptions({ fans: { stopped_states: [] } }, ALL)).toEqual([]);
+    for (const stopped_states of ['off', 3, ['off', 3], { off: true }]) {
+      const config = { fans: { stopped_states } };
+      expect(optionValue(config, STOPPED), JSON.stringify(stopped_states)).toEqual(['Disabled']);
+      expect(invalidOptions(config, ALL), JSON.stringify(stopped_states)).toEqual([
+        'Invalid option fans.stopped_states: expected a list of texts',
+      ]);
+    }
   });
 });

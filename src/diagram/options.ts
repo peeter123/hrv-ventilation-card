@@ -2,7 +2,7 @@
 // reads the options through lib/options.ts.
 import { CALCULATION_OPTIONS } from '../calc/inputs';
 import type { Requirements } from '../lib/config';
-import type { BooleanOption, ChoiceOption, ColorOption, NumberOption, OptionSpec } from '../lib/options';
+import type { BooleanOption, ChoiceOption, ColorOption, ListOption, NumberOption, OptionSpec } from '../lib/options';
 import type { ExchangerType } from './drawing';
 import type { LayoutChoice } from './labels';
 
@@ -30,8 +30,11 @@ export const DIAGRAM_OPTIONS = {
   preHeaterMaxPower: { kind: 'number', path: 'pre_heater.max_power', min: 1, max: 4000, default: undefined },
   // The colour the coil glows in while the pre-heater draws power: a warm orange (Home Assistant's orange).
   preHeaterGlowColor: { kind: 'color', path: 'pre_heater.glow_color', default: '#ff9800' },
+  // The ventilation mode entity's states that count as stopped (compared trimmed, ignoring case); a binary sensor needs
+  // 'off' added. 'Disabled' is the ESPHome unit's service mode; never 'Overruling', when the fans modulate.
+  stoppedStates: { kind: 'list', path: 'fans.stopped_states', default: ['Disabled'] },
   layout: { kind: 'choice', path: 'layout', choices: LAYOUTS, default: 'auto' },
   showUnavailable: { kind: 'boolean', path: 'show_unavailable', default: false },
-} as const satisfies Record<string, NumberOption | ColorOption | BooleanOption | ChoiceOption>;
+} as const satisfies Record<string, NumberOption | ColorOption | BooleanOption | ChoiceOption | ListOption>;
 
 export const DIAGRAM_OPTION_LIST: readonly OptionSpec[] = Object.values(DIAGRAM_OPTIONS);

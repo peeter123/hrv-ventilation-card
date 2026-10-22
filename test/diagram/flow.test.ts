@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { flowSpeed, MAX_SPEED, MIN_SPEED } from '../../src/diagram/flow';
+import { flowSpeed, MAX_SPEED, MIN_SPEED, ventilationDisabled } from '../../src/diagram/flow';
 
 const flow = (state: string) => ({ state });
 
@@ -35,5 +35,42 @@ describe('flowSpeed', () => {
   test('a flow without a value moves at the medium speed', () => {
     expect(flowSpeed(flow('unavailable'), 400)).toBe(1);
     expect(flowSpeed(undefined, 400)).toBe(1);
+  });
+});
+
+describe('ventilationDisabled', () => {
+  const stopped = ['Disabled'];
+
+  test('airflow-diagram-card "Service mode on an ESPHome unit": the state Disabled counts as disabled', () => {
+    expect(ventilationDisabled(flow('Disabled'), stopped)).toBe(true);
+  });
+
+  test('airflow-diagram-card "Ventilating normally": Active and Overruling do not count as disabled', () => {
+    expect(ventilationDisabled(flow('Active'), stopped)).toBe(false);
+    expect(ventilationDisabled(flow('Overruling'), stopped)).toBe(false);
+  });
+
+  test('airflow-diagram-card "Custom stopped states": a binary sensor that is off is disabled when off is listed', () => {
+    expect(ventilationDisabled(flow('off'), ['off'])).toBe(true);
+    expect(ventilationDisabled(flow('on'), ['off'])).toBe(false);
+    expect(ventilationDisabled(flow('Disabled'), ['off', 'Disabled'])).toBe(true);
+  });
+
+  test('airflow-diagram-card "Default stopped states and a binary sensor": off is not disabled by default', () => {
+    expect(ventilationDisabled(flow('off'), stopped)).toBe(false);
+  });
+
+  test('airflow-diagram-card "Mode entity unavailable": unavailable, unknown or missing is not disabled', () => {
+    for (const list of [stopped, ['unavailable', 'unknown']]) {
+      expect(ventilationDisabled(flow('unavailable'), list)).toBe(false);
+      expect(ventilationDisabled(flow('unknown'), list)).toBe(false);
+      expect(ventilationDisabled(undefined, list)).toBe(false);
+    }
+  });
+
+  test('the state is trimmed and compared ignoring case', () => {
+    expect(ventilationDisabled(flow('  disabled '), stopped)).toBe(true);
+    expect(ventilationDisabled(flow('DISABLED'), ['disabled'])).toBe(true);
+    expect(ventilationDisabled(flow('Disabled'), [])).toBe(false);
   });
 });
