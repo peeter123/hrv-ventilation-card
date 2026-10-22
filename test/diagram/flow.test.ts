@@ -72,6 +72,9 @@ describe('ventilationDisabled', () => {
     expect(ventilationDisabled(flow('  disabled '), stopped)).toBe(true);
     expect(ventilationDisabled(flow('DISABLED'), ['disabled'])).toBe(true);
     expect(ventilationDisabled(flow('Disabled'), [])).toBe(false);
+    // Raw stopped states are normalised too.
+    expect(ventilationDisabled(flow('disabled'), ['Disabled ', 'OFF'])).toBe(true);
+    expect(ventilationDisabled(flow(' off'), ['Disabled ', 'OFF'])).toBe(true);
     expect(['  Disabled ', 'OFF'].map(normalizedState)).toEqual(['disabled', 'off']);
   });
 });

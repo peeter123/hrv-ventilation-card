@@ -194,8 +194,11 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     stays a warm amber and is darker than the wire at every level: the wire is that colour mixed with white) and the
     secondary text colour while off. It was first a mix with black, which looked muddy and clashed with the glow.
     Relative colour needs Chrome and Edge, Safari 16.4+ or Firefox 128+, as Home Assistant frontends run; older
-    browsers get a `color-mix` fallback (the base 80 % with black, a `stroke` attribute on the lit path and a
-    preceding declaration for the off one) that the relative colour overrides where supported. The off opacity of 0.5 sits on a group,
+    browsers get a `color-mix` fallback (the base 80 % with black). Both live in the card CSS, on the base colour in the
+    custom property `--coil-core-base` (set inline on the lit path, by `.coil.off` while off): `.coil-core` has the
+    `color-mix` stroke by default and the relative colour only inside `@supports (color: oklch(from red l c h))`.
+    The guard matters: both values would parse everywhere (they contain `var()`), so without `@supports` the
+    relative colour would always win and, unsupported, turn invalid at computed-value time and drop the stroke. The off opacity of 0.5 sits on a group,
     `<g class="coil off">` around wire and centreline, not on the wire alone: with the opacity on the wire only, the
     centreline would be drawn at full opacity, as solid as the text colour, while the wire around it is dimmed. On
     the group, both dim together and the centreline is darker than the wire as drawn. It is darker, not a highlight

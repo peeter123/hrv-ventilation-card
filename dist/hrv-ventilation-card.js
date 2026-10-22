@@ -2500,8 +2500,8 @@ function Vi(e, t) {
     <path class="ring total" d=${n} fill="none" stroke-width=${r} pathLength="100" stroke-dasharray=${zi(t)}
       style=${E({ stroke: i })}></path>`;
 }
-var Hi = (e) => 30 + 70 * e, Ui = 1, Wi = .9, Gi = (e) => `oklch(from ${e} calc(l * ${String(Wi)}) c h)`, Ki = 80, qi = (e) => `color-mix(in srgb, ${e} ${String(Ki)}%, black)`;
-function Ji({ level: e, color: t }, n) {
+var Hi = (e) => 30 + 70 * e, Ui = 1, Wi = .9, Gi = "--coil-core-base", Ki = (e) => `oklch(from ${e} calc(l * ${String(Wi)}) c h)`, qi = 80, Ji = (e) => `color-mix(in srgb, ${e} ${String(qi)}%, black)`;
+function Yi({ level: e, color: t }, n) {
 	if (e <= 0) return S`<g class="coil off">
       <path class="coil" d=${Ei} fill="none" stroke-width=${Si} stroke-linejoin="round"></path>
       <path class="coil-core" d=${Ei} fill="none" stroke-width=${Ui} stroke-linejoin="round"></path>
@@ -2516,15 +2516,15 @@ function Ji({ level: e, color: t }, n) {
     <path class="coil on" d=${Ei} fill="none" stroke-width=${Si} stroke-linejoin="round"
       style=${E({ stroke: a })}></path>
     <path class="coil-core" d=${Ei} fill="none" stroke-width=${Ui} stroke-linejoin="round"
-      stroke=${qi(i)} style=${E({ stroke: Gi(i) })}></path>`;
+      style=${E({ [Gi]: i })}></path>`;
 }
-function Yi(e) {
+function Xi(e) {
 	let { x: t, y: n, width: r, height: i } = Di();
 	return S`<filter id=${e} filterUnits="userSpaceOnUse" x=${t} y=${n} width=${r} height=${i}>
     <feGaussianBlur stdDeviation=${wi}></feGaussianBlur>
   </filter>`;
 }
-function Xi({ ids: e, exchanger: t, colors: n, bypass: r, speeds: i, rings: a, coil: o }) {
+function Zi({ ids: e, exchanger: t, colors: n, bypass: r, speeds: i, rings: a, coil: o }) {
 	let [s, c] = [Z(r, 3), Z(1 - r, 3)], l = `url(#${e.supply})`, u = `url(#${e.exhaust})`;
 	return S`<svg
     class="art"
@@ -2544,7 +2544,7 @@ function Xi({ ids: e, exchanger: t, colors: n, bypass: r, speeds: i, rings: a, c
         ${Li("0", n.extract)}${Li("1", n.exhaust)}
       </linearGradient>
       <clipPath id=${e.rim}><path d=${_i} clip-rule="evenodd"></path></clipPath>
-      ${o ? Yi(e.blur) : null}
+      ${o ? Xi(e.blur) : null}
     </defs>
     ${Ri(36, n.outdoor, Ai)}
     ${Ri(364, n.extract, ji)}
@@ -2555,7 +2555,7 @@ function Xi({ ids: e, exchanger: t, colors: n, bypass: r, speeds: i, rings: a, c
     ${a ? Vi(a.color, a.total) : null}
     ${Ii("bypass", l, s)}
     ${Ii("supply", l, c)}
-    ${o ? Ji(o, e.blur) : null}
+    ${o ? Yi(o, e.blur) : null}
     <polygon class="head" points=${fi.supply} style=${E({ fill: n.supply })}></polygon>
     ${Ii("exhaust", u, 1)}
     <polygon class="head" points=${fi.exhaust} style=${E({ fill: n.exhaust })}></polygon>
@@ -2563,32 +2563,34 @@ function Xi({ ids: e, exchanger: t, colors: n, bypass: r, speeds: i, rings: a, c
 }
 //#endregion
 //#region src/diagram/flow.ts
-var Zi = .25;
-function Qi(e, t) {
+var Qi = .25;
+function $i(e, t) {
 	let n = It(e);
-	return n === void 0 ? 1 : n <= 0 ? 0 : t === void 0 || t <= 0 ? 1 : Math.min(Math.max(n / t, Zi), 2);
+	return n === void 0 ? 1 : n <= 0 ? 0 : t === void 0 || t <= 0 ? 1 : Math.min(Math.max(n / t, Qi), 2);
 }
-var $i = (e) => e.trim().toLowerCase();
-function ea(e, t) {
-	return e === void 0 || Pt(e) ? !1 : t.includes($i(e.state));
+var ea = (e) => e.trim().toLowerCase();
+function ta(e, t) {
+	if (e === void 0 || Pt(e)) return !1;
+	let n = ea(e.state);
+	return t.some((e) => ea(e) === n);
 }
 //#endregion
 //#region src/diagram/preheater.ts
-var ta = .1;
-function na(e, t) {
+var na = .1;
+function ra(e, t) {
 	let n = bn(e && {
 		state: e.state,
 		attributes: e.attributes ?? {}
 	}, "power");
-	return n === void 0 ? +(e?.state === "on") : n <= 0 ? 0 : t === void 0 ? 1 : Math.min(Math.max(n / t, ta), 1);
+	return n === void 0 ? +(e?.state === "on") : n <= 0 ? 0 : t === void 0 ? 1 : Math.min(Math.max(n / t, na), 1);
 }
-function ra(e) {
-	return na(e, void 0) > 0;
+function ia(e) {
+	return ra(e, void 0) > 0;
 }
-function ia(e, t) {
+function aa(e, t) {
 	return e === "auto" ? t !== void 0 && t > 0 && t < 340 : e === "compact";
 }
-var aa = ["status.power", "status.rmot"], oa = ["seasons.heating", "seasons.cooling"], sa = ["fans.supply_flow", "fans.exhaust_flow"], ca = [
+var oa = ["status.power", "status.rmot"], sa = ["seasons.heating", "seasons.cooling"], ca = ["fans.supply_flow", "fans.exhaust_flow"], la = [
 	"fans.level",
 	"bypass.mode",
 	"bypass.next_change",
@@ -2598,7 +2600,7 @@ var aa = ["status.power", "status.rmot"], oa = ["seasons.heating", "seasons.cool
 	"status.next_fan_change",
 	"status.filter_days",
 	"pre_heater.energy"
-], la = {
+], ua = {
 	"fans.level": {
 		column: 1,
 		row: 1
@@ -2635,7 +2637,7 @@ var aa = ["status.power", "status.rmot"], oa = ["seasons.heating", "seasons.cool
 		column: 3,
 		row: 3
 	}
-}, ua = { "status.rmot": N.prefixes.rmot }, da = {
+}, da = { "status.rmot": N.prefixes.rmot }, fa = {
 	"status.power": "mdi:lightning-bolt",
 	"status.rmot": "mdi:thermometer-lines",
 	"fans.level": "mdi:fan",
@@ -2648,25 +2650,25 @@ var aa = ["status.power", "status.rmot"], oa = ["seasons.heating", "seasons.cool
 	"status.filter_days": "mdi:air-filter",
 	"pre_heater.power": "mdi:heat-wave",
 	"pre_heater.energy": "mdi:heat-wave"
-}, fa = /* @__PURE__ */ new Set(["bypass.next_change", "status.next_fan_change"]), pa = (e) => e.trim().toLowerCase() === "n/a";
-function ma(e, t) {
-	return fa.has(e) && (pa(t?.state ?? "") || t?.state === "unknown");
+}, pa = /* @__PURE__ */ new Set(["bypass.next_change", "status.next_fan_change"]), ma = (e) => e.trim().toLowerCase() === "n/a";
+function ha(e, t) {
+	return pa.has(e) && (ma(t?.state ?? "") || t?.state === "unknown");
 }
-function ha(e, t, n) {
-	return ma(e, t) ? !0 : e === "bypass.position" && It(t) === 0 ? !1 : n || !Pt(t);
+function ga(e, t, n) {
+	return ha(e, t) ? !0 : e === "bypass.position" && It(t) === 0 ? !1 : n || !Pt(t);
 }
-function ga(e, t, { showUnavailable: n, compact: r }) {
+function _a(e, t, { showUnavailable: n, compact: r }) {
 	let i = (r) => r.flatMap((r) => {
 		let i = k(e, r);
 		if (i === void 0) return [];
-		let a = t[i], o = ha(r, a, n), s = da[r];
+		let a = t[i], o = ga(r, a, n), s = fa[r];
 		return [{
 			role: r,
 			entityId: i,
 			...s === void 0 ? {} : { icon: s },
-			prefix: ua[r] ?? "",
+			prefix: da[r] ?? "",
 			visible: o,
-			...ma(r, a) ? { notPlanned: !0 } : {}
+			...ha(r, a) ? { notPlanned: !0 } : {}
 		}];
 	}), a = (t) => t.some((t) => k(e, t) !== void 0), o = {
 		corners: mt((e) => i(r ? [`${e}.temperature`, `${e}.humidity`] : [
@@ -2675,39 +2677,39 @@ function ga(e, t, { showUnavailable: n, compact: r }) {
 			`${e}.absolute_humidity`
 		])),
 		centre: i(["bypass.position"]),
-		flows: r ? [] : i(sa)
+		flows: r ? [] : i(ca)
 	};
 	if (a([
-		...aa,
 		...oa,
+		...sa,
 		"pre_heater.power"
 	])) {
 		let n = k(e, "pre_heater.power");
-		o.top = i(n !== void 0 && ra(t[n]) ? [
+		o.top = i(n !== void 0 && ia(t[n]) ? [
 			"status.power",
 			"pre_heater.power",
 			"status.rmot"
-		] : aa);
+		] : oa);
 	}
-	return r || a(ca) && (o.status = i(ca)), o;
+	return r || a(la) && (o.status = i(la)), o;
 }
 //#endregion
 //#region src/diagram/options.ts
-var _a = { paths: [
+var va = { paths: [
 	"outdoor.temperature",
 	"supply.temperature",
 	"extract.temperature",
 	"exhaust.temperature"
-] }, va = [
+] }, ya = [
 	"auto",
 	"full",
 	"compact"
-], ya = ["hrv", "erv"], Q = {
+], ba = ["hrv", "erv"], Q = {
 	...L,
 	exchangerType: {
 		kind: "choice",
 		path: "exchanger_type",
-		choices: ya,
+		choices: ba,
 		default: "hrv"
 	},
 	cold: {
@@ -2757,7 +2759,7 @@ var _a = { paths: [
 	layout: {
 		kind: "choice",
 		path: "layout",
-		choices: va,
+		choices: ya,
 		default: "auto"
 	},
 	showUnavailable: {
@@ -2765,15 +2767,15 @@ var _a = { paths: [
 		path: "show_unavailable",
 		default: !1
 	}
-}, ba = Object.values(Q), xa = {
+}, xa = Object.values(Q), Sa = {
 	heating: "mdi:sun-thermometer",
 	cooling: "mdi:snowflake-thermometer",
 	between: "mdi:sun-snowflake-variant"
 };
-function Sa(e, t, n) {
+function Ca(e, t, n) {
 	let r = k(e, "seasons.heating"), i = k(e, "seasons.cooling"), a = (e) => t[e]?.state, o = (e, t, n) => ({
 		season: e,
-		icon: xa[e],
+		icon: Sa[e],
 		color: t,
 		title: N.seasons[e],
 		entityId: n
@@ -2784,27 +2786,27 @@ function Sa(e, t, n) {
 }
 //#endregion
 //#region src/diagram/streams.ts
-var Ca = "var(--disabled-text-color, #9e9e9e)", wa = 10;
-function Ta(e) {
+var wa = "var(--disabled-text-color, #9e9e9e)", Ta = 10;
+function Ea(e) {
 	let t = It(e);
 	return t === void 0 ? 0 : Math.min(Math.max(t / 100, 0), 1);
 }
-function Ea(e) {
-	let t = mt((t) => bn(e[t], "temperature")), n = Object.values(t).filter((e) => e !== void 0), r = Math.min(...n), i = Math.max(...n), a = Math.max(i - r, wa), o = (r + i) / 2 - a / 2, s = (e) => e === void 0 ? void 0 : Math.min(Math.max((e - o) / a, 0), 1);
+function Da(e) {
+	let t = mt((t) => bn(e[t], "temperature")), n = Object.values(t).filter((e) => e !== void 0), r = Math.min(...n), i = Math.max(...n), a = Math.max(i - r, Ta), o = (r + i) / 2 - a / 2, s = (e) => e === void 0 ? void 0 : Math.min(Math.max((e - o) / a, 0), 1);
 	return mt((e) => s(t[e]));
 }
-function Da(e, t) {
-	if (e === void 0) return Ca;
+function Oa(e, t) {
+	if (e === void 0) return wa;
 	let n = Math.round(e * 1e3) / 10;
 	return n <= 0 ? t.cold : n >= 100 ? t.warm : `color-mix(in srgb, ${t.warm} ${String(n)}%, ${t.cold})`;
 }
-function Oa(e, t) {
-	let n = Ea(e);
-	return mt((e) => Da(n[e], t));
+function ka(e, t) {
+	let n = Da(e);
+	return mt((e) => Oa(n[e], t));
 }
 //#endregion
 //#region src/editor/diagram-schema.ts
-var $ = { advanced: !0 }, ka = [
+var $ = { advanced: !0 }, Aa = [
 	_r("exchanger_type", Q.exchangerType, At.exchangerTypes, { advanced: !1 }),
 	V("outdoor", {
 		requiredTemperature: !0,
@@ -2887,29 +2889,29 @@ var $ = { advanced: !0 }, ka = [
 	},
 	_r("layout", Q.layout, At.layouts),
 	gr("show_unavailable", Q.showUnavailable, $)
-], Aa = (e, t) => t === void 0 ? void 0 : e[t];
-function ja(e, t) {
+], ja = (e, t) => t === void 0 ? void 0 : e[t];
+function Ma(e, t) {
 	let n = e.states[t];
 	if (n === void 0) return "n/a";
 	if (typeof e.formatEntityState == "function") return e.formatEntityState(n);
 	let r = n.attributes.unit_of_measurement;
 	return r && !Pt(n) ? `${n.state} ${r}` : n.state;
 }
-function Ma(e) {
+function Na(e) {
 	if (e === void 0 || !e.entity_id.startsWith("fan.") || Pt(e)) return;
 	let { percentage: t, percentage_step: n } = e.attributes;
 	return typeof t != "number" || !Number.isFinite(t) || typeof n != "number" || !Number.isFinite(n) || n <= 0 ? void 0 : Math.round(100 / n) === 3 ? wt[Math.min(3, Math.max(+(t > 0), Math.round(t / n)))] : `${String(Math.round(t))} %`;
 }
 //#endregion
 //#region src/cards/ventilation-card.ts
-var Na = "hrv-ventilation-card";
-function Pa(e) {
-	Ir(e, _a, ba);
+var Pa = "hrv-ventilation-card";
+function Fa(e) {
+	Ir(e, va, xa);
 }
-var Fa = 400, Ia = (e, t) => {
+var Ia = 400, La = (e, t) => {
 	let n = Et[e];
 	return `${n.charAt(0).toUpperCase()}${n.slice(1)}: ${t}`;
-}, La = class extends Rr {
+}, Ra = class extends Rr {
 	constructor(...e) {
 		super(...e), this.compact = !1, this.observer = new ResizeObserver((e) => {
 			this.width = e[0]?.contentRect.width, this.updateCompact();
@@ -3099,10 +3101,16 @@ var Fa = 400, Ia = (e, t) => {
     .coil.off {
       stroke: var(--secondary-text-color);
       opacity: 0.5;
+      ${a(Gi)}: var(--secondary-text-color);
     }
-    .coil.off .coil-core {
-      stroke: ${a(qi("var(--secondary-text-color)"))};
-      stroke: ${a(Gi("var(--secondary-text-color)"))};
+    /* The centreline: a color-mix fallback, replaced by the relative colour only where the browser parses it. */
+    .coil-core {
+      stroke: ${a(Ji(`var(${Gi})`))};
+    }
+    @supports (color: oklch(from red l c h)) {
+      .coil-core {
+        stroke: ${a(Ki(`var(${Gi})`))};
+      }
     }
     .coil-glow {
       animation: hrv-glow 2.5s ease-in-out infinite;
@@ -3169,7 +3177,7 @@ var Fa = 400, Ia = (e, t) => {
     .moisture-recovery .unit {
       margin-left: 0.25em;
     }
-    @container (max-width: ${Fa}px) {
+    @container (max-width: ${Ia}px) {
       .moisture-recovery .figure .value {
         display: flex;
         flex-direction: column;
@@ -3305,7 +3313,7 @@ var Fa = 400, Ia = (e, t) => {
 	}
 	static getConfigElement() {
 		let e = document.createElement(Zt);
-		return e.schema = ka, e;
+		return e.schema = Aa, e;
 	}
 	contentSize() {
 		return 6;
@@ -3317,7 +3325,7 @@ var Fa = 400, Ia = (e, t) => {
 		};
 	}
 	check(e) {
-		Pa(e);
+		Fa(e);
 	}
 	configure(e) {
 		let t = k(e, "pre_heater.power");
@@ -3352,14 +3360,14 @@ var Fa = 400, Ia = (e, t) => {
 				exhaust: k(e, "fans.exhaust_flow")
 			},
 			ventilationMode: k(e, "fans.ventilation_mode"),
-			stoppedStates: I(e, Q.stoppedStates).map($i),
+			stoppedStates: I(e, Q.stoppedStates),
 			animate: I(e, Q.animation),
 			nominalFlow: I(e, Q.nominalFlow)
 		}, this.updateCompact();
 	}
 	updateCompact() {
 		if (!this.settings) return;
-		let e = ia(this.settings.layout, this.width);
+		let e = aa(this.settings.layout, this.width);
 		e !== this.compact && (this.compact = e);
 	}
 	connectedCallback() {
@@ -3377,20 +3385,20 @@ var Fa = 400, Ia = (e, t) => {
 		};
 	}
 	label(e) {
-		let t = this.shownHass, n = (t && e.role === "fans.level" ? this.stopped ? "Stopped" : Ma(t.states[e.entityId]) : void 0) ?? (t ? ja(t, e.entityId) : ""), r = this.tap(e.entityId, "img"), [i = "", a = ""] = e.role.split("."), o = i === "pre_heater" ? `pre-heater-${a}` : a, s = e.icon ? x`<ha-icon .icon=${e.icon} aria-hidden="true"></ha-icon>` : w, c = x`<span class="value">${e.prefix}${e.notPlanned ? N.notPlanned : n}</span>`;
+		let t = this.shownHass, n = (t && e.role === "fans.level" ? this.stopped ? "Stopped" : Na(t.states[e.entityId]) : void 0) ?? (t ? Ma(t, e.entityId) : ""), r = this.tap(e.entityId, "img"), [i = "", a = ""] = e.role.split("."), o = i === "pre_heater" ? `pre-heater-${a}` : a, s = e.icon ? x`<ha-icon .icon=${e.icon} aria-hidden="true"></ha-icon>` : w, c = x`<span class="value">${e.prefix}${e.notPlanned ? N.notPlanned : n}</span>`;
 		return e.visible ? x`<span
       class="label ${o} ${e.notPlanned ? "not-planned" : ""}"
       role=${K(r.role)}
       tabindex=${K(r.tabindex)}
       aria-label="${Et[e.role]}: ${n}"
-      title=${Ia(e.role, n)}
+      title=${La(e.role, n)}
       data-entity=${K(r.entity)}
       >${s}${c}</span
     >` : x`<span class="label ${o} hidden" aria-hidden="true">${s}${c}</span>`;
 	}
 	disabled(e) {
 		let { ventilationMode: t, stoppedStates: n } = this.settings ?? { stoppedStates: [] };
-		return t !== void 0 && ea(e[t], n);
+		return t !== void 0 && ta(e[t], n);
 	}
 	alert(e, t) {
 		let n = this.tap(e, "img"), r = `${Tt}: ${t}`;
@@ -3418,7 +3426,7 @@ var Fa = 400, Ia = (e, t) => {
 	statusGrid(e) {
 		return x`<div class="status">
       ${e.map((e) => {
-			let t = la[e.role];
+			let t = ua[e.role];
 			return x`<div
           class="cell"
           style=${E({
@@ -3478,7 +3486,7 @@ var Fa = 400, Ia = (e, t) => {
     </div>`;
 	}
 	coilBox(e, t) {
-		let n = this.tap(e, "img"), r = Ia("pre_heater.power", t);
+		let n = this.tap(e, "img"), r = La("pre_heater.power", t);
 		return x`<div
       class="on-drawing pre-heater"
       role=${K(n.role)}
@@ -3492,19 +3500,19 @@ var Fa = 400, Ia = (e, t) => {
 	render() {
 		let e = this.shownHass;
 		if (!this.config || !e || !this.settings) return w;
-		let { settings: t } = this, { compact: n } = this, r = ga(this.config, e.states, {
+		let { settings: t } = this, { compact: n } = this, r = _a(this.config, e.states, {
 			showUnavailable: t.showUnavailable,
 			compact: n
-		}), i = Sa(this.config, e.states, t.colors), a = this.disabled(e.states);
+		}), i = Ca(this.config, e.states, t.colors), a = this.disabled(e.states);
 		this.stopped = a;
-		let o = (t.badge || t.rings) && this.calculator ? this.calculator(e, { noAirflow: a }) : void 0, s = o?.result, c = Gn(e), l = t.badge ? ei(s, t, c) : void 0, u = ni(s, t, c), { states: d } = e, { temperatures: f, flows: p } = t, { rings: m } = t, h = m ? ri(s, o?.inputs.bypass, m.moisture, c) : void 0, { preHeater: g, ventilationMode: _ } = t, ee = Xi({
+		let o = (t.badge || t.rings) && this.calculator ? this.calculator(e, { noAirflow: a }) : void 0, s = o?.result, c = Gn(e), l = t.badge ? ei(s, t, c) : void 0, u = ni(s, t, c), { states: d } = e, { temperatures: f, flows: p } = t, { rings: m } = t, h = m ? ri(s, o?.inputs.bypass, m.moisture, c) : void 0, { preHeater: g, ventilationMode: _ } = t, ee = Zi({
 			ids: this.ids,
 			exchanger: t.exchanger,
-			colors: Oa(mt((e) => Aa(d, f[e])), t.colors),
-			bypass: Ta(Aa(d, t.bypass)),
+			colors: ka(mt((e) => ja(d, f[e])), t.colors),
+			bypass: Ea(ja(d, t.bypass)),
 			speeds: {
-				supply: a ? 0 : Qi(Aa(d, p.supply), t.nominalFlow),
-				exhaust: a ? 0 : Qi(Aa(d, p.exhaust), t.nominalFlow)
+				supply: a ? 0 : $i(ja(d, p.supply), t.nominalFlow),
+				exhaust: a ? 0 : $i(ja(d, p.exhaust), t.nominalFlow)
 			},
 			rings: m ? {
 				total: s?.effectiveness.total,
@@ -3512,7 +3520,7 @@ var Fa = 400, Ia = (e, t) => {
 				color: $r(s?.mode, t.colors)
 			} : void 0,
 			coil: g ? {
-				level: na(Aa(d, g.entityId), g.maxPower),
+				level: ra(ja(d, g.entityId), g.maxPower),
 				color: g.glowColor
 			} : void 0
 		});
@@ -3522,8 +3530,8 @@ var Fa = 400, Ia = (e, t) => {
         ${ee}
         ${pt.map((e) => x`<div class="corner ${e}">${r.corners[e].map((e) => this.label(e))}</div>`)}
         ${h === void 0 ? w : x`<div class="on-drawing effectiveness" role="img" aria-label=${h} title=${h}></div>`}
-        ${g ? this.coilBox(g.entityId, ja(e, g.entityId)) : w}
-        ${a && _ ? this.alert(_, ja(e, _)) : w}
+        ${g ? this.coilBox(g.entityId, Ma(e, g.entityId)) : w}
+        ${a && _ ? this.alert(_, Ma(e, _)) : w}
         <div class="on-drawing bypass-position">${r.centre.map((e) => this.label(e))}</div>
         ${l ? x`<div class="on-drawing saving">${this.badge(l, ti(s, t.savings, d))}</div>` : w}
         ${this.moistureFigure(u)}
@@ -3535,12 +3543,12 @@ var Fa = 400, Ia = (e, t) => {
     </ha-card>`;
 	}
 };
-P([ft()], La.prototype, "compact", void 0), Ct(Na, La);
+P([ft()], Ra.prototype, "compact", void 0), Ct(Pa, Ra);
 //#endregion
 //#region src/index.ts
-var Ra = [
+var za = [
 	{
-		type: Na,
+		type: Pa,
 		...kt.diagram,
 		preview: !0
 	},
@@ -3555,10 +3563,10 @@ var Ra = [
 		preview: !0
 	}
 ];
-function za(e = window) {
+function Ba(e = window) {
 	let t = e.customCards ??= [];
-	for (let e of Ra) t.some((t) => t.type === e.type) || t.push({ ...e });
+	for (let e of za) t.some((t) => t.type === e.type) || t.push({ ...e });
 }
-za();
+Ba();
 //#endregion
-export { Ra as CARD_ENTRIES, za as registerCardPicker };
+export { za as CARD_ENTRIES, Ba as registerCardPicker };

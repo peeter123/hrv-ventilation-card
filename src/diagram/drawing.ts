@@ -261,20 +261,23 @@ const CORE_WIDTH = 1;
  */
 export const CORE_LIGHTNESS = 0.9;
 
+/** The custom property that carries the centreline's base colour to the card's CSS, which derives the stroke from it. */
+export const CORE_BASE = '--coil-core-base';
+
 /** A darker shade of a colour: lower lightness, same chroma and hue (no mixing with black, which greys it). */
 export const darker = (color: string): string => `oklch(from ${color} calc(l * ${String(CORE_LIGHTNESS)}) c h)`;
 
 /** Percent of the base colour in the centreline's fallback, for browsers without relative colour syntax (the rest is black). */
 const CORE_FALLBACK_SHARE = 80;
 
-/** The centreline's fallback: the card's existing colour mixing, used where `darker` is not understood. */
+/** The centreline's fallback: the card's existing colour mixing, used where `darker` is not understood (guarded by `@supports` in the card's CSS). */
 export const darkerFallback = (color: string): string =>
   `color-mix(in srgb, ${color} ${String(CORE_FALLBACK_SHARE)}%, black)`;
 
 /**
  * The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. Either way
- * a thin centreline (`coil-core`) in a darker shade of the wire's colour before the whitening follows the wire's path; its colour while off
- * is in the card's CSS (see `darker`), with the off group's opacity.
+ * a thin centreline (`coil-core`) in a darker shade of the wire's colour before the whitening follows the wire's path; its stroke
+ * is in the card's CSS (see `darker`), derived from the base colour in `CORE_BASE` (set inline while lit, by the off group's CSS while off).
  */
 function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
   if (level <= 0) {
@@ -295,7 +298,7 @@ function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
       style=${styleMap({ stroke })}></path>
     <path class="coil-core" d=${COIL} fill="none" stroke-width=${CORE_WIDTH} stroke-linejoin="round"
-      stroke=${darkerFallback(heated)} style=${styleMap({ stroke: darker(heated) })}></path>`;
+      style=${styleMap({ [CORE_BASE]: heated })}></path>`;
 }
 
 /** The blur of the coil's glow, over the coil's area (the default filter region is too small for a thin wave). */

@@ -739,6 +739,8 @@ Planned with OpenSpec (CLI `openspec`, installed globally with npm).
 - **Done: v0.2 of the cards** (released), with improvements to the cards themselves.
 - **Done: v0.3 of the cards** (released 2026-10-20): the effectiveness rings on the exchanger, the pre-heater coil with its
   figure in the top row and its energy in the status grid, and the shown defaults in the editor.
+- **Done: v0.4 of the cards**: the fan level from a fan entity or a select, the ventilation disabled state
+  (`fans.ventilation_mode` with `stopped_states`), and the coil centreline.
 - **Next: a custom integration for history and energy statistics.** The cards show the present only. Power,
   energy, effectiveness and moisture rate sensors for charts and the energy dashboard come from template, filter
   and Riemann helpers in the author's installation today (a Jinja macro hard-coded to one unit); an integration

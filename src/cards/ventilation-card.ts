@@ -18,8 +18,16 @@ import {
   type Badge,
   type MoistureFigure,
 } from '../diagram/badge';
-import { coilBox, darker, darkerFallback, drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
-import { flowSpeed, normalizedState, ventilationDisabled } from '../diagram/flow';
+import {
+  CORE_BASE,
+  coilBox,
+  darker,
+  darkerFallback,
+  drawing,
+  drawingIds,
+  type ExchangerType,
+} from '../diagram/drawing';
+import { flowSpeed, ventilationDisabled } from '../diagram/flow';
 import {
   COMPACT_BELOW,
   isCompact,
@@ -80,7 +88,7 @@ interface DiagramSettings {
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
   flows: { supply?: string; exhaust?: string };
-  /** The `fans.ventilation_mode` entity, and the states of it that count as stopped, normalised once with `normalizedState`. */
+  /** The `fans.ventilation_mode` entity, and the states of it that count as stopped (compared trimmed and ignoring case). */
   ventilationMode?: string;
   stoppedStates: readonly string[];
   animate: boolean;
@@ -268,10 +276,16 @@ export class HrvVentilationCard extends HrvCard {
     .coil.off {
       stroke: var(--secondary-text-color);
       opacity: 0.5;
+      ${unsafeCSS(CORE_BASE)}: var(--secondary-text-color);
     }
-    .coil.off .coil-core {
-      stroke: ${unsafeCSS(darkerFallback('var(--secondary-text-color)'))};
-      stroke: ${unsafeCSS(darker('var(--secondary-text-color)'))};
+    /* The centreline: a color-mix fallback, replaced by the relative colour only where the browser parses it. */
+    .coil-core {
+      stroke: ${unsafeCSS(darkerFallback(`var(${CORE_BASE})`))};
+    }
+    @supports (color: oklch(from red l c h)) {
+      .coil-core {
+        stroke: ${unsafeCSS(darker(`var(${CORE_BASE})`))};
+      }
     }
     .coil-glow {
       animation: hrv-glow 2.5s ease-in-out infinite;
@@ -537,7 +551,7 @@ export class HrvVentilationCard extends HrvCard {
       bypass: entityAt(config, 'bypass.position'),
       flows: { supply: entityAt(config, 'fans.supply_flow'), exhaust: entityAt(config, 'fans.exhaust_flow') },
       ventilationMode: entityAt(config, 'fans.ventilation_mode'),
-      stoppedStates: optionValue(config, DIAGRAM_OPTIONS.stoppedStates).map(normalizedState),
+      stoppedStates: optionValue(config, DIAGRAM_OPTIONS.stoppedStates),
       animate: optionValue(config, DIAGRAM_OPTIONS.animation),
       nominalFlow: optionValue(config, DIAGRAM_OPTIONS.nominalFlow),
     };

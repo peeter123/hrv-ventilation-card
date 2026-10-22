@@ -62,6 +62,16 @@ const keydown = (element: Element, key: string, init: KeyboardEventInit = {}): v
 const opacity = (root: ShadowRoot, selector: string): string | null | undefined =>
   root.querySelector(selector)?.getAttribute('opacity');
 
+/** The centreline's stroke: a color-mix fallback by default, the relative colour only inside @supports. */
+function expectCoreStrokeRules(css: string): void {
+  const base = 'var(--coil-core-base)';
+  const supports = /@supports \(color: oklch\(from red l c h\)\)\s*\{\s*\.coil-core\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
+  expect(supports.trim()).toBe(`stroke: ${darker(base)};`);
+  const plain = css.replace(/@supports[^{]*\{[^}]*\{[^}]*\}\s*\}/, '');
+  const rules = [...plain.matchAll(/\.coil-core\s*\{([^}]*)\}/g)].map((match) => (match[1] ?? '').trim());
+  expect(rules).toContain(`stroke: ${darkerFallback(base)};`);
+}
+
 describe('the drawing', () => {
   test('bypass 0: no bypass path, the outdoor air goes through the exchanger at full strength', async () => {
     const { root } = await render(CONFIG, '0');
@@ -953,11 +963,10 @@ describe('the pre-heater coil', () => {
       .map((style) => ('cssText' in style ? style.cssText : ''))
       .join('');
     expect(css).toMatch(/\.coil\.off\s*\{[^}]*opacity: 0\.5/);
-    const off = /\.coil\.off \.coil-core\s*\{([^}]*)\}/.exec(css)?.[1] ?? '';
-    // The fallback comes first, so a browser that understands relative colour takes the second declaration.
-    const [fallback = '', relative = ''] = off.split(';').map((declaration) => declaration.trim());
-    expect(fallback).toBe(`stroke: ${darkerFallback('var(--secondary-text-color)')}`);
-    expect(relative).toBe(`stroke: ${darker('var(--secondary-text-color)')}`);
+    // The off group sets the centreline's base colour; the stroke derives from it in the card's CSS.
+    expect(css).toMatch(/\.coil\.off\s*\{[^}]*--coil-core-base: var\(--secondary-text-color\)/);
+    expect(core?.getAttribute('style') ?? '').not.toContain('--coil-core-base');
+    expectCoreStrokeRules(css);
   });
 
   test('airflow-diagram-card "Glowing coil": a centreline darker than the lit wire follows it, the glow is unchanged', async () => {
@@ -965,11 +974,12 @@ describe('the pre-heater coil', () => {
     const wire = root.querySelector('svg path.coil.on');
     const core = root.querySelector('svg path.coil-core');
     expect(core?.previousElementSibling).toBe(wire);
-    // A darker shade of the wire's glow colour before the white lightening (so it follows the level), keeping hue and
-    // chroma, with a color-mix fallback attribute for browsers without relative colour.
+    // The wire's glow colour before the white lightening (so it follows the level) is the base colour; the card's CSS
+    // derives the stroke from it (see expectCoreStrokeRules), so no stroke is set on the path itself.
     const heated = 'color-mix(in srgb, #ff9800 47.5%, var(--secondary-text-color))';
-    expect(core?.getAttribute('style')).toContain(darker(heated));
-    expect(core?.getAttribute('stroke')).toBe(darkerFallback(heated));
+    expect(core?.getAttribute('style')).toContain(`--coil-core-base:${heated}`);
+    expect(core?.getAttribute('style')).not.toContain('stroke');
+    expect(core?.hasAttribute('stroke')).toBe(false);
     expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.475');
     expect(root.querySelector('svg .coil-glow')?.getAttribute('stroke-width')).toBe('4.5');
   });
