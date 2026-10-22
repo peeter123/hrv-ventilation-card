@@ -308,15 +308,17 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
 - **Ventilation disabled.** One decision, `ventilationDisabled(stateObj, stoppedStates)` in `src/diagram/flow.ts`,
   drives three effects. It is true only while `fans.ventilation_mode` exists, is not unavailable or unknown, and its
   raw state, trimmed, equals one of `fans.stopped_states` ignoring case (default `['Disabled']`; blank entries are
-  dropped and an empty list falls back to it; a value that is not a list of texts is an invalid option, as for the
-  other option kinds).
+  dropped and an empty list falls back to it; numbers and YAML booleans are read as text, `false` and `true` as `off`
+  and `on`; a value that is not a list of those is an invalid option, as for the other option kinds). The card
+  normalises the list once, when the config is set.
   - **Effects.** The fan level label reads "Stopped" (value, aria label and tooltip) ahead of `fanLevelText`; its
     visibility rules and tap still use the level entity. Both stream speeds are 0, so the streams pause while the
     paths, the bypass strength and the colours are drawn as before. An alert (`mdi:alert` in `--warning-color`
-    with "Ventilation disabled") sits centred over the exchanger between the status row and its top edge (without a top row, between the
-    drawing's top and the exchanger's top), with the
-    tooltip "Ventilation disabled: <formatted state>" and a tap that opens the mode entity. It shows with the
-    animation off too: it reports the unit, not the motion. The role is an input only and gets no label.
+    with "Ventilation disabled") sits centred over the exchanger, between the separator under the top row (the row
+    of top labels and icons above the drawing) and the exchanger's top edge; without a top row, between the
+    drawing's top and the exchanger's top. It has the tooltip "Ventilation disabled: <formatted state>" and a tap
+    that opens the mode entity. It shows with the animation off too: it reports the unit, not the motion. The role
+    is an input only and gets no label. The card decides once per render and shares the result with every label.
   - **Why the raw state.** The formatted state depends on the user's language; the raw one does not.
   - **Why unavailable is not disabled.** A missing reading says nothing about the unit, and the card does not claim
     a stop it cannot see.

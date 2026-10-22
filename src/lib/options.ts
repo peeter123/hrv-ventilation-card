@@ -253,6 +253,20 @@ function accepts(option: OptionSpec): string {
   }
 }
 
+/** A list item YAML can produce for a text: a text, a number, a boolean or an empty item (null). */
+const isListItem = (item: unknown): item is string | number | boolean | null =>
+  item === null || ['string', 'number', 'boolean'].includes(typeof item);
+
+/**
+ * The texts of a list: numbers as text, booleans as the binary states `on` and `off` (YAML 1.1 reads an unquoted
+ * `off` as false), empty items and blank texts dropped.
+ */
+function listTexts(items: readonly (string | number | boolean | null)[]): string[] {
+  return items
+    .map((item) => (typeof item === 'boolean' ? (item ? 'on' : 'off') : item === null ? '' : String(item)))
+    .filter((text) => text.trim() !== '');
+}
+
 function isValid(option: OptionSpec, value: unknown): boolean {
   switch (option.kind) {
     case 'number':
@@ -264,7 +278,7 @@ function isValid(option: OptionSpec, value: unknown): boolean {
     case 'choice':
       return typeof value === 'string' && option.choices.includes(value);
     case 'list':
-      return Array.isArray(value) && value.every((item) => typeof item === 'string');
+      return Array.isArray(value) && value.every(isListItem);
   }
 }
 
@@ -297,7 +311,7 @@ export function invalidOptions(config: CardConfig, options: readonly OptionSpec[
 export function optionValue<T extends OptionSpec>(config: CardConfig, option: T): OptionValue<T> {
   const value = valueAt(config, option.path);
   if (option.kind === 'list' && Array.isArray(value) && isValid(option, value)) {
-    const texts = (value as string[]).filter((text) => text.trim() !== '');
+    const texts = listTexts(value as (string | number | boolean | null)[]);
     return (texts.length > 0 ? texts : option.default) as OptionValue<T>;
   }
   return (isLeftOut(value) || !isValid(option, value) ? option.default : value) as OptionValue<T>;

@@ -20,13 +20,16 @@ export function flowSpeed(flow: StateLike | undefined, nominalFlow: number | und
   return Math.min(Math.max(value / nominalFlow, MIN_SPEED), MAX_SPEED);
 }
 
+/** A state as `ventilationDisabled` compares it: trimmed and in lower case. Normalise the stopped states once. */
+export const normalizedState = (state: string): string => state.trim().toLowerCase();
+
 /**
  * True while the ventilation mode entity says the unit does not ventilate: it exists, is not unavailable or unknown
  * (the card does not claim a stop it cannot see), and its raw state, trimmed, equals one of the stopped states
- * ignoring case. The raw state, so the comparison does not depend on the user's language.
+ * ignoring case. The raw state, so the comparison does not depend on the user's language. `stoppedStates` must be
+ * normalised with `normalizedState`.
  */
 export function ventilationDisabled(stateObj: StateLike | undefined, stoppedStates: readonly string[]): boolean {
   if (stateObj === undefined || isUnavailable(stateObj)) return false;
-  const state = stateObj.state.trim().toLowerCase();
-  return stoppedStates.some((stopped) => stopped.trim().toLowerCase() === state);
+  return stoppedStates.includes(normalizedState(stateObj.state));
 }

@@ -368,7 +368,7 @@ absolute humidity is used; a relative humidity also needs the stream's temperatu
 |---|---|---|---|---|
 | `level` | entity | | | Fan level (diagram card only, status grid). A sensor, fan or select entity. A fan entity's level is named from its `percentage` and `percentage_step`: Away, Low, Medium or High for a three-speed fan, otherwise the percentage. |
 | `ventilation_mode` | entity | | | Ventilation mode of the unit (diagram card only): a sensor, binary sensor or select entity that says whether the unit ventilates. Optional; without it the card never shows the unit as stopped. See below. |
-| `stopped_states` | list | `Disabled` | yes | States of `ventilation_mode` that mean the unit is not ventilating (diagram card only). Compared with the entity's state as is, ignoring case and surrounding spaces; blank entries are ignored and an empty list gives the default. |
+| `stopped_states` | list | `Disabled` | yes | States of `ventilation_mode` that mean the unit is not ventilating (diagram card only). Compared with the entity's state as is, ignoring case and surrounding spaces; blank entries are ignored and an empty list gives the default. Numbers and YAML booleans are read as text (`false` as `off`, `true` as `on`). |
 | `supply_flow` | entity | | | Supply air flow sensor. Optional on the diagram card, where it shows above the supply arrow, sets the supply air's animation speed and is needed for the badge. |
 | `exhaust_flow` | entity | | | Exhaust air flow sensor (diagram card only, above the exhaust arrow, and the exhaust air's animation speed). |
 

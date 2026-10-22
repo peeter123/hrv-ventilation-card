@@ -19,7 +19,7 @@ import {
   type MoistureFigure,
 } from '../diagram/badge';
 import { coilBox, drawing, drawingIds, type ExchangerType } from '../diagram/drawing';
-import { flowSpeed, ventilationDisabled } from '../diagram/flow';
+import { flowSpeed, normalizedState, ventilationDisabled } from '../diagram/flow';
 import {
   COMPACT_BELOW,
   isCompact,
@@ -80,7 +80,7 @@ interface DiagramSettings {
   temperatures: Record<Stream, string | undefined>;
   bypass?: string;
   flows: { supply?: string; exhaust?: string };
-  /** The `fans.ventilation_mode` entity, and the states of it that count as stopped. */
+  /** The `fans.ventilation_mode` entity, and the states of it that count as stopped, normalised once with `normalizedState`. */
   ventilationMode?: string;
   stoppedStates: readonly string[];
   animate: boolean;
@@ -531,7 +531,7 @@ export class HrvVentilationCard extends HrvCard {
       bypass: entityAt(config, 'bypass.position'),
       flows: { supply: entityAt(config, 'fans.supply_flow'), exhaust: entityAt(config, 'fans.exhaust_flow') },
       ventilationMode: entityAt(config, 'fans.ventilation_mode'),
-      stoppedStates: optionValue(config, DIAGRAM_OPTIONS.stoppedStates),
+      stoppedStates: optionValue(config, DIAGRAM_OPTIONS.stoppedStates).map(normalizedState),
       animate: optionValue(config, DIAGRAM_OPTIONS.animation),
       nominalFlow: optionValue(config, DIAGRAM_OPTIONS.nominalFlow),
     };
@@ -597,7 +597,7 @@ export class HrvVentilationCard extends HrvCard {
     // While ventilation is disabled it says "Stopped" instead; the label stays on the level entity.
     const level =
       hass && label.role === 'fans.level'
-        ? this.disabled(hass.states)
+        ? this.stopped
           ? FAN_STOPPED
           : fanLevelText(hass.states[label.entityId])
         : undefined;
@@ -621,6 +621,9 @@ export class HrvVentilationCard extends HrvCard {
       >${icon}${value}</span
     >`;
   }
+
+  /** The decision of the current render, so that every label shares it. */
+  private stopped = false;
 
   /** Ventilation is disabled: the ventilation mode entity is in one of the stopped states. */
   private disabled(states: HassLike['states']): boolean {
@@ -774,6 +777,7 @@ export class HrvVentilationCard extends HrvCard {
       : undefined;
     const { preHeater, ventilationMode } = settings;
     const disabled = this.disabled(states);
+    this.stopped = disabled;
     const art = drawing({
       ids: this.ids,
       exchanger: settings.exchanger,

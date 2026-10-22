@@ -169,15 +169,16 @@ export function withoutUndefined<T>(value: T): T {
 
 /**
  * A copy without the blank texts of the list fields (a `text` selector with `multiple`): the list shows an empty row
- * after "add", which must not reach the config. A list left with no text is removed, so it counts as cleared.
+ * after "add", which must not reach the config. A list left with no text (also `[]`, after its last remove
+ * button) is removed, so it counts as cleared.
  */
 export function withoutBlankTexts(schema: EditorSchema | FormSchema, config: CardConfig): CardConfig {
   return fieldsWithPaths(schema as EditorSchema).reduce((cleaned, { field, path }) => {
     const text = field.selector['text'];
     const value = valueAt(cleaned, path);
     if (!isRecord(text) || text['multiple'] !== true || !Array.isArray(value)) return cleaned;
-    const kept = value.filter((item) => typeof item !== 'string' || item.trim() !== '');
-    if (kept.length === value.length) return cleaned;
+    const kept = value.filter((item) => item !== null && (typeof item !== 'string' || item.trim() !== ''));
+    if (kept.length === value.length && kept.length > 0) return cleaned;
     return withValueAt(cleaned, path, kept.length > 0 ? kept : undefined, config);
   }, config);
 }

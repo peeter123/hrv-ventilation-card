@@ -134,7 +134,15 @@ describe('optionValue', () => {
     }
     expect(optionValue({ fans: { stopped_states: ['Disabled', ''] } }, STOPPED)).toEqual(['Disabled']);
     expect(optionValue({ fans: { stopped_states: ['', 'off', ' '] } }, STOPPED)).toEqual(['off']);
-    for (const stopped_states of ['off', 3, ['off', 3], { off: true }]) {
+    expect(optionValue({ fans: { stopped_states: ['Disabled', null] } }, STOPPED)).toEqual(['Disabled']);
+    expect(optionValue({ fans: { stopped_states: [null] } }, STOPPED)).toEqual(['Disabled']);
+    expect(optionValue({ fans: { stopped_states: [0] } }, STOPPED)).toEqual(['0']);
+    expect(optionValue({ fans: { stopped_states: [false] } }, STOPPED)).toEqual(['off']);
+    expect(optionValue({ fans: { stopped_states: [true, 'Disabled'] } }, STOPPED)).toEqual(['on', 'Disabled']);
+    for (const stopped_states of [['Disabled', null], [0], [false], [true, 'Disabled']]) {
+      expect(invalidOptions({ fans: { stopped_states } }, ALL), JSON.stringify(stopped_states)).toEqual([]);
+    }
+    for (const stopped_states of ['off', 3, true, ['off', {}], ['off', ['on']], { off: true }]) {
       const config = { fans: { stopped_states } };
       expect(optionValue(config, STOPPED), JSON.stringify(stopped_states)).toEqual(['Disabled']);
       expect(invalidOptions(config, ALL), JSON.stringify(stopped_states)).toEqual([

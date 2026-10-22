@@ -164,7 +164,7 @@ describe('DIAGRAM_SCHEMA', () => {
       withoutBlankTexts(DIAGRAM_SCHEMA, { ...config, fans: { ...config.fans, stopped_states } });
     expect(clean(['Disabled', ''])).toEqual({ fans: { level: 'sensor.hrv_level', stopped_states: ['Disabled'] } });
     expect(clean(['', 'off', '  '])).toEqual({ fans: { level: 'sensor.hrv_level', stopped_states: ['off'] } });
-    for (const blank of [[''], ['  ']]) expect(clean(blank), JSON.stringify(blank)).toEqual(config);
+    for (const blank of [[''], ['  '], []]) expect(clean(blank), JSON.stringify(blank)).toEqual(config);
     expect(hasAdvancedValue(DIAGRAM_SCHEMA, clean(['']) as typeof config)).toBe(false);
     // Editing another field does not write the default list.
     const other = { ...shown, fans: { ...(shown['fans'] as object), level: 'fan.hrv' } };

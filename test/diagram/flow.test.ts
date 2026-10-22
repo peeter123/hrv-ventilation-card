@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { flowSpeed, MAX_SPEED, MIN_SPEED, ventilationDisabled } from '../../src/diagram/flow';
+import { flowSpeed, MAX_SPEED, MIN_SPEED, normalizedState, ventilationDisabled } from '../../src/diagram/flow';
 
 const flow = (state: string) => ({ state });
 
@@ -39,7 +39,7 @@ describe('flowSpeed', () => {
 });
 
 describe('ventilationDisabled', () => {
-  const stopped = ['Disabled'];
+  const stopped = ['disabled'];
 
   test('airflow-diagram-card "Service mode on an ESPHome unit": the state Disabled counts as disabled', () => {
     expect(ventilationDisabled(flow('Disabled'), stopped)).toBe(true);
@@ -53,7 +53,7 @@ describe('ventilationDisabled', () => {
   test('airflow-diagram-card "Custom stopped states": a binary sensor that is off is disabled when off is listed', () => {
     expect(ventilationDisabled(flow('off'), ['off'])).toBe(true);
     expect(ventilationDisabled(flow('on'), ['off'])).toBe(false);
-    expect(ventilationDisabled(flow('Disabled'), ['off', 'Disabled'])).toBe(true);
+    expect(ventilationDisabled(flow('Disabled'), ['off', 'disabled'])).toBe(true);
   });
 
   test('airflow-diagram-card "Default stopped states and a binary sensor": off is not disabled by default', () => {
@@ -72,5 +72,6 @@ describe('ventilationDisabled', () => {
     expect(ventilationDisabled(flow('  disabled '), stopped)).toBe(true);
     expect(ventilationDisabled(flow('DISABLED'), ['disabled'])).toBe(true);
     expect(ventilationDisabled(flow('Disabled'), [])).toBe(false);
+    expect(['  Disabled ', 'OFF'].map(normalizedState)).toEqual(['disabled', 'off']);
   });
 });

@@ -75,7 +75,7 @@ describe('hrv-card-editor stopped states list', () => {
     expect(saved).toEqual([config, config]);
 
     // A list of blank rows only is cleared: the key is dropped, and the card uses its default.
-    for (const blank of [[''], ['  ']]) {
+    for (const blank of [[''], ['  '], []]) {
       report(blank);
       expect(saved.at(-1), JSON.stringify(blank)).toEqual({ fans: { level: 'sensor.hrv_level' } });
     }
