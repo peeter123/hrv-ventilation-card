@@ -33,7 +33,7 @@
   unit", "Ventilating normally" with Active and Overruling, "Custom stopped states", "Default stopped states and a
   binary sensor", "Mode entity unavailable" with unavailable and unknown, trimming and case), that the role loads in
   a config and gets no label, and the strings and NBSP tests
-- [ ] 1.7 Use it in the card (`src/cards/ventilation-card.ts`): the fan level label's text "Stopped" (`FAN_STOPPED`
+- [x] 1.7 Use it in the card (`src/cards/ventilation-card.ts`): the fan level label's text "Stopped" (`FAN_STOPPED`
   in `src/strings.ts`) ahead of `fanLevelText`, both speeds 0, and the alert above the exchanger (`mdi:alert` in
   `--warning-color`, "Ventilation disabled" from `src/strings.ts`, its tooltip and its tap); verify card tests for
   "Service mode on an ESPHome unit" (label, title, both streams paused with flows above 0, the alert),
