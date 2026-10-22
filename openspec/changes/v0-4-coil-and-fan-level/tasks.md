@@ -107,7 +107,7 @@
   v0.3.0), remove the two entries from `BACKLOG.md` and update its release line; verify no
   tracked file holds an entity ID with the device serial, a helper or a dashboard ID (`npm run check:ids` and a
   `git grep` for the serial prefix)
-- [ ] 3.5 Feedback round: show the user the live screenshots from 3.3 and apply their feedback; verify the user
+- [x] 3.5 Feedback round: show the user the live screenshots from 3.3 and apply their feedback; verify the user
   approves before the review
 - [ ] 3.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
