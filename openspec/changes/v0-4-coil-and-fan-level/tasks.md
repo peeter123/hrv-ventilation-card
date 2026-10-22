@@ -25,7 +25,7 @@
   entity's level is named; a note for michaelarnauts/home-assistant-comfoconnect users to pick the fan entity) and in
   the status grid part of `docs/hrv-ventilation.md` (the formatter, why it is limited to the role, why "Away");
   verify the README tests pass
-- [ ] 1.6 Live check without changing a dashboard, after the bundle with this group is deployed (deploy script,
+- [x] 1.6 Live check without changing a dashboard, after the bundle with this group is deployed (deploy script,
   resource `?v=` bump): with Playwright (service workers blocked) on a live dashboard page, create a card element in
   `page.evaluate` from the installation's diagram config with `fans.level` set to the installation's fan entity, give
   it the page's `hass`, and read the label's text and title together with the fan entity's `percentage` and the fan
