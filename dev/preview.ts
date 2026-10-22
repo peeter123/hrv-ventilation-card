@@ -108,6 +108,14 @@ function applyScenario(scenario: Scenario): void {
 type PreHeaterKind = 'none' | 'power sensor' | 'on/off entity';
 const PRE_HEATER_KINDS: readonly PreHeaterKind[] = ['none', 'power sensor', 'on/off entity'];
 
+type FanLevelKind = 'sensor' | 'fan entity' | 'select';
+const FAN_LEVEL_KINDS: readonly FanLevelKind[] = ['sensor', 'fan entity', 'select'];
+const FAN_LEVEL_ENTITIES: Readonly<Record<FanLevelKind, string>> = {
+  sensor: id.level,
+  'fan entity': id.levelFan,
+  select: id.levelSelect,
+};
+
 const options = {
   config: 'full',
   exchanger: 'hrv',
@@ -116,6 +124,7 @@ const options = {
   showUnavailable: false,
   animation: true,
   nominalFlow: 0,
+  fanLevelKind: 'sensor' as FanLevelKind,
   preHeaterKind: 'none' as PreHeaterKind,
   /** The rated power in W; 0 = none (the option is left out). */
   preHeaterMax: 0,
@@ -165,7 +174,15 @@ function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
       ? { ...bare, exchanger_type: options.exchanger, show_effectiveness: options.showEffectiveness }
       : bare;
   }
-  const shared = { type: `custom:${tag}`, ...CONFIGS[options.config], smoothing: options.smoothing };
+  const base = CONFIGS[options.config] ?? {};
+  // The fan level entity follows the chosen kind, where the config has fans.
+  const fans = base['fans'] as Record<string, unknown> | undefined;
+  const shared = {
+    type: `custom:${tag}`,
+    ...base,
+    ...(fans ? { fans: { ...fans, level: FAN_LEVEL_ENTITIES[options.fanLevelKind] } } : {}),
+    smoothing: options.smoothing,
+  };
   if (tag !== 'hrv-ventilation-card') return shared;
   return {
     ...shared,
@@ -309,6 +326,10 @@ function renderControls(): void {
         <legend>fans and bypass</legend>
         ${slider('flow', values.flow, 450, (value) => {
           values.flow = value;
+        })}
+        ${select<FanLevelKind>('fan level kind', FAN_LEVEL_KINDS, options.fanLevelKind, (value) => {
+          options.fanLevelKind = value;
+          updateConfig();
         })}
         ${slider('bypass %', values.bypass, 100, (value) => {
           values.bypass = value;

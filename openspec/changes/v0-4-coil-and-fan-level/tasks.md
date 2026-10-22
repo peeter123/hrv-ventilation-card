@@ -17,7 +17,7 @@
   `level` in `src/editor/diagram-schema.ts`; verify the editor test for "Editing the card" (the fan level picker
   offers sensors, fans and selects, the flow pickers sensors) and a config test that a `fan.` and a `select.` level
   ID load without error
-- [ ] 1.4 Add the "fan level kind" choice (sensor, fan entity, select) to the preview page's fans fieldset, with a
+- [x] 1.4 Add the "fan level kind" choice (sensor, fan entity, select) to the preview page's fans fieldset, with a
   mock fan entity whose `percentage` follows the flow's level (design: "Preview page"); verify a screenshot of the
   preview page with each kind at away, low, medium and high, inspected by an agent, showing the same level name for
   all three kinds

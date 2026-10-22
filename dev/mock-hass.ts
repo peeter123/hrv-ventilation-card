@@ -30,6 +30,9 @@ export const id = {
   humidity: (stream: Stream): string => `sensor.hrv_${stream}_humidity`,
   absoluteHumidity: (stream: Stream): string => `sensor.hrv_${stream}_absolute_humidity`,
   level: 'sensor.hrv_fan_level',
+  /** The fan level as a fan entity (percentage in steps of a third) or as a select (the level name). */
+  levelFan: 'fan.hrv_fan_level',
+  levelSelect: 'select.hrv_fan_level',
   supplyFlow: 'sensor.hrv_supply_flow',
   exhaustFlow: 'sensor.hrv_exhaust_flow',
   bypass: 'sensor.hrv_bypass_position',
@@ -90,13 +93,25 @@ interface Reading {
   state: string;
   unit?: string;
   decimals?: number;
+  /** Further attributes of the state. */
+  attributes?: Record<string, unknown>;
 }
 
-/** The unit's named fan level for a flow, as a Zehnder reports it. */
+const FAN_LEVELS = ['Away', 'Low', 'Medium', 'High'] as const;
+/** A fan entity with the four levels: its percentage at each level, and its step (a third of 100 %). */
+const FAN_PERCENTAGES = [0, 33, 66, 100] as const;
+const FAN_STEP = 100 / 3;
+
+/** The index into the unit's named fan levels (Away to High) for a flow, as a Zehnder reports it. */
+function fanLevelIndex(flow: number): number {
+  if (flow <= 0) return 0;
+  if (flow < 150) return 1;
+  return flow < 250 ? 2 : 3;
+}
+
+/** The unit's named fan level for a flow. */
 function fanLevel(flow: number): string {
-  if (flow <= 0) return 'Away';
-  if (flow < 150) return 'Low';
-  return flow < 250 ? 'Medium' : 'High';
+  return FAN_LEVELS[fanLevelIndex(flow)] ?? 'Away';
 }
 
 function readings(values: MockValues): Record<string, Reading> {
@@ -113,6 +128,11 @@ function readings(values: MockValues): Record<string, Reading> {
   const flow = (value: number): Reading => ({ state: value.toFixed(0), unit: 'm³/h', decimals: 0 });
   Object.assign(result, {
     [id.level]: { state: fanLevel(values.flow) },
+    [id.levelFan]: {
+      state: values.flow <= 0 ? 'off' : 'on',
+      attributes: { percentage: FAN_PERCENTAGES[fanLevelIndex(values.flow)] ?? 0, percentage_step: FAN_STEP },
+    },
+    [id.levelSelect]: { state: fanLevel(values.flow), attributes: { options: [...FAN_LEVELS] } },
     [id.supplyFlow]: flow(values.flow),
     [id.exhaustFlow]: flow(values.exhaustFlow ?? values.flow),
     [id.bypass]: { state: values.bypass.toFixed(0), unit: '%', decimals: 0 },
@@ -163,7 +183,10 @@ export class MockHass {
     const next: Record<string, HassEntityState> = {};
     for (const [entityId, reading] of Object.entries(readings(values))) {
       const previous = this.states[entityId];
-      const same = previous?.state === reading.state && previous.attributes.unit_of_measurement === reading.unit;
+      const same =
+        previous?.state === reading.state &&
+        previous.attributes.unit_of_measurement === reading.unit &&
+        JSON.stringify(previous.attributes['percentage']) === JSON.stringify(reading.attributes?.['percentage']);
       next[entityId] =
         previous && same
           ? previous
@@ -173,6 +196,7 @@ export class MockHass {
               attributes: {
                 ...(reading.unit === undefined ? {} : { unit_of_measurement: reading.unit }),
                 ...(reading.decimals === undefined ? {} : { decimals: reading.decimals }),
+                ...reading.attributes,
               },
               last_updated: now,
             };
