@@ -109,7 +109,7 @@
   `git grep` for the serial prefix)
 - [x] 3.5 Feedback round: show the user the live screenshots from 3.3 and apply their feedback; verify the user
   approves before the review
-- [ ] 3.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 3.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
 - [ ] 3.7 With the user's confirmation before each outward step, push `main` and the tag `v0.4.0` to
   `peeter123/hrv-ventilation-card` (never `private/history`); the user publishes the release from the tag in the
