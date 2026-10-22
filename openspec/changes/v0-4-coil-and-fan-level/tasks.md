@@ -2,7 +2,7 @@
 
 ## 1. Fan level from a fan entity
 
-- [ ] 1.1 Add `fanLevelText(stateObj)` to `src/lib/hass.ts` and the level names (`Away`, `Low`, `Medium`, `High`) to
+- [x] 1.1 Add `fanLevelText(stateObj)` to `src/lib/hass.ts` and the level names (`Away`, `Low`, `Medium`, `High`) to
   `src/strings.ts` (design: "Fan level text"): a step for a three-speed fan, the percentage with NBSP and `%`
   otherwise, `undefined` for a non-fan, unavailable entity, missing or non-numeric `percentage` or a missing
   `percentage_step`; verify unit tests for "Three-speed fan at medium" (66 and 33.333333333333336, the live shape),

@@ -8,6 +8,9 @@ import type { RolePath } from './lib/config';
 /** A no-break space: keeps a number on one line with its unit, in every text below. */
 export const NBSP = ' ';
 
+/** The names of a three-speed fan's levels, indexed by step (0 is the lowest, 3 the highest). */
+export const FAN_LEVELS: readonly string[] = ['Away', 'Low', 'Medium', 'High'];
+
 /** Shown for a figure whose inputs have no value. */
 export const NO_VALUE = 'n/a';
 

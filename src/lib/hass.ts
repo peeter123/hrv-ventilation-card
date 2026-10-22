@@ -1,6 +1,6 @@
 // The parts of Home Assistant's `hass` object the cards use. HA's frontend types are not published as a package,
 // so the cards declare what they read. Fields are added here as the cards start to use them.
-import { NO_VALUE } from '../strings';
+import { FAN_LEVELS, NBSP, NO_VALUE } from '../strings';
 import { isUnavailable } from './availability';
 
 /** A state object as in `hass.states[entity_id]`. */
@@ -47,4 +47,19 @@ export function formatState(hass: Pick<HassLike, 'states' | 'formatEntityState'>
   if (typeof hass.formatEntityState === 'function') return hass.formatEntityState(stateObj);
   const unit = stateObj.attributes.unit_of_measurement;
   return unit && !isUnavailable(stateObj) ? `${stateObj.state} ${unit}` : stateObj.state;
+}
+
+/**
+ * The level of a fan entity as text, or undefined when the entity is not an available `fan.*` with a numeric
+ * `percentage` and a positive `percentage_step`. A fan with three speeds (steps of about 33 %) gives the name of its
+ * nearest level (Away, Low, Medium, High); any other fan gives the rounded percentage.
+ */
+export function fanLevelText(stateObj: HassEntityState | undefined): string | undefined {
+  if (stateObj === undefined || !stateObj.entity_id.startsWith('fan.') || isUnavailable(stateObj)) return undefined;
+  const { percentage, percentage_step: step } = stateObj.attributes;
+  if (typeof percentage !== 'number' || !Number.isFinite(percentage)) return undefined;
+  if (typeof step !== 'number' || !Number.isFinite(step) || step <= 0) return undefined;
+  if (Math.round(100 / step) !== 3) return `${String(Math.round(percentage))}${NBSP}%`;
+  const level = Math.min(3, Math.max(0, Math.round(percentage / step)));
+  return FAN_LEVELS[level];
 }
