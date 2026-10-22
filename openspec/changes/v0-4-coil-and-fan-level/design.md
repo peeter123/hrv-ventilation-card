@@ -135,22 +135,25 @@ on tap keeps both.
 ### Coil centreline: a second path over the wire
 
 `coilWire` adds a path `coil-core` with the same `d` as the wire, stroke width 1 (a third of the wire's 3), round
-caps, after the wire, in both states. Its stroke is the wire's colour mixed with black:
+caps, after the wire, in both states. Its stroke is a darker shade of the glow colour itself, in OKLCH relative colour
+(same hue and chroma, lightness times 0.9, `CORE_LIGHTNESS`):
 
-- off: `color-mix(in srgb, var(--secondary-text-color) 55%, black)`; the off wire's 0.5 opacity moves from the path to
+- off: `oklch(from var(--secondary-text-color) calc(l * 0.9) c h)`; the off wire's 0.5 opacity moves from the path to
   a `<g class="coil off">` around wire and centreline, so the centreline is darker than the wire as drawn rather than
   as opaque as the text colour;
-- on: `color-mix(in srgb, <wire stroke> 60%, black)`, so it darkens with the wire's own colour and stays darker than
-  the lightened core at every level.
+- on: `oklch(from <glow color> calc(l * 0.9) c h)`, based on the `color` option and not on the whitened wire, so it
+  stays a warm amber and stays darker than the lightened core at every level.
 
-The shares are starting points for the feedback round. Because the centreline follows the wire's path and is
-narrower, it stays inside the wire and inside `coilArea()`, so the box, the glow filter region and the tap are
-unchanged. The class names keep the existing CSS: `.coil` keeps the round caps for both paths, `.coil.off` moves to
-the group.
+The first version mixed the wire's colour with black (55 % and 60 %). The feedback round dropped that because it
+looked muddy and brown and clashed with the glow; a darker shade of the glow colour keeps its hue and saturation, and
+0.9 (after trying 0.75, which was too dark) keeps it visibly darker than the wire. Relative colour syntax is
+supported by current Chrome and Edge, Safari 16.4+ and Firefox 128+, which is what Home Assistant frontends run.
+Because the centreline follows the wire's path and is narrower, it stays inside the wire and inside `coilArea()`, so
+the box, the glow filter region and the tap are unchanged. The class names keep the existing CSS: `.coil` keeps the
+round caps for both paths, `.coil.off` moves to the group.
 
 Alternative: a lighter centreline (a highlight, as on a shaded cylinder) instead of a darker one. The backlog asks
-for a darker line; the lit core of the glowing coil is already lighter than its halo. Offered in the feedback round
-if the darker line reads as a groove.
+for a darker line; the lit core of the glowing coil is already lighter than its halo.
 
 ### Preview page
 

@@ -953,7 +953,7 @@ describe('the pre-heater coil', () => {
       .join('');
     expect(css).toMatch(/\.coil\.off\s*\{[^}]*opacity: 0\.5/);
     expect(css).toMatch(
-      /\.coil\.off \.coil-core\s*\{[^}]*oklch\(from var\(--secondary-text-color\) calc\(l \* 0\.75\) c h\)/,
+      /\.coil\.off \.coil-core\s*\{[^}]*oklch\(from var\(--secondary-text-color\) calc\(l \* 0\.9\) c h\)/,
     );
   });
 
@@ -963,7 +963,7 @@ describe('the pre-heater coil', () => {
     const core = root.querySelector('svg path.coil-core');
     expect(core?.previousElementSibling).toBe(wire);
     // A darker shade of the glow colour itself (not of the whitened wire), keeping hue and chroma.
-    expect(core?.getAttribute('style')).toContain('oklch(from #ff9800 calc(l * 0.75) c h)');
+    expect(core?.getAttribute('style')).toContain('oklch(from #ff9800 calc(l * 0.9) c h)');
     expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.475');
     expect(root.querySelector('svg .coil-glow')?.getAttribute('stroke-width')).toBe('4.5');
   });

@@ -188,14 +188,16 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     against the orange halo and against the blue stream on both themes.
   - **Centreline.** A second path `path.coil-core` with the same `d` as the wire lies over it (after it in the SVG),
     stroke width 1 (a third of the wire's 3), round caps, so the coil reads as a tube with a dark line along its
-    middle. Its colour is the wire's own colour mixed with black. Off: `color-mix(in srgb,
-    var(--secondary-text-color) 55%, black)`. On: `color-mix(in srgb, <wire stroke> 60%, black)`, so it follows
-    the wire colour and stays darker than the lightened core at every level. The off opacity of 0.5 sits on a group,
+    middle. Its colour is a darker shade of the glow colour, in OKLCH relative colour that keeps hue and chroma:
+    `oklch(from <base> calc(l * 0.9) c h)` (`CORE_LIGHTNESS`), with the glow colour option as the base while lit
+    (not the whitened wire, so it stays a warm amber and darker than the wire at every level) and the secondary
+    text colour while off. It was first a mix with black, which looked muddy and clashed with the glow. Relative
+    colour needs Chrome and Edge, Safari 16.4+ or Firefox 128+, as Home Assistant frontends run. The off opacity of 0.5 sits on a group,
     `<g class="coil off">` around wire and centreline, not on the wire alone: with the opacity on the wire only, the
     centreline would be drawn at full opacity, as solid as the text colour, while the wire around it is dimmed. On
     the group, both dim together and the centreline is darker than the wire as drawn. It is darker, not a highlight
     (a lighter line, as on a shaded cylinder), because the lit core of the glowing coil is already lighter than its
-    halo. If the dark line reads as a groove, a highlight is the alternative to try. The centreline is narrower than the wire and
+    halo. The centreline is narrower than the wire and
     follows its path, so it stays inside the wire and inside `coilArea()`: the tap box and the glow filter region are
     unchanged. `.coil` keeps the round caps for both paths and `.coil.off` sits on the group.
   - **Pulse.** While the coil is on and the card's animation is on, the glow copy pulses: `.coil-glow` runs the

@@ -256,10 +256,10 @@ const CORE_WIDTH = 1;
 
 /**
  * The centreline's lightness as a factor of its base colour's (OKLCH relative colour, same hue and chroma): the glow
- * colour while lit, the secondary text colour while off. 0.75 keeps a deep amber instead of a brown, and stays darker
+ * colour while lit, the secondary text colour while off. 0.9 keeps a warm amber instead of a brown, and stays darker
  * than the lit wire, which is lightened towards white.
  */
-export const CORE_LIGHTNESS = 0.75;
+export const CORE_LIGHTNESS = 0.9;
 
 /** A darker shade of a colour: lower lightness, same chroma and hue (no mixing with black, which greys it). */
 export const darker = (color: string): string => `oklch(from ${color} calc(l * ${String(CORE_LIGHTNESS)}) c h)`;
