@@ -128,6 +128,12 @@ describe('optionValue', () => {
   test('a list option falls back to the default for an empty list or a value that is not a list of texts', () => {
     expect(optionValue({ fans: { stopped_states: [] } }, STOPPED)).toEqual(['Disabled']);
     expect(invalidOptions({ fans: { stopped_states: [] } }, ALL)).toEqual([]);
+    for (const stopped_states of [[''], ['  '], ['', ' ']]) {
+      expect(optionValue({ fans: { stopped_states } }, STOPPED), JSON.stringify(stopped_states)).toEqual(['Disabled']);
+      expect(invalidOptions({ fans: { stopped_states } }, ALL)).toEqual([]);
+    }
+    expect(optionValue({ fans: { stopped_states: ['Disabled', ''] } }, STOPPED)).toEqual(['Disabled']);
+    expect(optionValue({ fans: { stopped_states: ['', 'off', ' '] } }, STOPPED)).toEqual(['off']);
     for (const stopped_states of ['off', 3, ['off', 3], { off: true }]) {
       const config = { fans: { stopped_states } };
       expect(optionValue(config, STOPPED), JSON.stringify(stopped_states)).toEqual(['Disabled']);

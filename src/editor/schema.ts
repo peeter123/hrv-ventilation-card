@@ -168,6 +168,21 @@ export function withoutUndefined<T>(value: T): T {
 }
 
 /**
+ * A copy without the blank texts of the list fields (a `text` selector with `multiple`): the list shows an empty row
+ * after "add", which must not reach the config. A list left with no text is removed, so it counts as cleared.
+ */
+export function withoutBlankTexts(schema: EditorSchema | FormSchema, config: CardConfig): CardConfig {
+  return fieldsWithPaths(schema as EditorSchema).reduce((cleaned, { field, path }) => {
+    const text = field.selector['text'];
+    const value = valueAt(cleaned, path);
+    if (!isRecord(text) || text['multiple'] !== true || !Array.isArray(value)) return cleaned;
+    const kept = value.filter((item) => typeof item !== 'string' || item.trim() !== '');
+    if (kept.length === value.length) return cleaned;
+    return withValueAt(cleaned, path, kept.length > 0 ? kept : undefined, config);
+  }, config);
+}
+
+/**
  * The config to save after `ha-form` reports `changed`: a field the current config left unset is dropped again when
  * its value is still the default that `withShownDefaults` displayed, so editing one field never writes the defaults
  * of the others into the card's YAML.

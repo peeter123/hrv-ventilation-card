@@ -6,6 +6,7 @@ import {
   fieldsWithPaths,
   hasAdvancedValue,
   visibleSchema,
+  withoutBlankTexts,
   withoutShownDefaults,
   withShownDefaults,
   type FormSchema,
@@ -158,6 +159,13 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(withoutShownDefaults(DIAGRAM_SCHEMA, config, edited)).toEqual({
       fans: { level: 'sensor.hrv_level', stopped_states: ['Disabled', 'off'] },
     });
+    // The empty row of the text list never reaches the config.
+    const clean = (stopped_states: string[]): unknown =>
+      withoutBlankTexts(DIAGRAM_SCHEMA, { ...config, fans: { ...config.fans, stopped_states } });
+    expect(clean(['Disabled', ''])).toEqual({ fans: { level: 'sensor.hrv_level', stopped_states: ['Disabled'] } });
+    expect(clean(['', 'off', '  '])).toEqual({ fans: { level: 'sensor.hrv_level', stopped_states: ['off'] } });
+    for (const blank of [[''], ['  ']]) expect(clean(blank), JSON.stringify(blank)).toEqual(config);
+    expect(hasAdvancedValue(DIAGRAM_SCHEMA, clean(['']) as typeof config)).toBe(false);
     // Editing another field does not write the default list.
     const other = { ...shown, fans: { ...(shown['fans'] as object), level: 'fan.hrv' } };
     expect(withoutShownDefaults(DIAGRAM_SCHEMA, config, other)).toEqual({ fans: { level: 'fan.hrv' } });

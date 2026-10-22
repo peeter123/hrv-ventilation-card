@@ -290,9 +290,15 @@ export function invalidOptions(config: CardConfig, options: readonly OptionSpec[
   return [...new Set(messages)];
 }
 
-/** The option's value, or its default when it is left out (or, for a list, empty). Call after invalidOptions found no problem. */
+/**
+ * The option's value, or its default when it is left out (or, for a list, empty or only blank texts). Blank texts of
+ * a list are dropped: the editor's text list can hold an empty row. Call after invalidOptions found no problem.
+ */
 export function optionValue<T extends OptionSpec>(config: CardConfig, option: T): OptionValue<T> {
   const value = valueAt(config, option.path);
-  const empty = option.kind === 'list' && Array.isArray(value) && value.length === 0;
-  return (isLeftOut(value) || empty || !isValid(option, value) ? option.default : value) as OptionValue<T>;
+  if (option.kind === 'list' && Array.isArray(value) && isValid(option, value)) {
+    const texts = (value as string[]).filter((text) => text.trim() !== '');
+    return (texts.length > 0 ? texts : option.default) as OptionValue<T>;
+  }
+  return (isLeftOut(value) || !isValid(option, value) ? option.default : value) as OptionValue<T>;
 }

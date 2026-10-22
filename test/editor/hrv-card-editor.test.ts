@@ -60,6 +60,28 @@ function cleared(data: Record<string, unknown>, path: string): Record<string, un
 
 const fieldNames = (schema: FormSchema): string[] => fieldsWithPaths(schema).map(({ path }) => path);
 
+describe('hrv-card-editor stopped states list', () => {
+  test('airflow-diagram-card "Advanced settings on": a blank row of the stopped states list never reaches the config', async () => {
+    const config = { fans: { level: 'sensor.hrv_level', stopped_states: ['off'] } };
+    const { editor, form } = await openEditor(config, DIAGRAM_SCHEMA);
+    const saved = collectSaved(editor);
+    const shown = form.data as { fans: Record<string, unknown> };
+    const report = (stopped_states: string[]): void => {
+      form.change({ ...shown, fans: { ...shown.fans, stopped_states } });
+    };
+
+    report(['off', '']);
+    report(['off', '  ']);
+    expect(saved).toEqual([config, config]);
+
+    // A list of blank rows only is cleared: the key is dropped, and the card uses its default.
+    for (const blank of [[''], ['  ']]) {
+      report(blank);
+      expect(saved.at(-1), JSON.stringify(blank)).toEqual({ fans: { level: 'sensor.hrv_level' } });
+    }
+  });
+});
+
 describe('hrv-card-editor', () => {
   test('card-bundle "Default editor": the switch is off and no advanced setting is shown', async () => {
     const { toggle, form } = await openEditor(BASIC_CONFIG);

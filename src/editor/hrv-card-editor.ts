@@ -13,6 +13,7 @@ import {
   hasAdvancedValue,
   isSection,
   visibleSchema,
+  withoutBlankTexts,
   withoutShownDefaults,
   withoutUndefined,
   withShownDefaults,
@@ -118,7 +119,7 @@ export class HrvCardEditor extends LitElement {
     event.stopPropagation();
     // ha-form reports the whole data it displays, defaults included: keep out those the config did not have, and
     // the keys of cleared fields (reported as undefined).
-    const value = withoutUndefined(event.detail.value);
+    const value = withoutBlankTexts(this.schema, withoutUndefined(event.detail.value));
     const cleared = clearedPaths(this.schema, this._shown, value);
     this._emptied = new Set([...this._emptied, ...cleared].filter((path) => valueAt(value, path) === undefined));
     const config = this._config ? withoutShownDefaults(this.schema, this._config, value) : value;
