@@ -89,9 +89,11 @@ describe('DIAGRAM_SCHEMA', () => {
       const domain =
         path === 'pre_heater.power'
           ? ['sensor', 'binary_sensor', 'switch']
-          : path.startsWith('seasons.')
-            ? 'binary_sensor'
-            : 'sensor';
+          : path === 'fans.level'
+            ? ['sensor', 'fan', 'select']
+            : path.startsWith('seasons.')
+              ? 'binary_sensor'
+              : 'sensor';
       expect(field.selector, path).toEqual({ entity: { domain } });
     }
   });

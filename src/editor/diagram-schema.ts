@@ -10,6 +10,7 @@ import {
   CALCULATION_SECTION,
   choiceField,
   colorField,
+  fanLevelField,
   numberField,
   sensorField,
   streamSection,
@@ -28,7 +29,7 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
   {
     type: 'expandable',
     name: 'fans',
-    schema: [sensorField('level'), sensorField('supply_flow'), sensorField('exhaust_flow')],
+    schema: [fanLevelField('level'), sensorField('supply_flow'), sensorField('exhaust_flow')],
   },
   {
     type: 'expandable',

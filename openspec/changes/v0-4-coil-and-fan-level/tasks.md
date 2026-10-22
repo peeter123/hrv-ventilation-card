@@ -13,7 +13,7 @@
   fan level from a fan entity" (opens the fan entity), "Fan level sensor" (unchanged), an unavailable fan entity
   (hidden as any unavailable label, and shown as unavailable with `show_unavailable`), and that a fan entity set as
   another role still shows Home Assistant's state
-- [ ] 1.3 Add `fanLevelField` with the domains `sensor`, `fan` and `select` to `src/editor/fields.ts` and use it for
+- [x] 1.3 Add `fanLevelField` with the domains `sensor`, `fan` and `select` to `src/editor/fields.ts` and use it for
   `level` in `src/editor/diagram-schema.ts`; verify the editor test for "Editing the card" (the fan level picker
   offers sensors, fans and selects, the flow pickers sensors) and a config test that a `fan.` and a `select.` level
   ID load without error

@@ -28,6 +28,12 @@ export const switchableField = (name: string): EditorField => ({
   selector: { entity: { domain: ['sensor', 'binary_sensor', 'switch'] } },
 });
 
+/** The fan level picker: a level sensor, a fan entity (its percentage) or a select (a named level). */
+export const fanLevelField = (name: string): EditorField => ({
+  name,
+  selector: { entity: { domain: ['sensor', 'fan', 'select'] } },
+});
+
 /**
  * A stream section: temperature, relative humidity and absolute humidity. The bar cards keep the absolute humidity
  * advanced (relative humidity with the temperature is enough); the diagram shows it as a label, so there it is basic.

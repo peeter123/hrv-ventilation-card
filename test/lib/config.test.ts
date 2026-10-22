@@ -55,6 +55,11 @@ describe('valueAt, entityAt and isConfigured', () => {
     expect(isConfigured({}, 'supply.temperature')).toBe(false);
   });
 
+  test('a fan or select fan level counts as configured', () => {
+    expect(isConfigured({ fans: { level: 'fan.hrv_unit' } }, 'fans.level')).toBe(true);
+    expect(isConfigured({ fans: { level: 'select.hrv_fan_level' } }, 'fans.level')).toBe(true);
+  });
+
   test('inherited object members are not config values', () => {
     expect(isConfigured({}, 'constructor')).toBe(false);
     expect(valueAt({ outdoor: {} }, 'outdoor.toString')).toBeUndefined();
