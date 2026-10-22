@@ -1119,4 +1119,43 @@ describe('ventilation disabled alert', () => {
       }
     });
   }
+
+  for (const layout of ['full', 'compact'] as const) {
+    test(`without a top row, ${layout} layout: the alert lies inside the drawing, halfway between its top and the exchanger's top, 280 and 600 px`, async () => {
+      const shown = await show(280, 'light', layout, VALUES, {
+        fans: FANS,
+        status: { filter_days: id.filter },
+        seasons: {},
+      });
+      const { card, root } = shown;
+      const base = card.hass;
+      if (!base) throw new Error('no hass');
+      card.hass = {
+        ...base,
+        states: {
+          ...base.states,
+          [MODE]: { entity_id: MODE, state: 'Disabled', attributes: {}, last_updated: '2026-10-22T12:00:00Z' },
+        },
+      };
+      expect(root.querySelector('.top')).toBeNull();
+      for (const width of [280, 600]) {
+        await resize(shown, width);
+        const where = `${layout} ${String(width)} px`;
+        const alert = box(root, '.on-drawing.alert');
+        const drawing = box(root, '.drawing');
+        const exchanger = box(root, 'svg .exchanger');
+        expect(alert.top, where).toBeGreaterThanOrEqual(drawing.top - 0.5);
+        expect(alert.bottom, where).toBeLessThanOrEqual(exchanger.top + 0.5);
+        expect(Math.abs(alert.top + alert.height / 2 - (drawing.top + exchanger.top) / 2), where).toBeLessThanOrEqual(
+          1.5,
+        );
+        for (const { name, box: other } of shownBoxes(root)) {
+          expect(
+            overlap(alert, other),
+            `${where}: alert ${JSON.stringify(alert)} / ${name} ${JSON.stringify(other)}`,
+          ).toBe(false);
+        }
+      }
+    });
+  }
 });

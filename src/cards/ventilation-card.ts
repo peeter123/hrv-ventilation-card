@@ -168,6 +168,10 @@ export class HrvVentilationCard extends HrvCard {
       position: relative;
       aspect-ratio: 2 / 1;
     }
+    /* Without a top row there is no separator or gap above the drawing. */
+    .drawing.no-top {
+      --top-gap: 0px;
+    }
     .art {
       position: absolute;
       inset: 0;
@@ -800,7 +804,7 @@ export class HrvVentilationCard extends HrvCard {
 
     return html`<ha-card @click=${this.activate} @keydown=${this.activate}>
       ${model.top ? this.topRow(model.top, season) : nothing}
-      <div class="drawing ${settings.animate ? '' : 'still'}">
+      <div class="drawing ${settings.animate ? '' : 'still'} ${model.top ? '' : 'no-top'}">
         ${art}
         ${STREAMS.map(
           (stream) =>
