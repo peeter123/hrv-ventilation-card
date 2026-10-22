@@ -59,7 +59,7 @@
   binary sensor needs `off` in the stopped states) and in `docs/hrv-ventilation.md` (what ventilation disabled
   changes, why one decision, why the raw state, why unavailable is not disabled, why not the flows or the fan speeds);
   verify the README tests pass
-- [ ] 1.11 Live check without changing a dashboard, after the bundle with this group is deployed (deploy script,
+- [x] 1.11 Live check without changing a dashboard, after the bundle with this group is deployed (deploy script,
   resource `?v=` bump): with Playwright (service workers blocked) on a live dashboard page, create a card element in
   `page.evaluate` from the installation's diagram config, give it the page's `hass`, and read the fan level label's
   text and title, the streams' animation state and the alert. First with `fans.level` set to the installation's fan
