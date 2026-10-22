@@ -114,6 +114,16 @@ exchanger. Otherwise the card SHALL behave as without the role.
 - **WHEN** `fans.ventilation_mode` is not configured
 - **THEN** the card renders as in v0.3, apart from the other changes in v0.4
 
+### Requirement: Recovery while ventilation disabled
+While ventilation is disabled, the saving badge, the moisture figure and the effectiveness rings SHALL show no
+recovery, as with no airflow, because the flow entities still read above 0 with the fans stopped. The flow labels
+SHALL keep showing what the flow entities report.
+
+#### Scenario: Recovery while ventilation disabled
+- **WHEN** `fans.ventilation_mode` reads a stopped state and the flow entities read more than 0
+- **THEN** the badge, the moisture figure and the rings show no recovery, as with no airflow
+- **AND** the flow labels still show what the flow entities report
+
 ## MODIFIED Requirements
 
 ### Requirement: Entities come from the card config

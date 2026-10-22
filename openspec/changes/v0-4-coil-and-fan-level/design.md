@@ -109,6 +109,11 @@ a config test checks that a `fan.` and a `select.` ID load.
     and its tap (the level entity's more-info) are unchanged;
   - both `speeds` are 0, so both streams pause; the paths and their strengths (bypass, temperature colours) are
     drawn as before, and the flow labels still show what the flow sensors report;
+  - the badge, the moisture figure and the effectiveness rings show no recovery, as with no airflow: the calculation
+    gets a supply flow of 0 (`noAirflow` on the calculator in `src/calc/inputs.ts`), so the badge reads "0 W", the
+    moisture figure "0 g/h" and the rings have no figure. Reason: the flow sensors read non-zero with the fans
+    stopped (the exhaust flow about 21 m³/h), so the figures would show heat recovered by a stopped unit. The two
+    bar cards do not read `fans.ventilation_mode` and are unchanged;
   - an alert on the drawing, centred over the exchanger above its top edge (y 26): `mdi:alert` in
     `--warning-color` with the text "Ventilation disabled" (`VENTILATION_DISABLED` in `src/strings.ts`), its tooltip
     "Ventilation disabled: <the mode entity's state as Home Assistant formats it>", and a tap that opens the

@@ -380,7 +380,9 @@ entity's state is compared with `stopped_states`; on a match the fan level label
 opens the level entity), both air streams stop moving (the flow labels keep showing what the flow sensors report)
 and an alert with a warning icon and "Ventilation disabled" appears over the exchanger, also with the animation off.
 Hovering it shows "Ventilation disabled: " and the state as Home Assistant formats it; tapping it opens the
-`ventilation_mode` entity. An unavailable, unknown or missing entity never counts as disabled.
+`ventilation_mode` entity. The saving badge, the moisture figure and the effectiveness rings then show no recovery, as
+with no airflow, because the flow sensors can still read above 0 with the fans stopped. An unavailable, unknown or
+missing entity never counts as disabled.
 
 - The ESPHome ventilation mode sensor has the states `Disabled`, `Active` and `Overruling`. `Disabled` means that
   sensor-based control is off, which is seen in service mode, so the fans are stopped. Set the role only if the

@@ -36,8 +36,11 @@ export interface CardCalculation {
   result?: RecoveryResult;
 }
 
-/** Computes a card's figures for the current `hass`; built once per config by createCalculator. */
-export type Calculator = (hass: SmoothingHass) => CardCalculation;
+/**
+ * Computes a card's figures for the current `hass`; built once per config by createCalculator. With `noAirflow` the
+ * supply flow counts as 0 whatever the sensor reads (the unit is not ventilating), so the figures show no recovery.
+ */
+export type Calculator = (hass: SmoothingHass, options?: { noAirflow?: boolean }) => CardCalculation;
 
 /** The smoothing source of a stream's absolute humidity, or undefined when the stream has no humidity. */
 function humiditySource(config: CardConfig, stream: Stream): SmoothingSource | undefined {
@@ -85,13 +88,13 @@ export function createCalculator(config: CardConfig, store: SmoothingStore = smo
     extract: extract as T,
   });
 
-  return (hass) => {
+  return (hass, { noAirflow = false } = {}) => {
     const read = (id: string | undefined, quantity: Quantity): number | undefined =>
       id === undefined ? undefined : convertedState(hass.states[id], quantity);
     const at = latestUpdate(used.map((id) => hass.states[id]));
     const inputs: RecoveryInputs = {
       temperature: perStream(temperatures.map((id) => read(id, 'temperature'))),
-      supplyFlow: read(supplyFlow, 'flow'),
+      supplyFlow: noAirflow ? 0 : read(supplyFlow, 'flow'),
       bypass: bypass === undefined ? 0 : read(bypass, 'percentage'),
       airDensity,
     };

@@ -306,7 +306,7 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   undefined (falling back to `formatState`) for a non-fan, an unavailable state or missing attributes. A fan that is on below half a step shows Low (Away only at 0 %). Step 0 is
   "Away" because the unit still ventilates at away, and Zehnder's own sensors say "Away", not "Off".
 - **Ventilation disabled.** One decision, `ventilationDisabled(stateObj, stoppedStates)` in `src/diagram/flow.ts`,
-  drives three effects. It is true only while `fans.ventilation_mode` exists, is not unavailable or unknown, and its
+  drives four effects. It is true only while `fans.ventilation_mode` exists, is not unavailable or unknown, and its
   raw state, trimmed, equals one of `fans.stopped_states` ignoring case (default `['Disabled']`; blank entries are
   dropped and an empty list falls back to it; numbers and YAML booleans are read as text, `false` and `true` as `off`
   and `on`; a value that is not a list of those is an invalid option, as for the other option kinds). The card
@@ -319,6 +319,10 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     drawing's top and the exchanger's top. It has the tooltip "Ventilation disabled: <formatted state>" and a tap
     that opens the mode entity. It shows with the animation off too: it reports the unit, not the motion. The role
     is an input only and gets no label. The card decides once per render and shares the result with every label.
+    The badge, the moisture figure and the rings show no recovery: the calculator is called with `noAirflow`, which
+    makes the supply flow 0, so they render as with a flow of 0 (badge "0 W", moisture "0 g/h", rings without a
+    figure). The flow sensors read non-zero with the fans stopped, so otherwise a stopped unit would show recovery.
+    The flow labels keep showing the sensors. The recovery and moisture bar cards do not read the role.
   - **Why the raw state.** The formatted state depends on the user's language; the raw one does not.
   - **Why unavailable is not disabled.** A missing reading says nothing about the unit, and the card does not claim
     a stop it cannot see.

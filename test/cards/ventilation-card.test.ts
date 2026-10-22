@@ -615,6 +615,60 @@ describe('ventilation disabled', () => {
   });
 });
 
+describe('recovery while ventilation is disabled', () => {
+  const MODE = 'sensor.hrv_mode';
+  const CONFIGURED: CardConfig = {
+    ...CALCULATION,
+    exchanger_type: 'erv',
+    show_effectiveness: true,
+    fans: { supply_flow: 'sensor.hrv_flow', ventilation_mode: MODE },
+  };
+  // Outdoor 0 and extract 20 degrees, supply 18.4, absolute humidity 2, 12 and 8.5 g/m3: an effective unit.
+  const READINGS = [
+    state('sensor.hrv_supply_t', '18.4', '°C'),
+    state('sensor.hrv_extract_t', '20', '°C'),
+    state('sensor.hrv_ah_out', '2', 'g/m³'),
+    state('sensor.hrv_ah_sup', '8.5', 'g/m³'),
+    state('sensor.hrv_ah_ext', '12', 'g/m³'),
+    state('sensor.hrv_flow', '21', 'm³/h'),
+  ];
+  const figures = (root: ShadowRoot) => ({
+    badge: root.querySelector('.saving .badge')?.textContent.trim(),
+    moisture: root.querySelector('.moisture-recovery .figure')?.textContent.trim(),
+    rings: root.querySelector('.on-drawing.effectiveness')?.getAttribute('title'),
+    totalRing: root.querySelector('svg .ring.total')?.getAttribute('stroke-dasharray'),
+    flow: root.querySelector('.supply-flow .label')?.textContent.trim(),
+  });
+
+  test('airflow-diagram-card "Recovery while ventilation disabled": no recovery, the flow label still shows the sensor', async () => {
+    const active = figures((await renderInputs(CONFIGURED, '0', [...READINGS, state(MODE, 'Active')])).root);
+    document.body.innerHTML = '';
+    const disabled = figures((await renderInputs(CONFIGURED, '0', [...READINGS, state(MODE, 'Disabled')])).root);
+    // The flow sensor reads above 0 either way, so the flow label is the same.
+    expect(disabled.flow).toBe(active.flow);
+    expect(disabled.flow).toContain('21');
+    // As with a supply flow of 0.
+    document.body.innerHTML = '';
+    const none = figures(
+      (await renderInputs(CONFIGURED, '0', [...READINGS, state('sensor.hrv_flow', '0', 'm³/h')])).root,
+    );
+    expect({ ...disabled, flow: undefined }).toEqual({ ...none, flow: undefined });
+    expect(disabled.badge).toBe(nb('0 W'));
+    expect(disabled.moisture).toBe('0g/h');
+    expect(disabled.rings).toBe('Effectiveness: heat not measurable, moisture not measurable');
+    expect(active.badge).not.toBe(disabled.badge);
+  });
+
+  test('airflow-diagram-card "Ventilation active": the figures are calculated from the flow', async () => {
+    const { root } = await renderInputs(CONFIGURED, '0', [...READINGS, state(MODE, 'Active')]);
+    const shown = figures(root);
+    expect(shown.badge).not.toBe(nb('0 W'));
+    expect(shown.moisture).not.toBe('0g/h');
+    expect(shown.rings).toBe(nb('Effectiveness: heat 78 % (226 / 289 W), moisture 65 % (137 / 210 g/h)'));
+    expect(shown.totalRing).toBe('78.14 100');
+  });
+});
+
 describe('the effectiveness rings', () => {
   // The ERV with every input of the calculation and the rings on. By default the temperatures give 85.71 % and the
   // absolute humidities 50 %.

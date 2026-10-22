@@ -764,7 +764,13 @@ export class HrvVentilationCard extends HrvCard {
     const season = seasonIcon(this.config, hass.states, settings.colors);
     // One calculation for the badge, the moisture figure and the rings, which share its inputs (the rings need the
     // badge's without the humidities).
-    const calculation = (settings.badge || settings.rings) && this.calculator ? this.calculator(hass) : undefined;
+    // While ventilation is disabled the flow sensors may still read above 0, so the calculation gets no airflow.
+    const disabled = this.disabled(hass.states);
+    this.stopped = disabled;
+    const calculation =
+      (settings.badge || settings.rings) && this.calculator
+        ? this.calculator(hass, { noAirflow: disabled })
+        : undefined;
     const result = calculation?.result;
     const locale = localeFromHass(hass);
     const badge = settings.badge ? savingBadge(result, settings, locale) : undefined;
@@ -776,8 +782,6 @@ export class HrvVentilationCard extends HrvCard {
       ? effectivenessLabel(result, calculation?.inputs.bypass, rings.moisture, locale)
       : undefined;
     const { preHeater, ventilationMode } = settings;
-    const disabled = this.disabled(states);
-    this.stopped = disabled;
     const art = drawing({
       ids: this.ids,
       exchanger: settings.exchanger,
