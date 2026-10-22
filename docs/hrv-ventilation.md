@@ -285,13 +285,6 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   icon. The preview's `ha-icon` stub has Home Assistant's structure (an inline host around an inline-flex icon box
   aligned to the middle), and the browser test measures the svg each icon draws, not its host, so it catches an
   offset of the drawn icon.
-- **Fan level text.** The fan level may be a fan entity (the comfoconnect integration has no fan level sensor).
-  `label()` runs `fanLevelText` in front of `formatState`, for the `fans.level` role only: `formatState` is shared by
-  all labels and the pre-heater box, and a fan could be set as any role in YAML, so the fan formatting must not
-  leak into the others. `fanLevelText` returns the percentage divided by `percentage_step`, rounded, as Away (0), Low,
-  Medium or High when the fan has three speeds (`round(100 / step) == 3`), else the rounded percentage; it returns
-  undefined (falling back to `formatState`) for a non-fan, an unavailable state or missing attributes. Step 0 is
-  "Away" because the unit still ventilates at away, and Zehnder's own sensors say "Away", not "Off".
   - **Pre-heater figure.** The centre cell holds power and, after it, the pre-heater state with `mdi:heat-wave`
     ("Pre-heater: <state>", tap opens `pre_heater.power`), a centred flex box with a gap, so the pair widens around
     the middle. It is given only while the level is above 0 and the entity is available, and otherwise left out of
@@ -305,6 +298,13 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   - **No sum, no share.** The figure stands side by side with power. Whether a unit's power reading includes its
     pre-heater differs per unit and could not be confirmed on the live one, so adding the two or showing a share
     could double count or understate. No follow-up is planned (the proposal's "Out of Scope").
+- **Fan level text.** The fan level may be a fan entity (the comfoconnect integration has no fan level sensor).
+  `label()` runs `fanLevelText` in front of `formatState`, for the `fans.level` role only: `formatState` is shared by
+  all labels and the pre-heater box, and a fan could be set as any role in YAML, so the fan formatting must not
+  leak into the others. `fanLevelText` returns the percentage divided by `percentage_step`, rounded, as Away (0), Low,
+  Medium or High when the fan has three speeds (`round(100 / step) == 3`), else the rounded percentage; it returns
+  undefined (falling back to `formatState`) for a non-fan, an unavailable state or missing attributes. A fan that is on below half a step shows Low (Away only at 0 %). Step 0 is
+  "Away" because the unit still ventilates at away, and Zehnder's own sensors say "Away", not "Off".
 - **Seasons.** With both season sensors configured and both off, the top row shows the "between seasons" icon.
 - **Layout.** `layout: auto` switches to compact below 340 px card width. A narrow desktop sections column is about
   350 px and a full-width card on a 360 px phone about 344 px, so both show the full layout.

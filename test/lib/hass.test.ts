@@ -49,6 +49,9 @@ describe('fanLevelText', () => {
     expect(level(100)).toBe('High');
     expect(level(120)).toBe('High');
     expect(level(-5)).toBe('Away');
+    expect(level(10)).toBe('Low');
+    expect(level(1)).toBe('Low');
+    expect(level(0)).toBe('Away');
   });
 
   test('another number of speeds gives the rounded percentage', () => {

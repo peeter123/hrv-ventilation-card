@@ -5,6 +5,7 @@ import { absoluteHumidity } from '../src/calc/humidity';
 import type { CardHass } from '../src/cards/base-card';
 import { STREAMS, type Stream } from '../src/lib/config';
 import type { HassEntityState } from '../src/lib/hass';
+import { FAN_LEVELS } from '../src/strings';
 
 export type SeasonChoice = 'heating' | 'cooling' | 'between';
 
@@ -97,7 +98,6 @@ interface Reading {
   attributes?: Record<string, unknown>;
 }
 
-const FAN_LEVELS = ['Away', 'Low', 'Medium', 'High'] as const;
 /** A fan entity with the four levels: its percentage at each level, and its step (a third of 100 %). */
 const FAN_PERCENTAGES = [0, 33, 66, 100] as const;
 const FAN_STEP = 100 / 3;
@@ -174,6 +174,15 @@ function formatEntityState(stateObj: HassEntityState): string {
 // Home Assistant replaces the locale only when the user changes it.
 const LOCALE = { language: 'en', number_format: 'language' };
 
+/** The attributes of a state built from a reading. */
+function attributesOf(reading: Reading): Record<string, unknown> {
+  return {
+    ...(reading.unit === undefined ? {} : { unit_of_measurement: reading.unit }),
+    ...(reading.decimals === undefined ? {} : { decimals: reading.decimals }),
+    ...reading.attributes,
+  };
+}
+
 /** Builds `hass` objects, keeping a state object while its reading stays the same. */
 export class MockHass {
   private states: Record<string, HassEntityState> = {};
@@ -186,18 +195,14 @@ export class MockHass {
       const same =
         previous?.state === reading.state &&
         previous.attributes.unit_of_measurement === reading.unit &&
-        JSON.stringify(previous.attributes['percentage']) === JSON.stringify(reading.attributes?.['percentage']);
+        JSON.stringify(previous.attributes) === JSON.stringify(attributesOf(reading));
       next[entityId] =
         previous && same
           ? previous
           : {
               entity_id: entityId,
               state: reading.state,
-              attributes: {
-                ...(reading.unit === undefined ? {} : { unit_of_measurement: reading.unit }),
-                ...(reading.decimals === undefined ? {} : { decimals: reading.decimals }),
-                ...reading.attributes,
-              },
+              attributes: attributesOf(reading),
               last_updated: now,
             };
     }

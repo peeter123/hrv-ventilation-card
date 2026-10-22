@@ -60,6 +60,7 @@ export function fanLevelText(stateObj: HassEntityState | undefined): string | un
   if (typeof percentage !== 'number' || !Number.isFinite(percentage)) return undefined;
   if (typeof step !== 'number' || !Number.isFinite(step) || step <= 0) return undefined;
   if (Math.round(100 / step) !== 3) return `${String(Math.round(percentage))}${NBSP}%`;
-  const level = Math.min(3, Math.max(0, Math.round(percentage / step)));
+  // A fan that is on below half a step still runs at Low: Away is 0 % only.
+  const level = Math.min(3, Math.max(percentage > 0 ? 1 : 0, Math.round(percentage / step)));
   return FAN_LEVELS[level];
 }

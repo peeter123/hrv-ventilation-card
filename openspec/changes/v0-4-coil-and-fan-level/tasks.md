@@ -30,7 +30,7 @@
   `page.evaluate` from the installation's diagram config with `fans.level` set to the installation's fan entity, give
   it the page's `hass`, and read the label's text and title together with the fan entity's `percentage` and the fan
   level sensor's state; verify they agree (IDs from `private/installation.md`, none written to a tracked file)
-- [ ] 1.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 1.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 2. Pre-heater coil centreline
