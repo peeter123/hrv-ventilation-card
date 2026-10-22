@@ -95,7 +95,8 @@ a config test checks that a `fan.` and a `select.` ID load.
 - **Option** `fans.stopped_states`: a list of state strings, default `['Disabled']` (the ESPHome ventilation mode
   sensor's state in service mode; never `Overruling`, when the fans modulate). A binary sensor needs `off` added by
   the user. It needs a new option kind `list` in
-  `src/lib/options.ts` (a string array; an empty list or a non-list value falls back to the default), declared in
+  `src/lib/options.ts` (a string array; blank entries are dropped and an empty list falls back to the default; a value that is not a list
+  of strings is an invalid option, as for the other kinds), declared in
   `DIAGRAM_OPTIONS` at the path `fans.stopped_states`, next to the role it qualifies, as `pre_heater.max_power` is.
   An advanced setting.
 - **Decision**: a pure function `ventilationDisabled(stateObj, stoppedStates)` (in `src/diagram/flow.ts`, next to

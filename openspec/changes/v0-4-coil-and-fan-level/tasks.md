@@ -53,7 +53,7 @@
   `npm run dev` for the user and show screenshots inspected by an agent (active and disabled; the bypass closed and
   open; both layouts; 280, 400 and 600 px; light and dark), and apply the user's feedback on the alert's look and
   place; verify the user approves before the docs
-- [ ] 1.10 Document it in `README.md` (the `ventilation_mode` row of the fans table and `stopped_states` with its
+- [x] 1.10 Document it in `README.md` (the `ventilation_mode` row of the fans table and `stopped_states` with its
   default; the ESPHome states `Disabled`, `Active`, `Overruling` and that `Disabled` means sensor-based control is
   off, seen in service mode, so set the role only if the entity reads `Active` or `Overruling` in normal use; a
   binary sensor needs `off` in the stopped states) and in `docs/hrv-ventilation.md` (what ventilation disabled

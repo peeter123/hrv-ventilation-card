@@ -307,8 +307,9 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   "Away" because the unit still ventilates at away, and Zehnder's own sensors say "Away", not "Off".
 - **Ventilation disabled.** One decision, `ventilationDisabled(stateObj, stoppedStates)` in `src/diagram/flow.ts`,
   drives three effects. It is true only while `fans.ventilation_mode` exists, is not unavailable or unknown, and its
-  raw state, trimmed, equals one of `fans.stopped_states` ignoring case (default `['Disabled']`; an empty or
-  non-list value falls back to it, blank entries are dropped).
+  raw state, trimmed, equals one of `fans.stopped_states` ignoring case (default `['Disabled']`; blank entries are
+  dropped and an empty list falls back to it; a value that is not a list of texts is an invalid option, as for the
+  other option kinds).
   - **Effects.** The fan level label reads "Stopped" (value, aria label and tooltip) ahead of `fanLevelText`; its
     visibility rules and tap still use the level entity. Both stream speeds are 0, so the streams pause while the
     paths, the bypass strength and the colours are drawn as before. An alert (`mdi:alert` in `--warning-color`
