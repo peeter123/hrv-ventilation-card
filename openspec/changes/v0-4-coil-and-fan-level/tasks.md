@@ -48,7 +48,7 @@
   option parses (design: "Ventilation disabled"); verify the editor tests for "Editing the card" (the picker and its
   domains, no stopped states field) and "Advanced settings on" (the stopped states with the default `Disabled`), and
   a round trip: a list edited in the editor lands in the config as a list
-- [ ] 1.9 Add the "ventilation" control (active, disabled) to the preview page's fans fieldset, with a mock
+- [x] 1.9 Add the "ventilation" control (active, disabled) to the preview page's fans fieldset, with a mock
   ventilation mode sensor set as `fans.ventilation_mode` (design: "Preview page"); feedback round: start
   `npm run dev` for the user and show screenshots inspected by an agent (active and disabled; the bypass closed and
   open; both layouts; 280, 400 and 600 px; light and dark), and apply the user's feedback on the alert's look and
