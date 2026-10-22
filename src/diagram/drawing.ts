@@ -251,10 +251,23 @@ function totalRing(color: string, figure: number | undefined): SVGTemplateResult
 /** Percent of the glow colour at a level: from 30 % at the lowest level to 100 %, so a partial level visibly glows. */
 export const glowShare = (level: number): number => 30 + 70 * level;
 
-/** The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. */
+/** The centreline's width: a third of the wire's, so it stays inside the wire. */
+const CORE_WIDTH = 1;
+
+/** Percent of the wire's colour in the lit coil's centreline (the rest is black). */
+const CORE_SHARE = 60;
+
+/**
+ * The pre-heater coil: dim in the secondary text colour while off, else the glow colour over a blurred glow. Either way
+ * a thin darker centreline (`coil-core`) follows the wire's path; its colour while off is in the card's CSS, with the
+ * off group's opacity.
+ */
 function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
   if (level <= 0) {
-    return svg`<path class="coil off" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>`;
+    return svg`<g class="coil off">
+      <path class="coil" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"></path>
+      <path class="coil-core" d=${COIL} fill="none" stroke-width=${CORE_WIDTH} stroke-linejoin="round"></path>
+    </g>`;
   }
   const share = glowShare(level);
   // A filament: the wire is the glow colour towards the text colour, then lightened towards white as the level rises
@@ -266,7 +279,9 @@ function coilWire({ level, color }: Coil, blur: string): SVGTemplateResult {
       filter="url(#${blur})" opacity=${glow}
       style=${styleMap({ stroke: color, '--glow-opacity': glow })}></path>
     <path class="coil on" d=${COIL} fill="none" stroke-width=${COIL_WIDTH} stroke-linejoin="round"
-      style=${styleMap({ stroke })}></path>`;
+      style=${styleMap({ stroke })}></path>
+    <path class="coil-core" d=${COIL} fill="none" stroke-width=${CORE_WIDTH} stroke-linejoin="round"
+      style=${styleMap({ stroke: `color-mix(in srgb, ${stroke} ${String(CORE_SHARE)}%, black)` })}></path>`;
 }
 
 /** The blur of the coil's glow, over the coil's area (the default filter region is too small for a thin wave). */

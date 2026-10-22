@@ -904,7 +904,7 @@ describe('pre-heater coil', () => {
           const wire = box(root, 'svg path.coil');
           // The coil's state: on draws the wire lit over a glow, off draws the dim wire alone.
           expect(root.querySelector('svg path.coil.on') !== null, `${where} lit`).toBe(name === 'on');
-          expect(root.querySelector('svg path.coil.off') !== null, `${where} dim`).toBe(name === 'off');
+          expect(root.querySelector('svg g.coil.off path.coil') !== null, `${where} dim`).toBe(name === 'off');
           expect(root.querySelector('svg path.coil-glow') !== null, `${where} glow`).toBe(name === 'on');
           // The glow is a wider, blurred stroke: its box is the wire's, grown by half its stroke (2.25) and one blur radius (1.5).
           const reach = (2.25 + 1.5) * ((element(root, 'svg path.coil') as SVGGraphicsElement).getScreenCTM()?.a ?? 1);

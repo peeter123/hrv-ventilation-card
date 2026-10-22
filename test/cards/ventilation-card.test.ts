@@ -939,8 +939,53 @@ describe('the pre-heater coil', () => {
     }
   });
 
+  test('airflow-diagram-card "Off coil": the dim wire and a centreline sit in the off group, which carries the dimming', async () => {
+    const { root } = await render(WITH_HEATER, '0', [state(HEATER, '0', 'W')]);
+    const group = root.querySelector('svg g.coil.off');
+    expect(group?.querySelector('path.coil')).not.toBeNull();
+    const core = group?.querySelector('path.coil-core');
+    expect(core).not.toBeNull();
+    // After the wire, so it is drawn over it.
+    expect(core?.previousElementSibling).toBe(group?.querySelector('path.coil'));
+    const css = [HrvVentilationCard.styles]
+      .flat()
+      .map((style) => ('cssText' in style ? style.cssText : ''))
+      .join('');
+    expect(css).toMatch(/\.coil\.off\s*\{[^}]*opacity: 0\.5/);
+    expect(css).toMatch(
+      /\.coil\.off \.coil-core\s*\{[^}]*color-mix\(in srgb, var\(--secondary-text-color\) 55%, black\)/,
+    );
+  });
+
+  test('airflow-diagram-card "Glowing coil": a centreline darker than the lit wire follows it, the glow is unchanged', async () => {
+    const { root } = await render(WITH_HEATER, '0', [state(HEATER, '250', 'W')]);
+    const wire = root.querySelector('svg path.coil.on');
+    const core = root.querySelector('svg path.coil-core');
+    expect(core?.previousElementSibling).toBe(wire);
+    const stroke =
+      wire
+        ?.getAttribute('style')
+        ?.replace(/^stroke:\s*/, '')
+        .replace(/;$/, '') ?? '';
+    expect(core?.getAttribute('style')).toContain(`color-mix(in srgb, ${stroke} 60%, black)`);
+    expect(root.querySelector('svg .coil-glow')?.getAttribute('opacity')).toBe('0.475');
+    expect(root.querySelector('svg .coil-glow')?.getAttribute('stroke-width')).toBe('4.5');
+  });
+
+  test('airflow-diagram-card "Inside the wire": the centreline has the wire\'s path and is narrower', async () => {
+    for (const power of ['0', '250']) {
+      const { root } = await render(WITH_HEATER, '0', [state(HEATER, power, 'W')]);
+      const wire = root.querySelector('svg path.coil');
+      const core = root.querySelector('svg path.coil-core');
+      expect(core?.getAttribute('d')).toBe(wire?.getAttribute('d'));
+      expect(Number(core?.getAttribute('stroke-width'))).toBeLessThan(Number(wire?.getAttribute('stroke-width')));
+      document.body.innerHTML = '';
+    }
+  });
+
   test('airflow-diagram-card "No pre-heater": no coil and no box', async () => {
     const { root } = await render(CONFIG, '0');
+    expect(root.querySelector('svg .coil-core')).toBeNull();
     expect(root.querySelector('svg .coil')).toBeNull();
     expect(root.querySelector('svg .coil-glow')).toBeNull();
     expect(box(root)).toBeNull();

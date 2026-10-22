@@ -260,12 +260,17 @@ export class HrvVentilationCard extends HrvCard {
       clip-path: polygon(28% 0, 72% 0, 100% 50%, 72% 100%, 28% 100%, 0 50%);
     }
     /* The pre-heater coil's tap box: its position and size are set inline from the coil's bounds (see coilBox in drawing.ts). */
-    .coil {
+    .coil,
+    .coil-core {
       stroke-linecap: round;
     }
+    /* The off coil: the group dims the wire and its centreline together, so the centreline is darker than the wire as drawn. */
     .coil.off {
       stroke: var(--secondary-text-color);
       opacity: 0.5;
+    }
+    .coil.off .coil-core {
+      stroke: color-mix(in srgb, var(--secondary-text-color) 55%, black);
     }
     .coil-glow {
       animation: hrv-glow 2.5s ease-in-out infinite;
