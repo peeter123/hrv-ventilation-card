@@ -174,7 +174,7 @@ try {
   await exchanger.selectOption('hrv');
 
   // Frost: the pre-heater (a power sensor, rated 1000 W) runs at 600 W, the coil glows and its power is in the top row.
-  const preHeaterKind = page.locator('label', { hasText: 'kind' }).locator('select');
+  const preHeaterKind = page.locator('label', { hasText: /^kind/ }).locator('select');
   const preHeaterMax = page.getByLabel('max W (0 = none)');
   await preHeaterKind.selectOption('power sensor');
   await preHeaterMax.fill('1000');
