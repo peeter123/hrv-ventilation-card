@@ -96,7 +96,7 @@
   `npm run capture`; verify every image the README links exists and the frost image shows the centreline
 - [x] 3.2 Set the version to `0.4.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
-- [ ] 3.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; with the user's
+- [x] 3.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; with the user's
   confirmation before each dashboard save, add `fans.ventilation_mode` (the ventilation mode sensor) to both live
   diagram cards; verify with Playwright (service workers blocked) on both dashboards that the cards render as in
   v0.3 apart from the coil's centreline, the fan level label still shows the sensor's state, no alert shows while
