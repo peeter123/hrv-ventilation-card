@@ -6,6 +6,7 @@ import {
   hasRings,
   modeColor,
   moistureFigure,
+  moistureOutsideFigure,
   savingBadge,
   savingTarget,
 } from '../../src/diagram/badge';
@@ -134,6 +135,55 @@ describe('moistureFigure', () => {
 
   test('no figure without the badge inputs, also with show_unavailable', () => {
     expect(moistureFigure(undefined, { ...ERV, badge: false, showUnavailable: true }, LOCALE)).toBeUndefined();
+  });
+});
+
+describe('moistureOutsideFigure', () => {
+  const ERV = { exchanger: 'erv', badge: true, showUnavailable: false } as const;
+  const withOutside = (outside: number): RecoveryResult => ({
+    ...result('heating', 300),
+    moisture: { extracted: 500, recovered: 500 - outside, outside },
+  });
+
+  test('airflow-diagram-card "Moisture put outside": home-export-outline and "230 g/h"', () => {
+    expect(moistureOutsideFigure(withOutside(230.2), ERV, LOCALE)).toEqual({
+      text: '230',
+      unit: 'g/h',
+      icon: 'mdi:home-export-outline',
+      title: nb('Moisture put outside: 230 g/h'),
+    });
+  });
+
+  test('airflow-diagram-card "Moisture brought in": home-import-outline and "200 g/h" without a sign', () => {
+    expect(moistureOutsideFigure(withOutside(-200), ERV, LOCALE)).toEqual({
+      text: '200',
+      unit: 'g/h',
+      icon: 'mdi:home-import-outline',
+      title: nb('Moisture brought in: 200 g/h'),
+    });
+  });
+
+  test('a rate that shows as 0 g/h counts as put outside', () => {
+    expect(moistureOutsideFigure(withOutside(-0.4), ERV, LOCALE)).toEqual({
+      text: '0',
+      unit: 'g/h',
+      icon: 'mdi:home-export-outline',
+      title: nb('Moisture put outside: 0 g/h'),
+    });
+  });
+
+  test('airflow-diagram-card "Input unavailable": hidden, or "n/a" with show_unavailable', () => {
+    expect(moistureOutsideFigure(undefined, ERV, LOCALE)).toBeUndefined();
+    expect(moistureOutsideFigure(undefined, { ...ERV, showUnavailable: true }, LOCALE)).toEqual({
+      text: 'n/a',
+      title: 'Moisture put outside: n/a',
+    });
+    expect(moistureOutsideFigure(result('heating', 300), ERV, LOCALE)).toBeUndefined();
+  });
+
+  test('airflow-diagram-card "HRV": no figure; none without the badge inputs', () => {
+    expect(moistureOutsideFigure(withOutside(230), { ...ERV, exchanger: 'hrv' }, LOCALE)).toBeUndefined();
+    expect(moistureOutsideFigure(undefined, { ...ERV, badge: false, showUnavailable: true }, LOCALE)).toBeUndefined();
   });
 });
 

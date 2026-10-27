@@ -115,6 +115,32 @@ export function moistureFigure(
 }
 
 /**
+ * The moisture put-outside figure of an ERV: the magnitude of the rate at which the exhaust carries moisture out of
+ * the house (extracted minus recovered), with an icon for the direction (no sign). Same conditions as
+ * `moistureFigure`; none for an HRV or without the badge's inputs, hidden or "n/a" without a rate.
+ */
+export function moistureOutsideFigure(
+  result: RecoveryResult | undefined,
+  options: { exchanger: ExchangerType; badge: boolean; showUnavailable: boolean },
+  locale: LocaleLike,
+): MoistureFigure | undefined {
+  if (options.exchanger !== 'erv' || !options.badge) return undefined;
+  const rate = result?.moisture?.outside;
+  if (rate === undefined)
+    return options.showUnavailable ? { text: NO_VALUE, title: DIAGRAM.moistureOutsideNoValue } : undefined;
+  const text = formatNumber(Math.abs(rate), locale);
+  // Brought in only when the rate shows with a sign: a rate that rounds to 0 counts as put outside.
+  const broughtIn = Math.round(rate) < 0;
+  const magnitude = DIAGRAM.moisture(text);
+  return {
+    text,
+    unit: DIAGRAM.moistureUnit,
+    icon: broughtIn ? DIAGRAM.moistureBroughtInIcon : DIAGRAM.moisturePutOutsideIcon,
+    title: broughtIn ? DIAGRAM.moistureBroughtIn(magnitude) : DIAGRAM.moisturePutOutside(magnitude),
+  };
+}
+
+/**
  * The tooltip and accessible name of the effectiveness rings: the total figure named by the mode (heat, cooling, free
  * cooling) and the moisture figure, each in whole percent with its absolute values as magnitudes (the recovered total
  * and the potential in W, as the recovery card's header; the recovered and the extracted moisture in g/h), the

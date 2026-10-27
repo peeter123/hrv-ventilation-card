@@ -263,6 +263,12 @@ export const DIAGRAM = {
   moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,
   moistureNoValue: `Moisture recovery: ${NO_VALUE}`,
+  moisturePutOutsideIcon: 'mdi:home-export-outline',
+  moistureBroughtInIcon: 'mdi:home-import-outline',
+  /** The put-outside figure's tooltips; `figure` is the rate's magnitude, e.g. "230 g/h". */
+  moisturePutOutside: (figure: string): string => `Moisture put outside: ${figure}`,
+  moistureBroughtIn: (figure: string): string => `Moisture brought in: ${figure}`,
+  moistureOutsideNoValue: `Moisture put outside: ${NO_VALUE}`,
   /**
    * The effectiveness rings' tooltip. Each figure is an `effectivenessFigure` (the total named by the kind, or without one while
    * there is no calculation; the moisture without a name) of a `figure` (`effectivenessPercent` or

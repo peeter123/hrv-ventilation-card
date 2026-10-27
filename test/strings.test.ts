@@ -195,6 +195,13 @@ describe('texts', () => {
     expect(d.effectiveness('heat 92', '65', '40')).toBe('Effectiveness: heat 92, moisture 65 (bypass 40 %)');
   });
 
+  test('airflow-diagram-card "Moisture put outside": the tooltips have a no-break space before the unit', () => {
+    const d = DIAGRAM;
+    expect(d.moisturePutOutside(d.moisture('230'))).toBe(nb('Moisture put outside: 230 g/h'));
+    expect(d.moistureBroughtIn(d.moisture('200'))).toBe(nb('Moisture brought in: 200 g/h'));
+    expect(d.moistureOutsideNoValue).toBe('Moisture put outside: n/a');
+  });
+
   test('the no-value text', () => {
     expect(NO_VALUE).toBe('n/a');
   });
