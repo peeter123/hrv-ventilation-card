@@ -54,7 +54,7 @@
   verify a browser test that the bar shows the third segment in the pre-heater colour with the pre-heater at 500 W
   and none at 0 W
 - [x] 2.4 Document the card's pre-heater part in `README.md` (the recovery card's options: the pre-heater keys it
-  reads and `pre_heater.color`) and `docs/hrv-ventilation.md` (the bar's third segment and why it comes last); verify
+  reads and `pre_heater.glow_color`) and `docs/hrv-ventilation.md` (the bar's third segment and why it comes last); verify
   the README tests pass
 - [ ] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
   at 500 W and at full; light and dark; 280 and 600 px), inspected by an agent, and apply the user's feedback (the
