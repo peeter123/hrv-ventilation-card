@@ -2,7 +2,7 @@
 
 ## 1. Calculation: exchanger inlet after the pre-heater
 
-- [ ] 1.1 Move the pre-heater state reading to `src/lib/preheater.ts` as `preHeaterRunning(state): boolean | undefined`
+- [x] 1.1 Move the pre-heater state reading to `src/lib/preheater.ts` as `preHeaterRunning(state): boolean | undefined`
   (design: "The power entity's on state moves to `src/lib/`") and make `preHeaterLevel` / `preHeaterOn` in
   `src/diagram/preheater.ts` use it; verify the existing `test/diagram/preheater.test.ts` passes unchanged and new
   unit tests cover 350 W, 0 W, `on`, `off`, unavailable, unknown, text, a missing entity and an unsupported unit
