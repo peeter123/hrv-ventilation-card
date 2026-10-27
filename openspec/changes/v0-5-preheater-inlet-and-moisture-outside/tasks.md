@@ -27,7 +27,7 @@
   hook), run `homeassistant.reload_custom_templates`, and verify with `ha_eval_template` that the live helpers'
   values are unchanged (pre-heater off) and that the macro body with test variables gives the expected figures for a
   running pre-heater
-- [ ] 1.6 Add the pre-heater sets to `test/vectors.json` (spec: "Pre-heater vectors"): running with only the after
+- [x] 1.6 Add the pre-heater sets to `test/vectors.json` (spec: "Pre-heater vectors"): running with only the after
   temperature (rendered by the macro in Home Assistant, as the existing sets), not running with a 0.3 K offset, no
   power entity at 0.6 K, and with an after humidity (computed from the formulas, marked as such in the description);
   extend the vector test to pass the pre-heater block and check the pre-heater part and the total effectiveness;
