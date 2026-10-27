@@ -59,7 +59,7 @@
 - [x] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
   at 500 W and at full; light and dark; 280 and 600 px), inspected by an agent, and apply the user's feedback (the
   segment's place, colour or pattern); verify the user approves before the review
-- [ ] 2.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 2.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 3. Airflow diagram: pre-heater roles and the moisture put-outside figure
