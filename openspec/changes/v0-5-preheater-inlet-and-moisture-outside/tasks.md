@@ -6,10 +6,10 @@
   (design: "The power entity's on state moves to `src/lib/`") and make `preHeaterLevel` / `preHeaterOn` in
   `src/diagram/preheater.ts` use it; verify the existing `test/diagram/preheater.test.ts` passes unchanged and new
   unit tests cover 350 W, 0 W, `on`, `off`, unavailable, unknown, text, a missing entity and an unsupported unit
-- [ ] 1.2 Add the roles `pre_heater.temperature_after` and `pre_heater.humidity_after` to `RolePath` in
+- [x] 1.2 Add the roles `pre_heater.temperature_after` and `pre_heater.humidity_after` to `RolePath` in
   `src/lib/config.ts` and their names to `ROLE_LABELS` in `src/strings.ts`; verify a config test that both load
   without error and the strings and NBSP tests pass
-- [ ] 1.3 Extend `src/calc/recovery.ts` (design: "Running rule and inlet in the calculation"): the optional
+- [x] 1.3 Extend `src/calc/recovery.ts` (design: "Running rule and inlet in the calculation"): the optional
   `preHeater` input block, the running rule with `MIN_PRE_HEATER_RISE_K = 0.5`, the inlet, `preHeater: PowerSplit` on
   the result, the total effectiveness and its gate on the inlet, and no figures for a missing after value while
   running; verify unit tests for every scenario of the recovery-calculation delta ("Pre-heater running" 1073 / 402 /
