@@ -8,6 +8,10 @@
 // Heating recovers h_sup - h_out; cooling recovers h_ref - h_sup, where the reference is the extract or the outdoor
 // air, whichever has the higher enthalpy. Latent = 2501 * dAH, sensible = the rest (it includes the small vapour
 // term 1.86 * T * AH). Lost = potential minus recovered. Moisture rates are flow times AH differences.
+// Pre-heater: while it runs in heating mode (its power is on, else the air after it is MIN_PRE_HEATER_RISE_K warmer
+// than the outdoor air) the exchanger's inlet is the air after it, not the outdoor air. Recovered and lost are then
+// taken against that inlet, the pre-heater part is inlet minus outdoor, and the three parts sum to the load without
+// recovery. The mode, the moisture rates and the moisture effectiveness keep using the outdoor air.
 
 /** Default air density in kg/m³, the macro's fixed value. */
 export const DEFAULT_AIR_DENSITY = 1.2;
@@ -19,6 +23,7 @@ const SECONDS_PER_HOUR = 3600;
 // The smallest extract-outdoor differences at which an effectiveness ratio is still meaningful.
 const MIN_TOTAL_GRADIENT_K = 3; // K of dry air: for the total, an enthalpy difference of rho * 1006 * 3 J/m³
 const MIN_HUMIDITY_GRADIENT = 1.5; // g/m³, for the moisture
+const MIN_PRE_HEATER_RISE_K = 0.5; // the rise over the outdoor air at which a pre-heater without a power reading counts as running
 
 /** A value per air stream. */
 export interface Streams<T> {
@@ -43,6 +48,15 @@ export interface RecoveryInputs {
   bypass: number | undefined;
   /** kg/m³, a positive number */
   airDensity: number;
+  /** The pre-heater; present only when the temperature after it is configured */
+  preHeater?: {
+    /** Whether its power entity reads on; undefined without a power entity or without a value */
+    on: boolean | undefined;
+    /** °C, the air after the pre-heater */
+    temperatureAfter: number | undefined;
+    /** g/m³, smoothed; the key is present only when the humidity after it is configured */
+    absoluteHumidityAfter?: number | undefined;
+  };
 }
 
 export interface PowerSplit {
@@ -80,6 +94,8 @@ export interface RecoveryResult {
   recovered: PowerSplit;
   /** Signed parts still lost with the ventilation air, W */
   lost: PowerSplit;
+  /** Signed part the pre-heater adds to the exchanger's inlet, W; 0 while it does not run */
+  preHeater: PowerSplit;
   /** False without humidity for the three streams: latent parts are then 0 and there are no moisture rates. */
   latentKnown: boolean;
   /** g/h, only with humidity */
@@ -120,7 +136,7 @@ const reaches = (gradient: number, gate: number): boolean => gradient >= gate * 
 const percentOf = (part: number, whole: number): number => Math.min(Math.max((part / whole) * 100, 0), 100);
 
 /**
- * The total: recovered / (recovered + lost) = recovered / |extract - outdoor| per m³ (J/m³ in, before any rounding), in
+ * The total: recovered / (recovered + lost) = recovered / |extract - inlet| per m³ (J/m³ in, before any rounding), in
  * % capped to 0-100. Undefined below the enthalpy gate of MIN_TOTAL_GRADIENT_K of dry air, or without a potential: when
  * the potential rounds to 0 W (a supply flow of 0) there is nothing to recover or lose, as the recovery card's header,
  * which shows no percentage then.
@@ -163,7 +179,7 @@ const diff = (a: AirState, b: AirState): { total: number; latent: number } => ({
  * Without absolute humidity the result is sensible-only.
  */
 export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | undefined {
-  const { temperature, absoluteHumidity, supplyFlow, bypass, airDensity: rho } = inputs;
+  const { temperature, absoluteHumidity, supplyFlow, bypass, airDensity: rho, preHeater } = inputs;
   const T = [temperature.outdoor, temperature.supply, temperature.extract].filter(known);
   const AH =
     absoluteHumidity && [absoluteHumidity.outdoor, absoluteHumidity.supply, absoluteHumidity.extract].filter(known);
@@ -179,6 +195,19 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
   // The cooling reference: the extract or the outdoor air, whichever has the higher enthalpy. With the bypass open
   // and the extract as reference, the figures are free cooling.
   const extractIsReference = extract.h >= outdoor.h;
+  // The pre-heater runs in heating mode by its power, else by the rise of the air after it over the outdoor air.
+  const after = !cooling && preHeater ? preHeater : undefined;
+  const running =
+    after !== undefined &&
+    (after.on ??
+      (known(after.temperatureAfter) && reaches(after.temperatureAfter - (T[0] ?? Number.NaN), MIN_PRE_HEATER_RISE_K)));
+  let inlet = outdoor;
+  if (after && running) {
+    if (!known(after.temperatureAfter)) return undefined;
+    if ('absoluteHumidityAfter' in after && !known(after.absoluteHumidityAfter)) return undefined;
+    // Without an after humidity the inlet keeps the outdoor humidity.
+    inlet = air(after.temperatureAfter, AH === undefined ? 0 : (after.absoluteHumidityAfter ?? outdoor.A));
+  }
   let recovered;
   let lost;
   if (cooling) {
@@ -187,12 +216,13 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
     recovered = diff(reference, supply);
     lost = diff(supply, other);
   } else {
-    recovered = diff(supply, outdoor);
+    recovered = diff(supply, inlet);
     lost = diff(extract, supply);
   }
+  const preHeated = diff(inlet, outdoor);
 
   const moisture = absoluteHumidity && calculateMoisture(absoluteHumidity, supplyFlow);
-  const total = totalEffectiveness(recovered.total, extract.h - outdoor.h, rho, toWatts);
+  const total = totalEffectiveness(recovered.total, extract.h - inlet.h, rho, toWatts);
   const moistureRatio = moisture && moistureEffectiveness(absoluteHumidity as Streams<number>, moisture.extracted);
   return {
     mode: cooling ? 'cooling' : 'heating',
@@ -200,6 +230,7 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
     saving: Math.max(recovered.total, 0) * toWatts,
     recovered: { sensible: (recovered.total - recovered.latent) * toWatts, latent: recovered.latent * toWatts },
     lost: { sensible: (lost.total - lost.latent) * toWatts, latent: lost.latent * toWatts },
+    preHeater: { sensible: (preHeated.total - preHeated.latent) * toWatts, latent: preHeated.latent * toWatts },
     latentKnown: AH !== undefined,
     ...(moisture ? { moisture } : {}),
     effectiveness: {

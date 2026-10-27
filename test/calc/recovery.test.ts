@@ -389,3 +389,126 @@ describe('recovery-calculation scenarios', () => {
     });
   });
 });
+
+describe('pre-heater (recovery-calculation "Exchanger inlet after the pre-heater")', () => {
+  const winter = toInputs(byName('winter_design'));
+  const { absoluteHumidity: _humidity, ...dry } = winter;
+  // The scenario's unit: no humidity, outdoor -6 °C, supply 15 °C, extract 21 °C, 200 m³/h, bypass 0 %.
+  const cold: RecoveryInputs = { ...dry, temperature: { outdoor: -6, supply: 15, extract: 21 }, supplyFlow: 200 };
+  const humid: RecoveryInputs = { ...winter, temperature: { outdoor: -6, supply: 15, extract: 21 }, supplyFlow: 200 };
+  const withHeater = (
+    base: RecoveryInputs,
+    on: boolean | undefined,
+    temperatureAfter: number | undefined,
+    afterHumidity?: { value: number | undefined },
+  ): RecoveryInputs => ({
+    ...base,
+    preHeater: { on, temperatureAfter, ...(afterHumidity ? { absoluteHumidityAfter: afterHumidity.value } : {}) },
+  });
+  const sum = (result: RecoveryResult, lane: 'sensible' | 'latent'): number =>
+    result.recovered[lane] + result.lost[lane] + result.preHeater[lane];
+
+  test('"Pre-heater running": recovered 1073 W, lost 402 W, pre-heater 335 W, saving 1073 W (1408 W without the block)', () => {
+    const result = calculate(withHeater(cold, true, -1));
+    near(result.recovered.sensible, 1073, 1);
+    near(result.lost.sensible, 402, 1);
+    near(result.preHeater.sensible, 335, 1);
+    near(result.saving, 1073, 1);
+    near(calculate(cold).saving, 1408, 1);
+    expect(calculate(cold).preHeater).toEqual({ sensible: 0, latent: 0 });
+  });
+
+  test('"Effectiveness of the exchanger": 73 % on the inlet instead of 78 %', () => {
+    near(calculate(withHeater(cold, true, -1)).effectiveness.total, (16 / 22) * 100, 1e-9);
+    near(calculate(cold).effectiveness.total, (21 / 27) * 100, 1e-9);
+  });
+
+  test('"Gradient on the inlet": extract 21 °C, outdoor 15 °C, after 19 °C gives no total effectiveness', () => {
+    const inputs = { ...cold, temperature: { outdoor: 15, supply: 18, extract: 21 } };
+    expect(calculate(inputs).effectiveness.total).toBeDefined();
+    expect(calculate(withHeater(inputs, true, 19)).effectiveness.total).toBeUndefined();
+  });
+
+  test('"Power above 0": it runs whatever the two temperatures read', () => {
+    expect(calculate(withHeater(cold, true, -6)).preHeater).toEqual({ sensible: 0, latent: 0 });
+    expect(calculate(withHeater(cold, true, -7)).preHeater.sensible).toBeLessThan(0);
+  });
+
+  test('"Power 0 with a sensor offset": 0.3 K above the outdoor temperature does not run', () => {
+    expect(calculate(withHeater(cold, false, -5.7))).toEqual(calculate(cold));
+    expect(calculate(withHeater(cold, false, 5))).toEqual(calculate(cold));
+  });
+
+  test('"No power entity": it does not run at 0.3 K and runs at 0.6 K, and exactly at the gate', () => {
+    expect(calculate(withHeater(cold, undefined, -5.7))).toEqual(calculate(cold));
+    near(calculate(withHeater(cold, undefined, -5.4)).preHeater.sensible, (1.2 * 1006 * 0.6 * 200) / 3600, 1e-9);
+    expect(calculate(withHeater(cold, undefined, -5.5)).preHeater.sensible).toBeGreaterThan(0);
+  });
+
+  test('"Cooling mode": at 40 % bypass the pre-heater does not count as running', () => {
+    const open = { ...cold, bypass: 40, temperature: { outdoor: 12, supply: 14, extract: 22 } };
+    const result = calculate(withHeater(open, true, 20));
+    expect(result).toEqual(calculate(open));
+    expect(result.mode).toBe('cooling');
+    expect(result.preHeater).toEqual({ sensible: 0, latent: 0 });
+  });
+
+  test('"Only the after temperature": the latent parts equal those without the block', () => {
+    const without = calculate(humid);
+    const result = calculate(withHeater(humid, true, -1));
+    expect(result.recovered.latent).toBeCloseTo(without.recovered.latent, 9);
+    expect(result.lost.latent).toBeCloseTo(without.lost.latent, 9);
+    expect(result.preHeater.latent).toBeCloseTo(0, 9);
+    expect(Math.abs(result.recovered.sensible - without.recovered.sensible)).toBeGreaterThan(100);
+  });
+
+  test('"Moisture figures unchanged": the moisture rates and the moisture effectiveness equal those without the block', () => {
+    const without = calculate(winter);
+    const result = calculate(withHeater(winter, true, 8, { value: 5.5 }));
+    expect(result.moisture).toEqual(without.moisture);
+    expect(result.effectiveness.moisture).toBe(without.effectiveness.moisture);
+    expect(result.mode).toBe('heating');
+  });
+
+  test('"Parts sum to the load": recovered, lost and the pre-heater part equal the extract minus the outdoor enthalpy', () => {
+    const toWatts = 200 / 3600;
+    for (const [base, afterHumidity] of [
+      [cold, undefined],
+      [humid, undefined],
+      [humid, { value: 4.3 }],
+    ] as const) {
+      const result = calculate(withHeater(base, true, -1, afterHumidity));
+      const { outdoor = 0, extract = 0 } = base.absoluteHumidity ?? {};
+      const latent = 2501 * (extract - outdoor) * toWatts;
+      const sensible = (1.2 * 1006 * (21 - -6) + 1.86 * (21 * extract - -6 * outdoor)) * toWatts;
+      near(sum(result, 'sensible'), sensible, 1);
+      near(sum(result, 'latent'), latent, 1);
+    }
+  });
+
+  test('"After humidity differs": 0.1 g/m³ above the outdoor air gives a latent pre-heater part of 14 W', () => {
+    const outdoorAH = humid.absoluteHumidity?.outdoor ?? 0;
+    const same = calculate(withHeater(humid, true, -1));
+    const result = calculate(withHeater(humid, true, -1, { value: outdoorAH + 0.1 }));
+    near(result.preHeater.latent, 14, 1);
+    near(same.recovered.latent - result.recovered.latent, 14, 1);
+  });
+
+  test('"After temperature unavailable while off": the figures equal those without the block', () => {
+    expect(calculate(withHeater(cold, false, undefined))).toEqual(calculate(cold));
+    expect(calculate(withHeater(cold, undefined, undefined))).toEqual(calculate(cold));
+    expect(calculate(withHeater(winter, false, undefined, { value: undefined }))).toEqual(calculate(winter));
+  });
+
+  test('"After temperature unavailable while running": no figures, nor without an after humidity value', () => {
+    expect(calculateRecovery(withHeater(cold, true, undefined))).toBeUndefined();
+    expect(calculateRecovery(withHeater(winter, true, 5, { value: undefined }))).toBeUndefined();
+    expect(calculateRecovery(withHeater(winter, true, 5, { value: Number.NaN }))).toBeUndefined();
+  });
+
+  test('"Unit without pre-heater roles": no block gives a zero pre-heater part and the same figures', () => {
+    const result = calculate(winter);
+    expect(result.preHeater).toEqual({ sensible: 0, latent: 0 });
+    expect(Math.round(result.recovered.sensible)).toBe(1324);
+  });
+});

@@ -15,6 +15,7 @@ const result = (overrides: Partial<RecoveryResult> = {}): RecoveryResult => ({
   saving: 300,
   recovered: { sensible: 250, latent: 50 },
   lost: { sensible: 80, latent: 20 },
+  preHeater: { sensible: 0, latent: 0 },
   latentKnown: true,
   moisture: { extracted: 200, recovered: 120, outside: 80 },
   effectiveness: {},

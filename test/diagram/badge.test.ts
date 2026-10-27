@@ -22,6 +22,7 @@ const result = (mode: 'heating' | 'cooling', saving: number): RecoveryResult => 
   saving,
   recovered: { sensible: saving, latent: 0 },
   lost: { sensible: 0, latent: 0 },
+  preHeater: { sensible: 0, latent: 0 },
   latentKnown: true,
   effectiveness: {},
 });
