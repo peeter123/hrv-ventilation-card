@@ -16,6 +16,8 @@ interface Vector {
     extract: { temperature: number; absolute_humidity: number };
     supply_flow: number;
     bypass: number;
+    /** Only on the pre-heater sets; power_w absent: no power entity, absolute_humidity_after absent: not configured */
+    pre_heater?: { temperature_after: number; power_w?: number; absolute_humidity_after?: number };
   };
   expected: {
     mode: 'heating' | 'cooling';
@@ -25,6 +27,8 @@ interface Vector {
     moisture_gh: { extracted: number; recovered: number; outside: number };
     /** The macro's whole percentage; null where it gives None (bypass open, or the gradient under its gate) */
     eff_moisture: number | null;
+    /** Only on the pre-heater sets: the part the pre-heater adds to the exchanger inlet, W */
+    pre_heater_w?: { sensible: number; latent: number };
   };
 }
 
@@ -59,6 +63,17 @@ const toInputs = ({ inputs }: Vector): RecoveryInputs => ({
   supplyFlow: inputs.supply_flow,
   bypass: inputs.bypass,
   airDensity: DEFAULT_AIR_DENSITY,
+  ...(inputs.pre_heater
+    ? {
+        preHeater: {
+          on: inputs.pre_heater.power_w === undefined ? undefined : inputs.pre_heater.power_w > 0,
+          temperatureAfter: inputs.pre_heater.temperature_after,
+          ...(inputs.pre_heater.absolute_humidity_after === undefined
+            ? {}
+            : { absoluteHumidityAfter: inputs.pre_heater.absolute_humidity_after }),
+        },
+      }
+    : {}),
 });
 
 const calculate = (inputs: RecoveryInputs): RecoveryResult => {
@@ -84,6 +99,33 @@ describe('golden vectors (recovery-calculation "Golden vectors")', () => {
     near(result.moisture?.extracted, expected.moisture_gh.extracted, TOLERANCE_GH);
     near(result.moisture?.recovered, expected.moisture_gh.recovered, TOLERANCE_GH);
     near(result.moisture?.outside, expected.moisture_gh.outside, TOLERANCE_GH);
+    if (expected.pre_heater_w) {
+      // The macro's heating_pre_heater is the total: compare sensible + latent
+      near(
+        result.preHeater.sensible + result.preHeater.latent,
+        expected.pre_heater_w.sensible + expected.pre_heater_w.latent,
+        TOLERANCE_W,
+      );
+      near(result.preHeater.sensible, expected.pre_heater_w.sensible, TOLERANCE_W);
+      near(result.preHeater.latent, expected.pre_heater_w.latent, TOLERANCE_W);
+    }
+  });
+
+  test('the pre-heater sets are in the table: three macro-rendered and one computed', () => {
+    expect(vectors.filter((v) => v.expected.pre_heater_w).map((v) => v.name)).toEqual([
+      'preheater_running_t21',
+      'preheater_off_offset',
+      'preheater_no_power_gate',
+      'preheater_running_ah_after',
+    ]);
+  });
+
+  test('the set that is not running equals the same air without a pre-heater', () => {
+    const { pre_heater: _off, ...plain } = byName('preheater_off_offset').inputs;
+    const without = calculate(toInputs({ ...byName('preheater_off_offset'), inputs: plain }));
+    const result = calculate(toInputs(byName('preheater_off_offset')));
+    expect(result.recovered).toEqual(without.recovered);
+    expect(result.preHeater).toEqual({ sensible: 0, latent: 0 });
   });
 
   // The macro rounds eff_moisture to whole percentages, does not cap and has a bypass gate the calculation lacks:

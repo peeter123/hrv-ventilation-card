@@ -1,5 +1,5 @@
 {
-  "description": "Golden vectors for the recovery calculation: fixed inputs and the results of the formulas of the author's template macro comfoair_q450.jinja (not published), rendered in Home Assistant 2026.10.1 on 2026-10-13 (the macro body inline, with the eight inputs as variables). eff_moisture (supply-side moisture effectiveness in %, rounded to an integer) was rendered the same way on 2026-10-20 (the expression inline, the humidities and bypass as variables); null where the macro gives None (bypass above 0, or the extract-outdoor gradient under 1.5 g/m3). The macro does not cap to 0-100, so the test compares only the values from 0 to 100, within 1 percentage point. The total effectiveness is compared with the expected power figures (recovered total / (recovered + lost total), capped to 0-100). Power in W, moisture in g/h, unrounded; units of the inputs: degrees C, g/m3, m3/h, %. Air density 1.2 kg/m3 (the macro's fixed value). The history vectors hold the inputs recorded at that moment; helpers_recorded lists the template helpers' recorded values (kW, g/h) that the expected figures match within the helpers' rounding. The 2026-09 moments predate the averaged humidity and the sensible/latent helpers (2026-10-04), so they use the raw absolute humidity; on 2026-09-30 the totals helper already existed and matches; on 2026-09-27 it still used an older formula, so that moment has no helper check.",
+  "description": "Golden vectors for the recovery calculation: fixed inputs and the results of the formulas of the author's template macro comfoair_q450.jinja (not published), rendered in Home Assistant 2026.10.1 on 2026-10-13 (the macro body inline, with the eight inputs as variables). eff_moisture (supply-side moisture effectiveness in %, rounded to an integer) was rendered the same way on 2026-10-20 (the expression inline, the humidities and bypass as variables); null where the macro gives None (bypass above 0, or the extract-outdoor gradient under 1.5 g/m3). The macro does not cap to 0-100, so the test compares only the values from 0 to 100, within 1 percentage point. The total effectiveness is compared with the expected power figures (recovered total / (recovered + lost total), capped to 0-100). Power in W, moisture in g/h, unrounded; units of the inputs: degrees C, g/m3, m3/h, %. Air density 1.2 kg/m3 (the macro's fixed value). The pre-heater vectors (names starting with preheater_, added 2026-10-27, same base air: outdoor -6 C / 2.5 g/m3, supply 15 / 4.5, extract 21 / 6.5, 200 m3/h, bypass closed) add the inputs pre_heater.temperature_after (C), power_w (W, absent: no power entity) and absolute_humidity_after (g/m3, absent: not configured), the expected pre_heater_w (the part the pre-heater adds to the exchanger inlet) and eff_sensible (the macro's supply-side temperature effectiveness in %, informational). The sets with source 'macro' were rendered by the macro in Home Assistant on 2026-10-27 (the body inline with the inputs as variables, the macro extended with the after temperature and the pre-heater power); the macro reads a non-numeric power as absent, and its heating_pre_heater is the total, so the sensible part holds it and the latent part is 0 as the macro takes no after humidity. The set with source 'computed' (an after humidity) was calculated from the formulas by an independent script, because the macro takes no after humidity. The history vectors hold the inputs recorded at that moment; helpers_recorded lists the template helpers' recorded values (kW, g/h) that the expected figures match within the helpers' rounding. The 2026-09 moments predate the averaged humidity and the sensible/latent helpers (2026-10-04), so they use the raw absolute humidity; on 2026-09-30 the totals helper already existed and matches; on 2026-09-27 it still used an older formula, so that moment has no helper check.",
   "tolerance": {
     "w": 1,
     "gh": 1
@@ -902,6 +902,198 @@
         "moisture_loss_rate_gh": 330,
         "moisture_loss_rate_hrv_gh": 603
       }
+    },
+    {
+      "name": "preheater_running_t21",
+      "description": "pre-heater running (power 400 W), only the air after it known; macro-rendered",
+      "inputs": {
+        "outdoor": {
+          "temperature": -6,
+          "absolute_humidity": 2.5
+        },
+        "supply": {
+          "temperature": 15,
+          "absolute_humidity": 4.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 6.5
+        },
+        "supply_flow": 200,
+        "bypass": 0,
+        "pre_heater": {
+          "temperature_after": -1,
+          "power_w": 400
+        }
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1358.1889,
+        "recovered_w": {
+          "sensible": 1080.3,
+          "latent": 277.8889
+        },
+        "lost_w": {
+          "sensible": 409.53,
+          "latent": 277.8889
+        },
+        "pre_heater_w": {
+          "sensible": 336.625,
+          "latent": 0
+        },
+        "eff_sensible": 73,
+        "moisture_gh": {
+          "extracted": 800,
+          "recovered": 400,
+          "outside": 400
+        },
+        "eff_moisture": 50
+      },
+      "source": "macro"
+    },
+    {
+      "name": "preheater_off_offset",
+      "description": "pre-heater not running (power 0 W), T21 0.3 K above the outdoor air; macro-rendered, equals the result without a pre-heater",
+      "inputs": {
+        "outdoor": {
+          "temperature": -6,
+          "absolute_humidity": 2.5
+        },
+        "supply": {
+          "temperature": 15,
+          "absolute_humidity": 4.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 6.5
+        },
+        "supply_flow": 200,
+        "bypass": 0,
+        "pre_heater": {
+          "temperature_after": -5.7,
+          "power_w": 0
+        }
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1694.8139,
+        "recovered_w": {
+          "sensible": 1416.925,
+          "latent": 277.8889
+        },
+        "lost_w": {
+          "sensible": 409.53,
+          "latent": 277.8889
+        },
+        "pre_heater_w": {
+          "sensible": 0,
+          "latent": 0
+        },
+        "eff_sensible": 78,
+        "moisture_gh": {
+          "extracted": 800,
+          "recovered": 400,
+          "outside": 400
+        },
+        "eff_moisture": 50
+      },
+      "source": "macro"
+    },
+    {
+      "name": "preheater_no_power_gate",
+      "description": "no power entity, T21 0.6 K above the outdoor air, running by the gate; macro-rendered",
+      "inputs": {
+        "outdoor": {
+          "temperature": -6,
+          "absolute_humidity": 2.5
+        },
+        "supply": {
+          "temperature": 15,
+          "absolute_humidity": 4.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 6.5
+        },
+        "supply_flow": 200,
+        "bypass": 0,
+        "pre_heater": {
+          "temperature_after": -5.4
+        }
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1654.4189,
+        "recovered_w": {
+          "sensible": 1376.53,
+          "latent": 277.8889
+        },
+        "lost_w": {
+          "sensible": 409.53,
+          "latent": 277.8889
+        },
+        "pre_heater_w": {
+          "sensible": 40.395,
+          "latent": 0
+        },
+        "eff_sensible": 77,
+        "moisture_gh": {
+          "extracted": 800,
+          "recovered": 400,
+          "outside": 400
+        },
+        "eff_moisture": 50
+      },
+      "source": "macro"
+    },
+    {
+      "name": "preheater_running_ah_after",
+      "description": "pre-heater running (power 400 W) with the absolute humidity after it 0.1 g/m3 above the outdoor air; computed from the formulas, not rendered by the macro (it takes no after humidity)",
+      "inputs": {
+        "outdoor": {
+          "temperature": -6,
+          "absolute_humidity": 2.5
+        },
+        "supply": {
+          "temperature": 15,
+          "absolute_humidity": 4.5
+        },
+        "extract": {
+          "temperature": 21,
+          "absolute_humidity": 6.5
+        },
+        "supply_flow": 200,
+        "bypass": 0,
+        "pre_heater": {
+          "temperature_after": -1,
+          "power_w": 400,
+          "absolute_humidity_after": 2.6
+        }
+      },
+      "expected": {
+        "mode": "heating",
+        "saving_w": 1344.3048,
+        "recovered_w": {
+          "sensible": 1080.3103,
+          "latent": 263.9944
+        },
+        "lost_w": {
+          "sensible": 409.53,
+          "latent": 277.8889
+        },
+        "pre_heater_w": {
+          "sensible": 336.6147,
+          "latent": 13.8944
+        },
+        "eff_sensible": 73,
+        "moisture_gh": {
+          "extracted": 800,
+          "recovered": 400,
+          "outside": 400
+        },
+        "eff_moisture": 50
+      },
+      "source": "computed"
     }
   ]
 }
