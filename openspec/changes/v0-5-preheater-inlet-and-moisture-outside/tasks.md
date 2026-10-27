@@ -41,7 +41,7 @@
 
 ## 2. Recovery balance bar: the pre-heater part
 
-- [x] 2.1 Add the third value per lane, the pre-heater legend entry and the `pre_heater.color` option to
+- [x] 2.1 Add the third value per lane, the pre-heater legend entry and the `pre_heater.glow_color` option (renamed from `pre_heater.color` in the group 2 review) to
   `src/cards/recovery-view.ts` and the card (design: "Recovery bar: a third value per lane"), with the texts in
   `src/strings.ts`; verify view tests for the delta's "Pre-heater running" (segments and header "Recovered 1,073 W of
   1,475 W (73 %)"), "Pre-heater not running", "Pre-heater entry", "No pre-heater entry", "Custom pre-heater colour"
@@ -56,7 +56,7 @@
 - [x] 2.4 Document the card's pre-heater part in `README.md` (the recovery card's options: the pre-heater keys it
   reads and `pre_heater.color`) and `docs/hrv-ventilation.md` (the bar's third segment and why it comes last); verify
   the README tests pass
-- [x] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
+- [ ] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
   at 500 W and at full; light and dark; 280 and 600 px), inspected by an agent, and apply the user's feedback (the
   segment's place, colour or pattern); verify the user approves before the review
 - [x] 2.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
@@ -81,7 +81,7 @@
   11 px, at 280, 300, 340, 400 and 600 px in both layouts with -1500 g/h and the coil drawn; if 280 px fails, apply the
   icon-above fallback from the design and test again; verify the test passes and the existing "ERV at the narrowest
   width" test covers both figures
-- [x] 3.5 Add the put-outside figure to the preview page's ERV scenarios and a bypass-at-100 % control if none exists;
+- [ ] 3.5 Add the put-outside figure to the preview page's ERV scenarios and a bypass-at-100 % control if none exists;
   feedback round: start `npm run dev` for the user and show screenshots (bypass 0 and 100 %, the coil on and off,
   drying and gaining, both layouts, 280, 400 and 600 px, light and dark), inspected by an agent, and apply the user's
   feedback on the icons, the place and the wording; verify the user approves before the docs
@@ -106,7 +106,7 @@
   rollback to v0.4.0), remove the "Exchanger inlet after the pre-heater" entry from `BACKLOG.md` and update its
   release line; verify no tracked file holds an entity ID with the device serial, a helper or a dashboard ID
   (`npm run check:ids` and a `git grep` for the serial prefix)
-- [x] 4.5 Feedback round: show the user the live screenshots from 4.3 and apply their feedback; verify the user
+- [ ] 4.5 Feedback round: show the user the live screenshots from 4.3 and apply their feedback; verify the user
   approves before the review
 - [ ] 4.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
