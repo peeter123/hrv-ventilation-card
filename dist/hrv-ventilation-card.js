@@ -937,8 +937,8 @@ var St = [
 	moistureRecovered: (e) => `Moisture recovered: ${e}`,
 	moistureKeptOut: (e) => `Moisture kept out: ${e}`,
 	moistureNoValue: "Moisture recovery: n/a",
-	moisturePutOutsideIcon: "mdi:home-export-outline",
-	moistureBroughtInIcon: "mdi:home-import-outline",
+	moisturePutOutsideIcon: "mdi:water-remove",
+	moistureBroughtInIcon: "mdi:water-plus",
 	moisturePutOutside: (e) => `Moisture put outside: ${e}`,
 	moistureBroughtIn: (e) => `Moisture brought in: ${e}`,
 	moistureOutsideNoValue: "Moisture put outside: n/a",
@@ -2266,14 +2266,14 @@ function qr(e, t, n) {
 	};
 	let { color: r, latent: i } = t.colors[e.mode], a = (e) => B(e, n), { recovered: o, potential: s, parts: c } = $e(e), { recovered: l, lost: u, preHeater: d } = c, f = d.sensible + d.latent, p = (e, n, r, i) => ({
 		values: r === 0 ? [e, n] : [
+			r,
 			e,
-			n,
-			r
+			n
 		],
-		backgrounds: [
+		backgrounds: r === 0 ? [i, Xn(i)] : [
+			t.colors.preHeater,
 			i,
-			Xn(i),
-			t.colors.preHeater
+			Xn(i)
 		]
 	}), m = [p(l.sensible, u.sensible, d.sensible, r)];
 	e.latentKnown && m.push(p(l.latent, u.latent, d.latent, i));
