@@ -64,11 +64,11 @@
 
 ## 3. Airflow diagram: pre-heater roles and the moisture put-outside figure
 
-- [ ] 3.1 Add the `temperature_after` and `humidity_after` sensor pickers to the pre-heater section of
+- [x] 3.1 Add the `temperature_after` and `humidity_after` sensor pickers to the pre-heater section of
   `src/editor/diagram-schema.ts`, and keep them out of every label list in `src/diagram/labels.ts`; verify the
   editor test for "Editing the card" of the airflow-diagram-card delta and a card test for "Pre-heater after roles"
   (the badge equals the calculation's saving with the inlet, no label for the two entities)
-- [ ] 3.2 Add the put-outside figure function to `src/diagram/badge.ts` and its texts and icons to `src/strings.ts`
+- [x] 3.2 Add the put-outside figure function to `src/diagram/badge.ts` and its texts and icons to `src/strings.ts`
   (design: "Moisture put-outside figure"); verify unit tests for "Moisture put outside" (230 g/h), "Moisture brought
   in" (-200 g/h, no minus), a rate that rounds to 0 (put outside), "Input unavailable" (hidden, or "n/a" with
   show-unavailable) and "HRV" (none), and the strings and NBSP tests
