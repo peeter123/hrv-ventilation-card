@@ -102,11 +102,11 @@
   render as in v0.4 apart from the put-outside figure, the badge and the bar are unchanged (pre-heater off), and the
   figure's tooltip matches the moisture card's "Outside" figure; screenshots at desktop and phone width, light and
   dark, inspected by an agent
-- [ ] 4.4 Update `private/installation.md` (resource `?v=`, the new roles in the live cards, the macro's inputs, the
+- [x] 4.4 Update `private/installation.md` (resource `?v=`, the new roles in the live cards, the macro's inputs, the
   rollback to v0.4.0), remove the "Exchanger inlet after the pre-heater" entry from `BACKLOG.md` and update its
   release line; verify no tracked file holds an entity ID with the device serial, a helper or a dashboard ID
   (`npm run check:ids` and a `git grep` for the serial prefix)
-- [ ] 4.5 Feedback round: show the user the live screenshots from 4.3 and apply their feedback; verify the user
+- [x] 4.5 Feedback round: show the user the live screenshots from 4.3 and apply their feedback; verify the user
   approves before the review
 - [ ] 4.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes and `git status` is clean after the commit
