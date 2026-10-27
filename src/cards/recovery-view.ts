@@ -69,11 +69,13 @@ export function recoveryView(
   // signed sum of the parts (the lanes can differ in sign).
   const preHeaterTotal = preHeater.sensible + preHeater.latent;
 
-  // One lane per kind (temperature, and moisture with humidity), each its solid recovered and its hatched lost part,
-  // then the solid pre-heater part while it runs, on the scale of the fuller lane.
+  // One lane per kind (temperature, and moisture with humidity): the solid pre-heater part first from the zero line
+  // while it runs (the physical order of the air), then the solid recovered and the hatched lost part, on the scale
+  // of the fuller lane.
   const lane = (recoveredPart: number, lostPart: number, preHeaterPart: number, laneColor: string) => ({
-    values: preHeaterPart === 0 ? [recoveredPart, lostPart] : [recoveredPart, lostPart, preHeaterPart],
-    backgrounds: [laneColor, hatch(laneColor), options.colors.preHeater],
+    values: preHeaterPart === 0 ? [recoveredPart, lostPart] : [preHeaterPart, recoveredPart, lostPart],
+    backgrounds:
+      preHeaterPart === 0 ? [laneColor, hatch(laneColor)] : [options.colors.preHeater, laneColor, hatch(laneColor)],
   });
   const laneParts = [lane(recovered.sensible, lost.sensible, preHeater.sensible, color)];
   if (result.latentKnown) laneParts.push(lane(recovered.latent, lost.latent, preHeater.latent, latentColor));

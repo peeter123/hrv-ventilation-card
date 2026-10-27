@@ -293,7 +293,7 @@ badge, is shown in both layouts, and tapping it opens the `status.moisture_recov
 
 A second figure left of the exchanger shows the moisture put outside with the exhaust air: the moisture the extract
 air carries minus what the exchanger recovered, in g/h, so recovered plus put outside is what the house extracts. It
-has a home-export icon while the house puts moisture outside, and home-import while the supply air is more humid than
+has a water-remove icon while the house puts moisture outside, and water-plus while the supply air is more humid than
 the extract air (the rate flow x (extract - supply) is negative): the ventilation then brings moisture in, normally on a
 day when the outdoor air is more humid. The two figures read as a pair: the right one is what the exchanger hands
 back (water-sync, or water-remove while it keeps moisture out), the left one is what leaves (or enters) the house. The
@@ -436,8 +436,7 @@ numbers (`rgb(219, 68, 55)`, `hsl(5, 70%, 54%)`, `oklch(62% 0.2 28)`) or a theme
 #### Recovery pre-heater object
 
 The same `pre_heater` object as on the airflow diagram card (see [Pre-heater](#pre-heater-object)); the recovery card
-reads `power`, `temperature_after`, `humidity_after` and `glow_color` of it. While the pre-heater runs, the bar shows the heat it adds as a third, solid segment after the lost
-part, with a swatch and its power in the legend; the segment is the pre-heater's own heat, apart from the recovered
+reads `power`, `temperature_after`, `humidity_after` and `glow_color` of it. While the pre-heater runs, the bar shows the heat it adds as a solid segment first from the zero line (the physical order of the air: pre-heater, then recovered, then lost; the hatched lost part stays at the outer end), with a swatch and its power in the legend; the segment is the pre-heater's own heat, apart from the recovered
 and the lost part. It is there in the temperature lane (sensible) and in the moisture lane (latent), in the pre-heater colour, with its legend entry whenever a segment is drawn (the signed sum of the two lanes' parts, in whole W); the header's figure and percentage leave it out (they are the exchanger's own). Without `temperature_after` the bar shows no pre-heater part.
 
 | Name | Type | Default | Advanced | Description |

@@ -78,7 +78,7 @@ const SCENARIOS: Readonly<Record<string, Scenario>> = {
     season: 'between',
   },
   // Humid summer day: the outdoor air is more humid than the extract air, so on an ERV both moisture figures show the
-  // house gaining moisture (water-remove on the recovered figure, home-import on the put-outside figure).
+  // house gaining moisture (water-remove on the recovered figure, water-plus on the put-outside figure).
   'humid summer (gaining)': {
     temperature: { outdoor: 30, supply: 26.5, extract: 25, exhaust: 28.5 },
     humidity: { outdoor: 75, supply: 66, extract: 50, exhaust: 62 },

@@ -145,20 +145,20 @@ describe('moistureOutsideFigure', () => {
     moisture: { extracted: 500, recovered: 500 - outside, outside },
   });
 
-  test('airflow-diagram-card "Moisture put outside": home-export-outline and "230 g/h"', () => {
+  test('airflow-diagram-card "Moisture put outside": water-remove and "230 g/h"', () => {
     expect(moistureOutsideFigure(withOutside(230.2), ERV, LOCALE)).toEqual({
       text: '230',
       unit: 'g/h',
-      icon: 'mdi:home-export-outline',
+      icon: 'mdi:water-remove',
       title: nb('Moisture put outside: 230 g/h'),
     });
   });
 
-  test('airflow-diagram-card "Moisture brought in": home-import-outline and "200 g/h" without a sign', () => {
+  test('airflow-diagram-card "Moisture brought in": water-plus and "200 g/h" without a sign', () => {
     expect(moistureOutsideFigure(withOutside(-200), ERV, LOCALE)).toEqual({
       text: '200',
       unit: 'g/h',
-      icon: 'mdi:home-import-outline',
+      icon: 'mdi:water-plus',
       title: nb('Moisture brought in: 200 g/h'),
     });
   });
@@ -167,7 +167,7 @@ describe('moistureOutsideFigure', () => {
     expect(moistureOutsideFigure(withOutside(-0.4), ERV, LOCALE)).toEqual({
       text: '0',
       unit: 'g/h',
-      icon: 'mdi:home-export-outline',
+      icon: 'mdi:water-remove',
       title: nb('Moisture put outside: 0 g/h'),
     });
   });

@@ -1,4 +1,4 @@
-// The recovery bar with the preview's mock pre-heater: a third segment in the pre-heater colour and a legend entry
+// The recovery bar with the preview's mock pre-heater: a segment in the pre-heater colour and a legend entry
 // while the pre-heater runs, none at 0 W.
 import { afterEach, expect, test } from 'vitest';
 import '../../dev/ha-stubs';

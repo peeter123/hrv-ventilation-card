@@ -163,11 +163,11 @@ describe('recoveryView', () => {
     });
     const options = { colors: COLORS, minScale: 500 };
 
-    test('recovery-balance-card "Pre-heater running": a solid pre-heater segment after recovered and lost', () => {
+    test('recovery-balance-card "Pre-heater running": the solid pre-heater segment first from the zero line, then recovered and lost', () => {
       const view = recoveryView(running, options, EN);
       const hatched = expect.stringMatching(/repeating-linear-gradient.*#db4437/) as unknown;
       expect(view.lanes).toHaveLength(1);
-      expect(view.lanes[0]?.map((segment) => segment.background)).toEqual(['#db4437', hatched, '#ff9800']);
+      expect(view.lanes[0]?.map((segment) => segment.background)).toEqual(['#ff9800', '#db4437', hatched]);
       expect(view.header).toBe(nb('Recovered 1,073 W of 1,475 W (73 %)'));
     });
 
@@ -177,10 +177,10 @@ describe('recoveryView', () => {
         { colors: COLORS, minScale: 100 },
         EN,
       );
-      expect(view.lanes.map((lane) => lane.at(-1)?.background)).toEqual(['#ff9800', '#ff9800']);
+      expect(view.lanes.map((lane) => lane[0]?.background)).toEqual(['#ff9800', '#ff9800']);
       expect(view.legend.at(-2)).toEqual({ kind: 'swatch', color: '#ff9800', text: nb('Pre-Heater 455 W') });
       // 250 + 80 + 335 = 665 W in the temperature lane, rounded up to the scale step of 750 W.
-      expect(view.lanes[0]?.at(-1)?.width).toBeCloseTo((335 / 750) * 50, 9);
+      expect(view.lanes[0]?.[0]?.width).toBeCloseTo((335 / 750) * 50, 9);
     });
 
     test('recovery-balance-card "Pre-heater not running": two segments per lane as before', () => {
@@ -213,7 +213,7 @@ describe('recoveryView', () => {
 
     test('recovery-balance-card "Custom pre-heater colour": the segment and the swatch use it', () => {
       const view = recoveryView(running, { colors: { ...COLORS, preHeater: '#ffc107' }, minScale: 500 }, EN);
-      expect(view.lanes[0]?.at(-1)?.background).toBe('#ffc107');
+      expect(view.lanes[0]?.at(0)?.background).toBe('#ffc107');
       expect(view.legend[1]).toMatchObject({ kind: 'swatch', color: '#ffc107' });
     });
   });

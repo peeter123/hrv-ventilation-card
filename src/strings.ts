@@ -265,8 +265,8 @@ export const DIAGRAM = {
   moistureRecovered: (figure: string): string => `Moisture recovered: ${figure}`,
   moistureKeptOut: (figure: string): string => `Moisture kept out: ${figure}`,
   moistureNoValue: `Moisture recovery: ${NO_VALUE}`,
-  moisturePutOutsideIcon: 'mdi:home-export-outline',
-  moistureBroughtInIcon: 'mdi:home-import-outline',
+  moisturePutOutsideIcon: 'mdi:water-remove',
+  moistureBroughtInIcon: 'mdi:water-plus',
   /** The put-outside figure's tooltips; `figure` is the rate's magnitude, e.g. "230 g/h". */
   moisturePutOutside: (figure: string): string => `Moisture put outside: ${figure}`,
   moistureBroughtIn: (figure: string): string => `Moisture brought in: ${figure}`,
