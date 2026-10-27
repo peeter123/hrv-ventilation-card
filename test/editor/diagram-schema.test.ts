@@ -51,7 +51,7 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('fans')).toEqual(['level', 'ventilation_mode', 'supply_flow', 'exhaust_flow']);
     expect(named.get('bypass')).toEqual(['position', 'mode']);
     expect(named.get('status')).toEqual(['operating_mode', 'filter_days', 'power', 'rmot']);
-    expect(named.get('pre_heater')).toEqual(['power', 'energy']);
+    expect(named.get('pre_heater')).toEqual(['power', 'energy', 'temperature_after', 'humidity_after']);
     expect(named.get('seasons')).toEqual(['heating', 'cooling']);
     expect(named.get('animation')).toEqual(['enabled']);
   });
@@ -120,7 +120,14 @@ describe('DIAGRAM_SCHEMA', () => {
     expect(named.get('animation')).toEqual(['enabled', 'nominal_flow']);
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('colors')).toEqual(['cold', 'warm']);
-    expect(named.get('pre_heater')).toEqual(['power', 'energy', 'max_power', 'glow_color']);
+    expect(named.get('pre_heater')).toEqual([
+      'power',
+      'energy',
+      'temperature_after',
+      'humidity_after',
+      'max_power',
+      'glow_color',
+    ]);
     expect(EDITOR.fields.glow_color).toBe('Glow colour');
     // The glow colour is an advanced text field that shows its default (orange) without the config having it.
     const glow = fieldsWithPaths(DIAGRAM_SCHEMA).find(({ path }) => path === 'pre_heater.glow_color')?.field;

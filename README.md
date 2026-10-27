@@ -183,6 +183,8 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 |---|---|---|---|---|
 | `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
 | `energy` | entity | | | The pre-heater's energy sensor. Shown in the status grid (second column, bottom cell, heat wave icon). |
+| `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). ComfoAir Q: "pre-heater temperature after" (T21). |
+| `humidity_after` | entity | | | The relative humidity of the air after the pre-heater. ComfoAir Q: "pre-heater humidity after" (H21). |
 | `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000); e.g. Zehnder ComfoAir Q450: 1740 W. It differs per unit, so take it from the unit's documentation. Without it the coil glows fully at any power above 0. |
 | `glow_color` | color | `#ff9800` | yes | The colour the coil glows in while the heater is on: a CSS colour, by default a warm orange. |
 
@@ -519,6 +521,8 @@ status:
 pre_heater:
   power: sensor.hrv_pre_heater_power
   energy: sensor.hrv_pre_heater_energy
+  temperature_after: sensor.hrv_pre_heater_temperature_after
+  humidity_after: sensor.hrv_pre_heater_humidity_after
   max_power: 1500
   glow_color: '#ff9800'
 seasons:

@@ -66,6 +66,8 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
     schema: [
       switchableField('power'),
       sensorField('energy'),
+      sensorField('temperature_after'),
+      sensorField('humidity_after'),
       numberField('max_power', DIAGRAM_OPTIONS.preHeaterMaxPower, 1, 'W'),
       colorField('glow_color', DIAGRAM_OPTIONS.preHeaterGlowColor.default),
     ],

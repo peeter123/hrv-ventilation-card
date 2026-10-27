@@ -56,6 +56,8 @@ export const ROLE_LABELS: Readonly<Record<RolePath, string>> = {
   'status.moisture_recovery': 'moisture recovery rate',
   'pre_heater.power': 'pre-heater',
   'pre_heater.energy': 'pre-heater energy',
+  'pre_heater.temperature_after': 'pre-heater temperature after',
+  'pre_heater.humidity_after': 'pre-heater humidity after',
   'seasons.heating': 'heating season',
   'seasons.cooling': 'cooling season',
 };
