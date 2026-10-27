@@ -92,7 +92,8 @@ temperature is configured.
 
 ### Requirement: Exchanger inlet after the pre-heater
 While the pre-heater runs, the exchanger's inlet SHALL be the air after the pre-heater instead of the outdoor air in
-the recovered and lost parts and the total effectiveness. Its temperature SHALL be the after temperature. Its
+the recovered and lost parts and the total effectiveness. Its temperature SHALL be the after temperature, but not
+below the outdoor temperature (a pre-heater does not cool). Its
 absolute humidity SHALL come from the after temperature and humidity when an after humidity is configured, smoothed
 as the streams' humidities, and from the outdoor air otherwise. The mode, the moisture rates and the moisture
 effectiveness SHALL keep using the outdoor air.
@@ -104,6 +105,17 @@ effectiveness SHALL keep using the outdoor air.
 #### Scenario: Moisture figures unchanged
 - **WHEN** the pre-heater runs with an after temperature and an after humidity configured
 - **THEN** the moisture rates and the moisture effectiveness equal those without the pre-heater roles
+
+#### Scenario: After temperature lags below the outdoor air
+- **WHEN** the pre-heater power reads 400 W, the outdoor air is -6 °C and the after temperature still reads -7 °C
+- **THEN** the inlet temperature is -6 °C, the sensible pre-heater part is 0 W and recovered equals the figure without
+  the pre-heater roles
+
+#### Scenario: After humidity without stream humidity
+- **WHEN** no humidity is configured for the streams, the after temperature and after humidity are configured, the
+  pre-heater runs and the after humidity is unavailable
+- **THEN** the calculation gives its sensible figures with the inlet after the pre-heater; the after humidity is not
+  used
 
 #### Scenario: Effectiveness of the exchanger
 - **WHEN** no humidity is configured, outdoor air is -6 °C, the air after the pre-heater -1 °C, supply 15 °C, extract
