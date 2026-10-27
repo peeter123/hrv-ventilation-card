@@ -56,7 +56,7 @@
 - [x] 2.4 Document the card's pre-heater part in `README.md` (the recovery card's options: the pre-heater keys it
   reads and `pre_heater.color`) and `docs/hrv-ventilation.md` (the bar's third segment and why it comes last); verify
   the README tests pass
-- [ ] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
+- [x] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
   at 500 W and at full; light and dark; 280 and 600 px), inspected by an agent, and apply the user's feedback (the
   segment's place, colour or pattern); verify the user approves before the review
 - [ ] 2.6 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
