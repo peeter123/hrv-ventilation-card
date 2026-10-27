@@ -25,7 +25,7 @@ ESPHome. The measured examples below come from that unit.
 ## Formulas
 
 - **Inputs:** outdoor, supply and extract temperature, the same three streams' absolute humidity (smoothed, see
-  below), the supply flow and the bypass position.
+  below), the supply flow and the bypass position; optionally the air after the pre-heater (see Pre-heater below).
 - **Enthalpy** per m³: `h [J/m³] = ρ · 1006 · T + AH · (2501 + 1.86 · T)`, with `T` in °C, `AH` in g/m³ and the air
   density `ρ` (option `air_density`, 1.2 kg/m³ by default). Latent heat comes in through the absolute humidity
   (AH g/m³ × 2501 J/g). Power: `P [W] = flow [m³/h] / 3600 · Δh`.
@@ -54,13 +54,56 @@ ESPHome. The measured examples below come from that unit.
     the house does not need more cooling. It means "cooling available but not used", not exchanger inefficiency.
     In **heating** with the bypass closed, "lost" is the real exchanger shortfall, and "N % recovered" approximates
     the total (enthalpy) effectiveness.
+- **Pre-heater (inlet of the exchanger).** A pre-heater warms the outdoor air before the exchanger, so the exchanger's
+  inlet is then the air after the pre-heater, not the outdoor air. The ComfoAir Q sensors: T20 (PDO 276) is the
+  outdoor air before the pre-heater, T21 / H21 (PDO 277 / 293) the temperature and humidity after it (in Home
+  Assistant "pre-heater temperature after" and "pre-heater humidity after"; the roles `pre_heater.temperature_after`
+  and `pre_heater.humidity_after`). Both roles are optional; without them nothing below applies and every figure is
+  as before.
+  - **Running rule.** In heating mode only, the pre-heater runs when its power (`pre_heater.power`) is above 0 or the
+    entity is on. Without a power entity, or while it has no value (unavailable, unknown), it runs when the after
+    temperature is at least 0.5 K above the outdoor temperature (`MIN_PRE_HEATER_RISE_K`). In cooling mode it is
+    never counted. A power entity that reads 0 or off decides "not running" by itself.
+  - **Why the 0.5 K gate.** A steady offset between the two sensors would otherwise show as a phantom pre-heater:
+    0.2 K at 200 m³/h is about 13 W. On a unit with a power entity the entity decides, so only the fallback needs
+    the gate. A unit whose sensors differ by 0.5 K or more without a power entity shows a phantom pre-heater; set
+    `pre_heater.power`.
+  - **Inlet.** While running, the inlet is the air at the after temperature with the after pair's absolute humidity
+    when `pre_heater.humidity_after` is set (smoothed like the other streams, from its relative humidity and the
+    after temperature), else the outdoor absolute humidity: heating does not change the absolute humidity. Not
+    running, the inlet is the outdoor air.
+  - **Three parts.** In heating the load (the potential) is `h_ext - h_out`, and with the inlet it splits into
+    **pre-heater** `h_in - h_out` + **recovered** `h_sup - h_in` + **lost** `h_ext - h_sup`, each into sensible and
+    latent like every other part, so pre-heater + recovered + lost = load in each lane. The latent part of the
+    pre-heater is `2501 · (AH_in - AH_out)`: 0 with only the after temperature, and the disagreement of the two
+    humidity sensors otherwise. Without a running pre-heater the pre-heater part is 0 and recovered + lost is the
+    load, as before. Totals (`recoveryTotals`) stay recovered + lost: the pre-heater part is outside the potential.
+  - **Total effectiveness** is the exchanger's own: `(h_sup - h_in) / (h_ext - h_in)`, gated on `|h_ext - h_in|` with
+    the same 3 K of dry air as above. It is not the free share recovered / load, because a running pre-heater is not
+    the exchanger's fault: the recovered part is a smaller share of the load, and the bar shows that share visually.
+    The mode, the moisture rates and the moisture effectiveness stay on the outdoor air.
+  - **Where the pre-heater's heat goes.** With an exchanger of effectiveness `e`, raising the inlet by `dT` raises
+    the supply by only `(1 - e) · dT`: the rest leaves with the exhaust, because the exchanger recovers less from a
+    warmer inlet. Example `e = 0.8`, pre-heater 300 W: the supply gets about 60 W warmer and about 240 W goes out
+    with the exhaust. The pre-heater part of the bar is therefore where the supply air's heat came from (the
+    electricity, not the exchanger), not heat the house gained.
+  - **No figures** while the pre-heater runs by its power and the after temperature has no value (and, with
+    `pre_heater.humidity_after` set, while the after humidity has none): the inlet is unknown, and falling back to the
+    outdoor air would show the pre-heater's heat as recovered.
+  - **Macro.** The author's template macro applies the same running rule and inlet, except that it treats an
+    unavailable after temperature as not running (its helpers keep a value, so the energy totals have no gap), where
+    the cards show no figures. It does not take the after humidity: the inlet uses the outdoor absolute humidity.
+  - **Vectors.** `test/vectors.json` has pre-heater sets: the ones with only an after temperature rendered by the
+    macro in Home Assistant, the ones with an after humidity computed from these formulas and noted as such in the
+    table.
 - **Effectiveness** (supply side; part of the recovery result, for the airflow card's effectiveness rings and the
   planned integration), in %:
   - **Total:** recovered / (recovered + lost) of the total (sensible plus latent) of the paragraphs above, per m³ and
     before rounding. It is the recovery balance card's header percentage in every mode (a test keeps the two equal).
     Heating `(h_sup - h_out) / (h_ext - h_out)`, cooling against the outdoor air the same ratio, free cooling
     `(h_ext - h_sup) / (h_ext - h_out)`, the share of the cooling delivered. Without humidity the enthalpies are
-    sensible only and it is the temperature ratio.
+    sensible only and it is the temperature ratio. With a running pre-heater the outdoor state `h_out` is replaced by
+    the inlet `h_in` (see Pre-heater).
   - **Why latent heat counts:** the latent heat of extracted moisture that the exchanger does not return is lost, so
     an HRV or a poor ERV scores lower than its temperature ratio, as the physics says. This holds for every
     exchanger type, as the recovery card counts latent heat whenever humidity is configured. Example 0/17/21 °C

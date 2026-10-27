@@ -183,8 +183,8 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 |---|---|---|---|---|
 | `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
 | `energy` | entity | | | The pre-heater's energy sensor. Shown in the status grid (second column, bottom cell, heat wave icon). |
-| `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). ComfoAir Q: "pre-heater temperature after" (T21). |
-| `humidity_after` | entity | | | The relative humidity of the air after the pre-heater. ComfoAir Q: "pre-heater humidity after" (H21). |
+| `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). ComfoAir Q: "pre-heater temperature after" (T21). Read by the calculation (the airflow card's badge and rings, and the recovery card from v0.5); it matters only while the pre-heater runs. |
+| `humidity_after` | entity | | | The relative humidity of the air after the pre-heater. ComfoAir Q: "pre-heater humidity after" (H21). Read by the calculation like the temperature, only while the pre-heater runs; without it the outdoor humidity is used for the inlet. |
 | `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000); e.g. Zehnder ComfoAir Q450: 1740 W. It differs per unit, so take it from the unit's documentation. Without it the coil glows fully at any power above 0. |
 | `glow_color` | color | `#ff9800` | yes | The colour the coil glows in while the heater is on: a CSS colour, by default a warm orange. |
 
@@ -219,6 +219,16 @@ nowhere and shows no share, because whether a unit's power reading includes its 
 "Pre-heater energy: " and its state (for example "12 kWh"); tapping it opens that sensor. The cell above it holds the
 next bypass change. The compact layout (below 340 px, or `layout: compact`) has no status grid, so the energy is not
 shown there.
+
+With `temperature_after` (and optionally `humidity_after`) the calculation knows the air the exchanger really gets.
+While the pre-heater runs, the exchanger's inlet is the air after it, not the outdoor air: the recovery card shows the
+pre-heater's share as a separate part of the bar, and the effectiveness is the exchanger's own, so a running
+pre-heater does not make the exchanger look worse. The pre-heater runs when `power` is above 0 (or on); without a
+power entity, or while it has no value, when the temperature after is at least 0.5 K above the outdoor temperature. The
+pre-heater's part is where the supply air's heat came from, not heat the house gained: with an exchanger of 80 %, a
+300 W pre-heater makes the supply air only about 60 W warmer, the rest leaves with the exhaust. While the pre-heater
+runs by its power and the temperature after has no value, the figures are left out. When the pre-heater is off, nothing
+changes. The details are in [`docs/hrv-ventilation.md`](docs/hrv-ventilation.md).
 
 In the visual editor the pre-heater has its own group after the status group. The basic fields are the power
 (a sensor, binary sensor or switch) and the energy (a sensor); the maximum power and the glow colour are advanced.
