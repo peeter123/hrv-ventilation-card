@@ -32,7 +32,7 @@
   power entity at 0.6 K, and with an after humidity (computed from the formulas, marked as such in the description);
   extend the vector test to pass the pre-heater block and check the pre-heater part and the total effectiveness;
   verify `npm test` passes
-- [ ] 1.7 Document the calculation in `docs/hrv-ventilation.md` (the formulas section: the inlet, the running rule and
+- [x] 1.7 Document the calculation in `docs/hrv-ventilation.md` (the formulas section: the inlet, the running rule and
   why the 0.5 K gate, the three parts, the exchanger effectiveness and why not the free share, the (1 - effectiveness)
   note on where the pre-heater heat goes, the T21 / H21 PDOs) and the new roles in `README.md`; update
   `private/installation.md` (the macro's new inputs, T21 equal to T20 on this unit); verify the README tests pass
