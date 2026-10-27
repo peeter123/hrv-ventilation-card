@@ -188,9 +188,11 @@ function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
     ...(fans ? { fans: { ...fans, level: FAN_LEVEL_ENTITIES[options.fanLevelKind] } } : {}),
     smoothing: options.smoothing,
   };
-  // The recovery bar shows the pre-heater's part from its power and the temperature after it.
+  // The recovery bar follows the diagram's pre-heater kind: none, or the power sensor or the on/off entity as power.
   if (tag === 'hrv-recovery-balance-card') {
-    return { ...shared, pre_heater: { power: id.preHeater, temperature_after: id.preHeaterAfter } };
+    if (options.preHeaterKind === 'none') return shared;
+    const power = options.preHeaterKind === 'power sensor' ? id.preHeater : id.preHeaterOn;
+    return { ...shared, pre_heater: { power, temperature_after: id.preHeaterAfter } };
   }
   if (tag !== 'hrv-ventilation-card') return shared;
   return {

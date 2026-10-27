@@ -25,7 +25,7 @@ export const RECOVERY_OPTIONS = {
   heatingLatent: color('heating.color_latent', '#f4a09a'),
   coolingColor: color('cooling.color', '#039be5'),
   coolingLatent: color('cooling.color_latent', '#8fd3f7'),
-  preHeaterColor: color('pre_heater.color', '#ff9800'),
+  preHeaterColor: color('pre_heater.glow_color', '#ff9800'),
 } as const satisfies Record<string, NumberOption | ColorOption>;
 
 export const RECOVERY_OPTION_LIST: readonly OptionSpec[] = Object.values(RECOVERY_OPTIONS);
@@ -63,10 +63,10 @@ export function recoveryView(
   const { color, latent: latentColor } = options.colors[result.mode];
   const watts = (value: number): string => formatNumber(value, locale);
   const { recovered: recoveredTotal, potential, parts } = recoveryTotals(result);
-  const { recovered, lost } = parts;
+  const { recovered, lost, preHeater } = parts;
 
-  // The pre-heater parts in whole W like the others; the header's potential leaves them out.
-  const preHeater = { sensible: Math.round(result.preHeater.sensible), latent: Math.round(result.preHeater.latent) };
+  // The header's potential leaves the pre-heater out. Its legend entry shows whenever a segment is drawn, with the
+  // signed sum of the parts (the lanes can differ in sign).
   const preHeaterTotal = preHeater.sensible + preHeater.latent;
 
   // One lane per kind (temperature, and moisture with humidity), each its solid recovered and its hatched lost part,
@@ -113,7 +113,7 @@ export function recoveryView(
       lost: lostText(watts(lost.latent)),
     });
   }
-  if (preHeaterTotal >= 1) {
+  if (preHeater.sensible !== 0 || preHeater.latent !== 0) {
     legend.push({ kind: 'swatch', color: options.colors.preHeater, text: RECOVERY.preHeater(watts(preHeaterTotal)) });
   }
   legend.push({ kind: 'text', text: RECOVERY.scale(watts(scale)) });

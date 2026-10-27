@@ -200,8 +200,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   up to 250).
 - **Pre-heater segment on the recovery bar.** While the pre-heater runs, each lane has a third segment after the lost
   part: its sensible part in the temperature lane and its latent part in the moisture lane (a lane whose part rounds
-  to 0 W shows none). It is solid, in `pre_heater.color` (default `#ff9800`), on the same scale as the other parts,
-  and the legend gets a swatch with "Pre-Heater" and its total in W from 1 W. It comes last on purpose: the recovered
+  to 0 W shows none). It is solid, in `pre_heater.glow_color` (default `#ff9800`, the same key as the airflow card's coil glow), on the same scale as the other parts,
+  and the legend gets a swatch with "Pre-Heater" and the signed sum of the rounded parts in W, whenever a segment is drawn (so a segment never lacks its entry; the lanes can differ in sign, e.g. +300 W and -320 W show -20 W). It comes last on purpose: the recovered
   segment keeps starting at the zero line, and the recovered and the lost part stay adjacent, which is how the
   header's percentage reads them. The physical order (pre-heater, then recovered, then lost) was considered and
   rejected because it would move the recovered segment away from the zero line. The header's Y and its percentage

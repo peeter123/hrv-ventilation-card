@@ -52,7 +52,7 @@ describe('RECOVERY_SCHEMA', () => {
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('heating')).toEqual(['color', 'color_latent']);
     expect(named.get('cooling')).toEqual(['color', 'color_latent']);
-    expect(named.get('pre_heater')).toEqual(['power', 'temperature_after', 'humidity_after', 'color']);
+    expect(named.get('pre_heater')).toEqual(['power', 'temperature_after', 'humidity_after', 'glow_color']);
     expect(shown.some((item) => item.name === 'min_scale')).toBe(true);
   });
 

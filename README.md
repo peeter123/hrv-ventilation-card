@@ -424,16 +424,16 @@ numbers (`rgb(219, 68, 55)`, `hsl(5, 70%, 54%)`, `oklch(62% 0.2 28)`) or a theme
 #### Recovery pre-heater object
 
 The same `pre_heater` object as on the airflow diagram card (see [Pre-heater](#pre-heater-object)); the recovery card
-reads these keys. While the pre-heater runs, the bar shows the heat it adds as a third, solid segment after the lost
+reads `power`, `temperature_after`, `humidity_after` and `glow_color` of it. While the pre-heater runs, the bar shows the heat it adds as a third, solid segment after the lost
 part, with a swatch and its power in the legend; the segment is the pre-heater's own heat, apart from the recovered
-and the lost part. It is there in the temperature lane (sensible) and in the moisture lane (latent), in the pre-heater colour, with its legend entry from 1 W; the header's figure and percentage leave it out (they are the exchanger's own). Without `temperature_after` the bar shows no pre-heater part.
+and the lost part. It is there in the temperature lane (sensible) and in the moisture lane (latent), in the pre-heater colour, with its legend entry whenever a segment is drawn (the signed sum of the two lanes' parts, in whole W); the header's figure and percentage leave it out (they are the exchanger's own). Without `temperature_after` the bar shows no pre-heater part.
 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
-| `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Optional; without it the pre-heater counts as running when the air after it is warmer than the outdoor air. |
+| `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Optional; without it the pre-heater counts as running while the air after it is at least 0.5 K warmer than the outdoor air, in heating mode only. |
 | `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). Needed for the pre-heater part. |
 | `humidity_after` | entity | | | The relative humidity of the air after the pre-heater; used for the moisture part only while the pre-heater runs. |
-| `color` | colour | `#ff9800` | yes | The pre-heater segment and its legend swatch: a CSS colour, by default a warm orange. |
+| `glow_color` | colour | `#ff9800` | yes | The pre-heater segment and its legend swatch: a CSS colour, by default a warm orange. The same key as the coil's glow colour on the airflow card. |
 
 **Smoothing.** Many units report relative humidity in whole percent, so absolute humidity moves in steps of about
 0.2 g/m³, about 50 g/h of moisture at 230 m³/h. The card therefore averages absolute humidity over `smoothing`
@@ -611,7 +611,7 @@ pre_heater:
   power: sensor.hrv_pre_heater_power
   temperature_after: sensor.hrv_pre_heater_temperature_after
   humidity_after: sensor.hrv_pre_heater_humidity_after
-  color: '#ff9800'
+  glow_color: '#ff9800'
 ```
 
 ### Moisture balance card

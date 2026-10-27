@@ -142,6 +142,8 @@ export const EDITOR = {
     moisture_recovery: 'Moisture recovery rate',
     energy: 'Energy',
     max_power: 'Maximum power (W)',
+    temperature_after: 'Temperature after pre-heater',
+    humidity_after: 'Humidity after pre-heater',
     glow_color: 'Glow colour',
     heating: 'Heating season',
     cooling: 'Cooling season',

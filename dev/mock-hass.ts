@@ -2,6 +2,7 @@
 // controls. A state object is replaced only when its value changes, as Home Assistant does, so the cards' re-render
 // rule is exercised too.
 import { absoluteHumidity } from '../src/calc/humidity';
+import { CP_AIR, DEFAULT_AIR_DENSITY } from '../src/calc/recovery';
 import type { CardHass } from '../src/cards/base-card';
 import { STREAMS, type Stream } from '../src/lib/config';
 import type { HassEntityState } from '../src/lib/hass';
@@ -125,11 +126,11 @@ function fanLevel(flow: number): string {
   return FAN_LEVELS[fanLevelIndex(flow)] ?? 'Away';
 }
 
-/** The outdoor temperature plus the pre-heater's heat over the flow: dT = P / (flow / 3600 * 1.2 * 1006). */
+/** The outdoor temperature plus the pre-heater's heat over the flow: dT = P / (flow / 3600 * air density * air heat capacity). */
 function afterPreHeater(values: MockValues): number {
   const power = values.preHeater ?? 0;
   if (power <= 0 || values.flow <= 0) return values.temperature.outdoor;
-  return values.temperature.outdoor + power / ((values.flow / 3600) * 1.2 * 1006);
+  return values.temperature.outdoor + power / ((values.flow / 3600) * DEFAULT_AIR_DENSITY * CP_AIR);
 }
 
 function readings(values: MockValues): Record<string, Reading> {

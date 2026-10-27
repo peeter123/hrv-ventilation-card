@@ -87,8 +87,8 @@ describe('checkRecoveryConfig', () => {
       checkRecoveryConfig({ ...CONFIG, heating: { color: 'red; x' } });
     }).toThrow('heating.color');
     expect(() => {
-      checkRecoveryConfig({ ...CONFIG, pre_heater: { color: 'red; x' } });
-    }).toThrow('pre_heater.color');
+      checkRecoveryConfig({ ...CONFIG, pre_heater: { glow_color: 'red; x' } });
+    }).toThrow('pre_heater.glow_color');
     expect(() => {
       checkRecoveryConfig({ ...CONFIG, min_scale: 0 });
     }).toThrow('min_scale');
@@ -161,6 +161,22 @@ describe('hrv-recovery-balance-card', () => {
     card.hass = hassWith(replace(STATES, state('sensor.rb_supply_flow', '115', 'm³/h')));
     await card.updateComplete;
     expect(root.querySelector('.net')?.textContent.trim()).toBe(nb('Recovered 862 W of 1,099 W (78 %)'));
+  });
+
+  test('the card is one line higher while the pre-heater entry is shown', async () => {
+    const withHeater: CardConfig = {
+      ...CONFIG,
+      pre_heater: { power: 'sensor.rb_heater', temperature_after: 'sensor.rb_after_t' },
+    };
+    const { card } = await render(withHeater, [
+      ...STATES,
+      state('sensor.rb_heater', '0', 'W'),
+      state('sensor.rb_after_t', '0', '°C'),
+    ]);
+    expect(card.getCardSize()).toBe(4);
+    card.hass = hassWith([...STATES, state('sensor.rb_heater', '300', 'W'), state('sensor.rb_after_t', '3', '°C')]);
+    await card.updateComplete;
+    expect(card.getCardSize()).toBe(5);
   });
 
   test('setConfig throws for a missing role, which Home Assistant shows as an error card', () => {

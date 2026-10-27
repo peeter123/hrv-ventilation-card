@@ -65,11 +65,5 @@ export function rowsCells(text: string, name: string): string[][] {
 
 /** The cells of an option's row in a table (Name, Type, Default, Advanced, Description), or [] without one. */
 export function rowCells(text: string, name: string): string[] {
-  const row = text.split('\n').find((line) => line.startsWith(`| \`${name}\` |`));
-  return row === undefined
-    ? []
-    : row
-        .split('|')
-        .slice(1, -1)
-        .map((cell) => cell.trim());
+  return rowsCells(text, name)[0] ?? [];
 }

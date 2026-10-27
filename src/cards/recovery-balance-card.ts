@@ -63,9 +63,12 @@ export class HrvRecoveryBalanceCard extends BarCard {
     `,
   ];
 
-  /** Height in masonry views: header, the two-lane bar and a legend of up to four lines. */
+  /** Whether the last render showed the pre-heater's legend entry, which is one more line. */
+  private preHeaterEntry = false;
+
+  /** Height in masonry views: header, the two-lane bar and a legend of up to four lines, one more with the pre-heater entry. */
   protected override contentSize(): number {
-    return 4;
+    return this.preHeaterEntry ? 5 : 4;
   }
 
   /** The visual editor: the shared editor with this card's schema. */
@@ -102,6 +105,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
     if (!this.config || !hass || !this.calculator || !this.colors) return nothing;
     const { result } = this.calculator(hass);
     const view = recoveryView(result, { colors: this.colors, minScale: this.minScale }, localeFromHass(hass));
+    this.preHeaterEntry = view.legend.some((entry) => entry.kind === 'swatch');
     const parts = view.legend.filter((entry) => entry.kind === 'part');
     const others = view.legend.filter((entry) => entry.kind !== 'part');
     return html`<ha-card>

@@ -26,7 +26,7 @@ export const RECOVERY_SCHEMA: EditorSchema = [
       switchableField('power'),
       sensorField('temperature_after'),
       sensorField('humidity_after'),
-      colorField('color', RECOVERY_OPTIONS.preHeaterColor.default),
+      colorField('glow_color', RECOVERY_OPTIONS.preHeaterColor.default),
     ],
   },
   CALCULATION_SECTION,

@@ -201,6 +201,16 @@ describe('recoveryView', () => {
       expect(recoveryView(tiny, options, EN).lanes.map((lane) => lane.length)).toEqual([2, 2]);
     });
 
+    test('recovery-balance-card "Pre-heater entry": the signed sum of the lanes, shown whenever a segment is drawn', () => {
+      const entry = (sensible: number, latent: number) =>
+        recoveryView(result({ preHeater: { sensible, latent } }), options, EN).legend.find(
+          (item) => item.kind === 'swatch',
+        );
+      expect(entry(300, -320)).toEqual({ kind: 'swatch', color: '#ff9800', text: nb('Pre-Heater −20 W') });
+      expect(entry(300, -100)).toMatchObject({ text: nb('Pre-Heater 200 W') });
+      expect(entry(300, 0)).toMatchObject({ text: nb('Pre-Heater 300 W') });
+    });
+
     test('recovery-balance-card "Custom pre-heater colour": the segment and the swatch use it', () => {
       const view = recoveryView(running, { colors: { ...COLORS, preHeater: '#ffc107' }, minScale: 500 }, EN);
       expect(view.lanes[0]?.at(-1)?.background).toBe('#ffc107');

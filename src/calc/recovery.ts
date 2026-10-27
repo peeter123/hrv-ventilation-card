@@ -16,7 +16,7 @@
 /** Default air density in kg/m³, the macro's fixed value. */
 export const DEFAULT_AIR_DENSITY = 1.2;
 
-const CP_AIR = 1006; // J/(kg K)
+export const CP_AIR = 1006; // J/(kg K)
 const LATENT_HEAT = 2501; // J/g, water vapour at 0 °C
 const CP_VAPOUR = 1.86; // J/(g K)
 const SECONDS_PER_HOUR = 3600;
@@ -118,14 +118,18 @@ export const recoveryKind = (result: Pick<RecoveryResult, 'mode' | 'freeCooling'
 export function recoveryTotals(result: RecoveryResult): {
   recovered: number;
   potential: number;
-  /** The four parts rounded to whole W, the one rounding the legend and the totals share. */
-  parts: { recovered: PowerSplit; lost: PowerSplit };
+  /** The parts rounded to whole W, the one rounding the legend, the bar and the totals share. */
+  parts: { recovered: PowerSplit; lost: PowerSplit; preHeater: PowerSplit };
 } {
   const rounded = ({ sensible, latent }: PowerSplit): PowerSplit => ({
     sensible: Math.round(sensible),
     latent: Math.round(latent),
   });
-  const parts = { recovered: rounded(result.recovered), lost: rounded(result.lost) };
+  const parts = {
+    recovered: rounded(result.recovered),
+    lost: rounded(result.lost),
+    preHeater: rounded(result.preHeater),
+  };
   const recovered = parts.recovered.sensible + parts.recovered.latent;
   return { recovered, potential: recovered + parts.lost.sensible + parts.lost.latent, parts };
 }
