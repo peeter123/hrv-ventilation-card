@@ -30,7 +30,7 @@ moisture balance card shows it; the diagram does not.
   effectiveness, which does not drop when the pre-heater switches on. The moisture effectiveness, the moisture rates
   and the moisture balance card are unchanged.
 - **Recovery balance bar.** While the pre-heater part is above 0 W, the temperature lane gets a third segment after the
-  lost part in a pre-heater colour (option `pre_heater.color`, default the coil's orange `#ff9800`), the legend a
+  lost part in a pre-heater colour (option `pre_heater.glow_color`, default the coil's orange `#ff9800`), the legend a
   "Pre-heater X W" entry. The header keeps "Recovered X W of Y W (N %)" with Y = recovered + lost. The card gets the
   pre-heater roles (power, temperature after, humidity after) in its config and editor.
 - **Moisture put outside on the airflow diagram (ERV).** A second moisture figure left of the exchanger, centred in the

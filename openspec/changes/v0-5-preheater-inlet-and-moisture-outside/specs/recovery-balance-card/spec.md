@@ -96,14 +96,15 @@ NOT show the moisture recovery rate in g/h, which the moisture balance card and 
 ### Requirement: Configurable colours
 The card SHALL use a red pair of colours for heating and a blue pair for cooling by default, and SHALL accept other
 colours per mode in its config. The pre-heater colour SHALL default to `#ff9800`, the airflow card's default coil
-glow, and SHALL be configurable as `pre_heater.color`.
+glow, and SHALL be configurable as `pre_heater.glow_color`, the same key that sets the coil's glow on the airflow card, so a
+pre_heater object shared by both cards gives both one colour.
 
 #### Scenario: Custom heating colour
 - **WHEN** the config sets a heating colour
 - **THEN** the heating segments, swatches and header use that colour
 
 #### Scenario: Custom pre-heater colour
-- **WHEN** the config sets `pre_heater.color: '#ffc107'` and the pre-heater runs
+- **WHEN** the config sets `pre_heater.glow_color: '#ffc107'` and the pre-heater runs
 - **THEN** the pre-heater segments and swatch use that colour
 
 ### Requirement: Visual editor

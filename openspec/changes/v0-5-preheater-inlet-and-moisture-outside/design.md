@@ -86,7 +86,7 @@ Each lane's values become `[recovered, lost, preHeater]` with backgrounds `[colo
 `layoutSegments` and `barScale` already take any number of values. The pre-heater segment comes last, so the solid
 recovered segment keeps starting at the zero line and recovered plus lost stay adjacent, as the header's percentage
 reads them. The legend gets a plain entry kind with one swatch, shown while the pre-heater total rounds to 1 W or
-more. The colour option is `pre_heater.color` (default `#ff9800`), an advanced field in a new pre-heater section of the
+more. The colour option is `pre_heater.glow_color` (default `#ff9800`), an advanced field in a new pre-heater section of the
 recovery editor, next to the shared `pre_heater` power, `temperature_after` and `humidity_after` pickers.
 
 Alternative considered: the pre-heater segment first (the physical order outdoor, pre-heater, exchanger, house).
