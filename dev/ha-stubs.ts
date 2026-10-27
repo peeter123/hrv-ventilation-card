@@ -7,6 +7,8 @@ import {
   mdiFan,
   mdiHeatWave,
   mdiHelpCircleOutline,
+  mdiHomeExportOutline,
+  mdiHomeImportOutline,
   mdiLightningBolt,
   mdiShuffleVariant,
   mdiSnowflakeThermometer,
@@ -39,6 +41,8 @@ const ICONS: Readonly<Record<string, string>> = {
   'mdi:air-filter': mdiAirFilter,
   'mdi:water-sync': mdiWaterSync,
   'mdi:water-remove': mdiWaterRemove,
+  'mdi:home-export-outline': mdiHomeExportOutline,
+  'mdi:home-import-outline': mdiHomeImportOutline,
 };
 
 @customElement('ha-card')
