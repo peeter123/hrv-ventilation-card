@@ -116,7 +116,7 @@ supply air (bottom right, into the house), extract air (top right) to the exhaus
 shows its temperature and humidities and is coloured by its temperature; the supply and exhaust flow show below
 the tips of their arrows, the bypass position at the top of the exchanger and the saving badge, shaped like the
 exchanger, on its centre. On an energy recovery unit (`exchanger_type: erv`) the exchanger is blue-grey instead of
-grey and shows the moisture it recovers right of the exchanger. A top row holds the season (left), the power (centred,
+grey and shows the moisture it recovers right of the exchanger and the moisture it puts outside left of it. A top row holds the season (left), the power (centred,
 followed by the pre-heater's power while it heats) and the running mean outdoor temperature (right), and a status grid
 below the drawing the fan level, the bypass mode, the unit's status and the pre-heater's energy.
 Every label there has an icon in front (lightning bolt for power, heat wave for the pre-heater, fan, crossing arrows
@@ -289,8 +289,18 @@ supply air, in g/h, from the same calculation and sensors as the badge. An icon 
 while moisture is recovered (the exchanger hands it back) and water-remove while the exchanger keeps moisture out
 (the outdoor air is more humid than the indoor air). The number is the size of the rate, without a sign, and the
 tooltip says which. On narrow cards the unit moves to a second line under the number. It is hidden or "n/a" like the
-badge, is shown in both layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. A second figure left of the exchanger shows the moisture put outside with the exhaust air (the extracted moisture minus the recovered), with a home-export icon (home-import while moisture is brought in), and opens `status.moisture_outside`. The type
-changes only the drawing: the calculation and the bar cards are the same for both.
+badge, is shown in both layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured.
+
+A second figure left of the exchanger shows the moisture put outside with the exhaust air: the moisture the extract
+air carries minus what the exchanger recovered, in g/h, so recovered plus put outside is what the house extracts. It
+has a home-export icon while the house puts moisture outside, and home-import while the outdoor air is more humid than
+the extract air and moisture is brought in. The two figures read as a pair: the right one is what the exchanger hands
+back (water-sync, or water-remove while it keeps moisture out), the left one is what leaves (or enters) the house. The
+number is the size without a sign, the tooltip names the direction ("Moisture put outside: 120 g/h", "Moisture brought
+in: 120 g/h"), and the unit goes under the number on cards up to 500 px wide. It is hidden or "n/a" like the badge and
+opens the `status.moisture_outside` sensor, if configured.
+
+The type changes only the drawing: the calculation and the bar cards are the same for both.
 
 **Effectiveness rings.** With `show_effectiveness: true` the exchanger gets progress rings that start at its top
 centre and run clockwise; a full ring is 100 %. The thin inner ring, on the inner outline, is the total

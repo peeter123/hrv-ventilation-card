@@ -346,6 +346,22 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   both layouts with three and four digits. Without a role entity it is `role="img"`, so its label is read out. It
   needs the badge's inputs and follows the badge when one has no value. It sits on the same calculation result as the
   badge, computed once per render.
+- **Moisture put-outside figure (ERV).** The pair of the recovered figure, left of the exchanger (class
+  `.moisture-outside`): the moisture that leaves with the exhaust air, extracted minus recovered (`moistureOutsideFigure`
+  in `src/diagram/badge.ts`, the same calculation result, texts in `src/strings.ts`). Icon `mdi:home-export-outline`
+  while the house puts moisture outside (0 or more), `mdi:home-import-outline` while moisture is brought in (the outdoor
+  air is more humid than the extract air); the number is the magnitude. Tooltips "Moisture put outside: X g/h" and
+  "Moisture brought in: X g/h". It follows the badge like the recovered figure (hidden or "n/a" with it) and opens
+  `status.moisture_outside`. It is deliberately not the mirror image of the recovered figure: the mirrored spot (x
+  100.5) leaves only 26 units to the bypass path's left edge (x about 127 at y 100), which a two-line figure at 280 px
+  (about 50 units wide) would touch. It is centred in the free box instead: x 91 (22.75 %), y 103 (51.5 %), in the box
+  bounded by the outdoor symbol (right edge x 56), the bypass path (x 127), the outdoor lead and coil (down to y 75)
+  and the exhaust lead (from y 131), which leaves about 34 units on each side. The box is only about 71 units wide
+  (89 on the right), so the unit goes under the number up to 500 px (`MOISTURE_OUTSIDE_TWO_LINES`, 400 x 89 / 71)
+  against 400 px for the recovered figure. The browser test checks that it overlaps neither the bypass path at 100 %,
+  the outdoor symbol, the coil, the streams nor the corner labels, with text of 11 px or more, at 280 to 600 px in
+  both layouts. If a future change makes 280 px fail, the fallback is the icon above the number below a second
+  threshold (three short lines fit in 39 px at 11 px).
 - **Flow labels.** Both the supply and the exhaust flow sit below their arrowheads (from y 158), the supply label
   right-aligned at `right: 15%` between the bypass path and the corner labels, the exhaust label at `left: 18.5%`.
   They were above the supply arrow's tip, in the wedge the moisture figure now uses. Below 340 px card width (the
@@ -423,7 +439,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
   point they disagree for minutes, and the mode alone would open a sensor reading 0. With one role configured, a
   state that is not a number, or equal readings, the badge opens the role of the calculation's current mode instead.
   When that role is not configured, or the badge shows no calculated saving (hidden or "n/a"), it opens nothing. The
-  choice is `savingTarget` in `src/diagram/badge.ts`. The moisture figure opens `status.moisture_recovery`. All three
+  choice is `savingTarget` in `src/diagram/badge.ts`. The moisture figure opens `status.moisture_recovery` and the
+  put-outside figure `status.moisture_outside`. All four
   roles are optional and never a label or a grid cell; what cannot open anything gets no `role="button"`, `tabindex`
   or `data-entity`, so it is not focusable and a tap opens nothing. The badge used to open the supply air
   temperature: a dialog unrelated to the figure tapped, which is why there is no fallback. The pointer cursor follows
