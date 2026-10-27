@@ -415,6 +415,26 @@ describe('the labels', () => {
       expect(bare.figure().getAttribute('aria-label')).toBe(nb('Moisture recovered: 400 g/h'));
     });
 
+    test('airflow-diagram-card "Pre-heater after roles": the badge uses the inlet after the pre-heater, and no label shows the two entities', async () => {
+      const watts = (badge: HTMLElement): number => Number(badge.textContent.replace(/[^0-9]/g, ''));
+      const heater = { power: 'sensor.hrv_pre_heater' };
+      const states = [state(heater.power, '500', 'W')];
+      const plain = await renderCalculation(CALCULATION, '0', states);
+      const plainSaving = watts(plain.badge);
+      document.body.innerHTML = '';
+      const after = { ...heater, temperature_after: 'sensor.hrv_after_t', humidity_after: 'sensor.hrv_after_rh' };
+      const { root, badge } = await renderCalculation({ ...CALCULATION, pre_heater: after }, '0', [
+        ...states,
+        state('sensor.hrv_after_t', '8', '°C'),
+        state('sensor.hrv_after_rh', '40', '%'),
+      ]);
+      // The exchanger works from air at 8 °C instead of 0 °C, so less is recovered from the heated inlet.
+      expect(watts(badge)).toBeLessThan(plainSaving);
+      expect(
+        root.querySelectorAll('[data-entity="sensor.hrv_after_t"], [data-entity="sensor.hrv_after_rh"]'),
+      ).toHaveLength(0);
+    });
+
     test('airflow-diagram-card "Roles configured": the same badge and figure, and no label or grid cell', async () => {
       const erv = { ...CALCULATION, exchanger_type: 'erv' };
       const plain = await renderCalculation(erv);
