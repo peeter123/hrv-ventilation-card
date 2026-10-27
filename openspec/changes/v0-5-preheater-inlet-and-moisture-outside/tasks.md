@@ -49,11 +49,11 @@
 - [x] 2.2 Add the pre-heater section to `src/editor/recovery-schema.ts` (power as a switchable field, after
   temperature and after humidity as sensor fields, the colour as an advanced field); verify the editor tests for
   "Editing the card" and "Advanced settings on" of the recovery-balance-card delta
-- [ ] 2.3 Add an after-temperature control to the preview page (`dev/`): a mock `pre_heater.temperature_after` that
+- [x] 2.3 Add an after-temperature control to the preview page (`dev/`): a mock `pre_heater.temperature_after` that
   follows outdoor plus the pre-heater's power over the flow, set on the recovery card when the pre-heater is above 0;
   verify a browser test that the bar shows the third segment in the pre-heater colour with the pre-heater at 500 W
   and none at 0 W
-- [ ] 2.4 Document the card's pre-heater part in `README.md` (the recovery card's options: the pre-heater keys it
+- [x] 2.4 Document the card's pre-heater part in `README.md` (the recovery card's options: the pre-heater keys it
   reads and `pre_heater.color`) and `docs/hrv-ventilation.md` (the bar's third segment and why it comes last); verify
   the README tests pass
 - [ ] 2.5 Feedback round: start `npm run dev` for the user and show screenshots of the recovery card (pre-heater off,
