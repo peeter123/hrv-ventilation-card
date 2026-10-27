@@ -90,9 +90,15 @@ ESPHome. The measured examples below come from that unit.
   - **No figures** while the pre-heater runs by its power and the after temperature has no value (and, with
     `pre_heater.humidity_after` set, while the after humidity has none): the inlet is unknown, and falling back to the
     outdoor air would show the pre-heater's heat as recovered.
-  - **Macro.** The author's template macro applies the same running rule and inlet, except that it treats an
+  - **Macro.** The author's template macro applies the same running rule and inlet, except that it reads only a
+    numeric power (an on/off power entity, a switch or binary sensor, counts as absent there and the 0.5 K gate
+    decides, while the cards read on/off), and that it treats an
     unavailable after temperature as not running (its helpers keep a value, so the energy totals have no gap), where
     the cards show no figures. It does not take the after humidity: the inlet uses the outdoor absolute humidity.
+  - **No hysteresis.** The 0.5 K gate keeps no state (the calculation is pure), so an after temperature hovering
+    around 0.5 K above the outdoor air makes the pre-heater part flicker; configure the power entity to avoid it.
+  - **Inlet temperature.** While running, the inlet is the higher of the after and the outdoor temperature: a
+    pre-heater does not cool, so a lagging after sensor does not turn into a negative pre-heater part.
   - **Vectors.** `test/vectors.json` has pre-heater sets: the ones with only an after temperature rendered by the
     macro in Home Assistant, the ones with an after humidity computed from these formulas and noted as such in the
     table.

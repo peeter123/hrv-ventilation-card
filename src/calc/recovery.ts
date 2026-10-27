@@ -183,7 +183,7 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
   const T = [temperature.outdoor, temperature.supply, temperature.extract].filter(known);
   const AH =
     absoluteHumidity && [absoluteHumidity.outdoor, absoluteHumidity.supply, absoluteHumidity.extract].filter(known);
-  if (T.length !== 3 || !known(supplyFlow) || !known(bypass)) return undefined;
+  if (T.length !== 3 || !known(temperature.outdoor) || !known(supplyFlow) || !known(bypass)) return undefined;
   if (AH !== undefined && AH.length !== 3) return undefined;
   if (!(Number.isFinite(rho) && rho > 0)) return undefined;
 
@@ -196,17 +196,21 @@ export function calculateRecovery(inputs: RecoveryInputs): RecoveryResult | unde
   // and the extract as reference, the figures are free cooling.
   const extractIsReference = extract.h >= outdoor.h;
   // The pre-heater runs in heating mode by its power, else by the rise of the air after it over the outdoor air.
-  const after = !cooling && preHeater ? preHeater : undefined;
-  const running =
+  let inlet = outdoor;
+  const after = cooling ? undefined : preHeater;
+  if (
     after !== undefined &&
     (after.on ??
-      (known(after.temperatureAfter) && reaches(after.temperatureAfter - (T[0] ?? Number.NaN), MIN_PRE_HEATER_RISE_K)));
-  let inlet = outdoor;
-  if (after && running) {
+      (known(after.temperatureAfter) && reaches(after.temperatureAfter - temperature.outdoor, MIN_PRE_HEATER_RISE_K)))
+  ) {
     if (!known(after.temperatureAfter)) return undefined;
     if ('absoluteHumidityAfter' in after && !known(after.absoluteHumidityAfter)) return undefined;
+    // A pre-heater does not cool: a lagging sensor below the outdoor air leaves the inlet at the outdoor temperature.
     // Without an after humidity the inlet keeps the outdoor humidity.
-    inlet = air(after.temperatureAfter, AH === undefined ? 0 : (after.absoluteHumidityAfter ?? outdoor.A));
+    inlet = air(
+      Math.max(after.temperatureAfter, temperature.outdoor),
+      AH === undefined ? 0 : (after.absoluteHumidityAfter ?? outdoor.A),
+    );
   }
   let recovered;
   let lost;

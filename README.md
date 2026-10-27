@@ -221,9 +221,8 @@ next bypass change. The compact layout (below 340 px, or `layout: compact`) has 
 shown there.
 
 With `temperature_after` (and optionally `humidity_after`) the calculation knows the air the exchanger really gets.
-While the pre-heater runs, the exchanger's inlet is the air after it, not the outdoor air: the recovery card shows the
-pre-heater's share as a separate part of the bar, and the effectiveness is the exchanger's own, so a running
-pre-heater does not make the exchanger look worse. The pre-heater runs when `power` is above 0 (or on); without a
+While the pre-heater runs in heating mode, the exchanger's inlet is the air after it, not the outdoor air, and the
+effectiveness is the exchanger's own, so a running pre-heater does not make the exchanger look worse. The pre-heater runs when `power` is above 0 (or on); without a
 power entity, or while it has no value, when the temperature after is at least 0.5 K above the outdoor temperature. The
 pre-heater's part is where the supply air's heat came from, not heat the house gained: with an exchanger of 80 %, a
 300 W pre-heater makes the supply air only about 60 W warmer, the rest leaves with the exhaust. While the pre-heater

@@ -84,12 +84,13 @@ export function createCalculator(config: CardConfig, store: SmoothingStore = smo
   const humidity = sources.every((source) => source !== undefined) ? sources : undefined;
   const supplyFlow = entityAt(config, 'fans.supply_flow');
   const bypass = entityAt(config, 'bypass.position');
-  // The pre-heater block exists only with the temperature after it; its humidity only with that role too.
+  // The pre-heater block exists only with the temperature after it; its humidity only with that role too, and only
+  // with humidity for the streams (without it the latent parts are not calculated, so the after humidity is unused).
   const preHeaterPower = entityAt(config, 'pre_heater.power');
   const temperatureAfter = entityAt(config, 'pre_heater.temperature_after');
   const humidityAfterRole = entityAt(config, 'pre_heater.humidity_after');
   const humidityAfter =
-    temperatureAfter !== undefined && humidityAfterRole !== undefined
+    humidity !== undefined && temperatureAfter !== undefined && humidityAfterRole !== undefined
       ? derivedSource(humidityAfterRole, temperatureAfter)
       : undefined;
   // The entities the calculation uses, for the smoothing time.
@@ -119,7 +120,8 @@ export function createCalculator(config: CardConfig, store: SmoothingStore = smo
     if (humidity !== undefined) {
       inputs.absoluteHumidity = perStream(humidity.map((source) => store.smoothed(hass, source, smoothing, at)));
     }
-    if (temperatureAfter !== undefined) {
+    // Not ventilating: the figures are zero whatever the pre-heater reads, so its inputs must not blank them.
+    if (temperatureAfter !== undefined && !noAirflow) {
       inputs.preHeater = {
         on: preHeaterPower === undefined ? undefined : preHeaterRunning(hass.states[preHeaterPower]),
         temperatureAfter: read(temperatureAfter, 'temperature'),

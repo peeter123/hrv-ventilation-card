@@ -35,6 +35,7 @@ interface Vector {
 const COLORS = {
   heating: { color: '#db4437', latent: '#f4a09a' },
   cooling: { color: '#039be5', latent: '#8fd3f7' },
+  preHeater: '#ff9800',
 };
 const vectors = golden.vectors as Vector[];
 const { w: TOLERANCE_W, gh: TOLERANCE_GH } = golden.tolerance;
@@ -473,7 +474,14 @@ describe('pre-heater (recovery-calculation "Exchanger inlet after the pre-heater
 
   test('"Power above 0": it runs whatever the two temperatures read', () => {
     expect(calculate(withHeater(cold, true, -6)).preHeater).toEqual({ sensible: 0, latent: 0 });
-    expect(calculate(withHeater(cold, true, -7)).preHeater.sensible).toBeLessThan(0);
+    near(calculate(withHeater(cold, true, 20)).preHeater.sensible, (1.2 * 1006 * 26 * 200) / 3600, 1e-9);
+  });
+
+  test('"After temperature lags below the outdoor air": the inlet stays at the outdoor temperature', () => {
+    const result = calculate(withHeater(cold, true, -7));
+    expect(result.preHeater.sensible).toBe(0);
+    expect(result.recovered).toEqual(calculate(cold).recovered);
+    expect(result.lost).toEqual(calculate(cold).lost);
   });
 
   test('"Power 0 with a sensor offset": 0.3 K above the outdoor temperature does not run', () => {

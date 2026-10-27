@@ -292,6 +292,41 @@ describe('calculateFromConfig', () => {
       expect(calculateFromConfig(TEMPERATURE_ONLY, hassWith(states), store).inputs.preHeater?.on).toBe(on);
     });
 
+    test('"After humidity without stream humidity": the after humidity is neither read nor needed', () => {
+      const { absoluteHumidity: _outdoor, ...outdoor } = COMPLETE['outdoor'] as Record<string, string>;
+      const dry: CardConfig = {
+        ...BOTH,
+        outdoor: { temperature: outdoor['temperature'] },
+        supply: { temperature: 'sensor.supply_t' },
+        extract: { temperature: 'sensor.extract_t' },
+      };
+      const unavailable = replace(AFTER_STATES, state('sensor.after_rh', 'unavailable'));
+      const { inputs, result } = calculateFromConfig(dry, hassWith(unavailable), store);
+      expect(inputs.preHeater).toEqual({ on: true, temperatureAfter: 5 });
+      expect(result).toBeDefined();
+      expect(result?.latentKnown).toBe(false);
+      // No history is requested for it either.
+      const requests: unknown[] = [];
+      const spying: SmoothingHass = {
+        ...hassWith(AFTER_STATES),
+        callWS: (message) => {
+          requests.push(message);
+          return new Promise(() => undefined);
+        },
+      };
+      calculateFromConfig({ ...dry, smoothing: 10 }, spying, new SmoothingStore());
+      expect(JSON.stringify(requests)).not.toContain('after_rh');
+    });
+
+    test('with no airflow the pre-heater block is left out, so an unavailable temperature after keeps the zero figures', () => {
+      const broken = replace(AFTER_STATES, state('sensor.after_t', 'unavailable'));
+      const calculator = createCalculator(BOTH, store);
+      expect(calculator(hassWith(broken)).result).toBeUndefined();
+      const idle = calculator(hassWith(broken), { noAirflow: true });
+      expect(idle.inputs).not.toHaveProperty('preHeater');
+      expect(idle.result?.saving).toBe(0);
+    });
+
     test('a running pre-heater changes the recovered figures, a stopped one does not', () => {
       const plain = calculateFromConfig(COMPLETE, hassWith(AFTER_STATES), store).result;
       const running = calculateFromConfig(BOTH, hassWith(AFTER_STATES), store).result;
