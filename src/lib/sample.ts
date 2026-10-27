@@ -70,7 +70,7 @@ export const setsAnyRole = (config: CardConfig): boolean =>
 export const withSample = (config: CardConfig): CardConfig => merge(SAMPLE_CONFIG, config);
 
 // Outdoor 2 °C / 85 %, supply 18.5 °C / 45 %, extract 21.5 °C / 50 %, exhaust 5.5 °C / 90 %. The saved power and
-// the moisture recovery are what the calculation gives for these values (a test checks them).
+// both moisture figures (recovered and put outside) are what the calculation gives for these values (a test checks them).
 const VALUES: readonly (readonly [role: string, state: string, unit?: string])[] = [
   ['outdoor.temperature', '2', '°C'],
   ['outdoor.humidity', '85', '%'],

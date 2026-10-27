@@ -293,8 +293,9 @@ badge, is shown in both layouts, and tapping it opens the `status.moisture_recov
 
 A second figure left of the exchanger shows the moisture put outside with the exhaust air: the moisture the extract
 air carries minus what the exchanger recovered, in g/h, so recovered plus put outside is what the house extracts. It
-has a home-export icon while the house puts moisture outside, and home-import while the outdoor air is more humid than
-the extract air and moisture is brought in. The two figures read as a pair: the right one is what the exchanger hands
+has a home-export icon while the house puts moisture outside, and home-import while the supply air is more humid than
+the extract air (the rate flow x (extract - supply) is negative): the ventilation then brings moisture in, normally on a
+day when the outdoor air is more humid. The two figures read as a pair: the right one is what the exchanger hands
 back (water-sync, or water-remove while it keeps moisture out), the left one is what leaves (or enters) the house. The
 number is the size without a sign, the tooltip names the direction ("Moisture put outside: 120 g/h", "Moisture brought
 in: 120 g/h"), and the unit goes under the number on cards up to 500 px wide. It is hidden or "n/a" like the badge and
@@ -330,7 +331,7 @@ it falls as the bypass opens, because the supply air is then partly outdoor air.
 position.
 
 **Layout.** With `layout: auto` the card switches to a compact layout below 340 px card width: only the four
-temperatures and relative humidities, the badge, the bypass position, the moisture figure (ERV) and the top row,
+temperatures and relative humidities, the badge, the bypass position, the two moisture figures (ERV) and the top row,
 without the flows, the absolute humidities and the status grid, so very narrow cards stay legible. A full-width card on a phone is about
 16 px narrower than the screen, so phones from 360 px wide show the full layout and only narrower screens or columns
 get the compact one. `full` and `compact` force one layout, for example `compact` on a phone you find too busy.
@@ -404,7 +405,7 @@ entity's state is compared with `stopped_states`; on a match the fan level label
 opens the level entity), both air streams stop moving (the flow labels keep showing what the flow sensors report)
 and an alert with a warning icon and "Ventilation disabled" appears over the exchanger, also with the animation off.
 Hovering it shows "Ventilation disabled: " and the state as Home Assistant formats it; tapping it opens the
-`ventilation_mode` entity. The saving badge, the moisture figure and the effectiveness rings then show no recovery, as
+`ventilation_mode` entity. The saving badge, the two moisture figures and the effectiveness rings then show no recovery, as
 with no airflow, because the flow sensors can still read above 0 with the fans stopped. An unavailable, unknown or
 missing entity never counts as disabled.
 

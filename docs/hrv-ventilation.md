@@ -349,12 +349,13 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
 - **Moisture put-outside figure (ERV).** The pair of the recovered figure, left of the exchanger (class
   `.moisture-outside`): the moisture that leaves with the exhaust air, extracted minus recovered (`moistureOutsideFigure`
   in `src/diagram/badge.ts`, the same calculation result, texts in `src/strings.ts`). Icon `mdi:home-export-outline`
-  while the house puts moisture outside (0 or more), `mdi:home-import-outline` while moisture is brought in (the outdoor
-  air is more humid than the extract air); the number is the magnitude. Tooltips "Moisture put outside: X g/h" and
+  while the house puts moisture outside (0 or more), `mdi:home-import-outline` while moisture is brought in (the supply air
+  is more humid than the extract air, so the rate flow x (extract - supply) is negative: normally on a day when the
+  outdoor air is more humid); the number is the magnitude. Tooltips "Moisture put outside: X g/h" and
   "Moisture brought in: X g/h". It follows the badge like the recovered figure (hidden or "n/a" with it) and opens
   `status.moisture_outside`. It is deliberately not the mirror image of the recovered figure: the mirrored spot (x
   100.5) leaves only 26 units to the bypass path's left edge (x about 127 at y 100), which a two-line figure at 280 px
-  (about 50 units wide) would touch. It is centred in the free box instead: x 91 (22.75 %), y 103 (51.5 %), in the box
+  (about 50 units wide) would touch. It is centred in the free box instead: x 91 (22.75 %), y 100 (50 %, the exchanger's centre height, as the recovered figure), in the box
   bounded by the outdoor symbol (right edge x 56), the bypass path (x 127), the outdoor lead and coil (down to y 75)
   and the exhaust lead (from y 131), which leaves about 34 units on each side. The box is only about 71 units wide
   (89 on the right), so the unit goes under the number up to 500 px (`MOISTURE_OUTSIDE_TWO_LINES`, 400 x 89 / 71)
@@ -412,8 +413,8 @@ All rates in g/h, signed, relative to the outdoor air: **extracted = recovered +
     drawing's top and the exchanger's top. It has the tooltip "Ventilation disabled: <formatted state>" and a tap
     that opens the mode entity. It shows with the animation off too: it reports the unit, not the motion. The role
     is an input only and gets no label. The card decides once per render and shares the result with every label.
-    The badge, the moisture figure and the rings show no recovery: the calculator is called with `noAirflow`, which
-    makes the supply flow 0, so they render as with a flow of 0 (badge "0 W", moisture "0 g/h", rings without a
+    The badge, the two moisture figures and the rings show no recovery: the calculator is called with `noAirflow`, which
+    makes the supply flow 0, so they render as with a flow of 0 (badge "0 W", both moisture figures "0 g/h", rings without a
     figure). The flow sensors read non-zero with the fans stopped, so otherwise a stopped unit would show recovery.
     The flow labels keep showing the sensors. The recovery and moisture bar cards do not read the role.
   - **Why the raw state.** The formatted state depends on the user's language; the raw one does not.

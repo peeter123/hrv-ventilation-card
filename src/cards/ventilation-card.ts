@@ -105,6 +105,19 @@ const MOISTURE_TWO_LINES = 400;
  */
 const MOISTURE_OUTSIDE_TWO_LINES = 500;
 
+/** The container query that puts a figure's unit under its number up to the given card width (px). */
+const twoLineRules = (selector: string, maxWidth: number) => css`
+  @container (max-width: ${unsafeCSS(String(maxWidth))}px) {
+    ${unsafeCSS(selector)} .figure .value {
+      display: flex;
+      flex-direction: column;
+    }
+    ${unsafeCSS(selector)} .unit {
+      margin-left: 0;
+    }
+  }
+`;
+
 /** A label's tooltip: what it is and its state, e.g. "Next bypass change: 01:30". */
 const roleTitle = (role: RolePath, text: string): string => {
   const name = ROLE_LABELS[role];
@@ -365,33 +378,17 @@ export class HrvVentilationCard extends HrvCard {
       left: 74.9%;
     }
     /*
-     * Left of the exchanger, centred at x 91 and y 103 in the free box between the outdoor symbol (right edge x 56),
-     * the bypass path (left edge about x 127 at y 100), the outdoor lead and coil (to y 75) and the exhaust lead
-     * (from y 131): about 34 units each way, where the mirror of the recovered figure (x 100.5) would leave 26.
+     * Left of the exchanger, centred at x 91 and y 100 (the exchanger's centre height, as the recovered figure) in
+     * the free box between the outdoor symbol (right edge x 56), the bypass path (left edge about x 127 at y 100), the
+     * outdoor lead and coil (to y 75) and the exhaust lead (from y 131): about 34 units each way, where the mirror of
+     * the recovered figure (x 100.5) would leave 26.
      * The same two-line layout as the recovered figure, up to a wider card because the box is narrower.
      */
     .moisture-outside {
       left: 22.75%;
-      top: 51.5%;
     }
-    @container (max-width: ${MOISTURE_TWO_LINES}px) {
-      .moisture-recovery .figure .value {
-        display: flex;
-        flex-direction: column;
-      }
-      .moisture-recovery .unit {
-        margin-left: 0;
-      }
-    }
-    @container (max-width: ${MOISTURE_OUTSIDE_TWO_LINES}px) {
-      .moisture-outside .figure .value {
-        display: flex;
-        flex-direction: column;
-      }
-      .moisture-outside .unit {
-        margin-left: 0;
-      }
-    }
+    ${twoLineRules('.moisture-recovery', MOISTURE_TWO_LINES)}
+    ${twoLineRules('.moisture-outside', MOISTURE_OUTSIDE_TWO_LINES)}
     /* On the exchanger's centre. */
     .saving {
       top: 50%;

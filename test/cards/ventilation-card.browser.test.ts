@@ -580,46 +580,57 @@ describe('exchanger type', () => {
     ...KEPT_OUT,
     humidity: { outdoor: 70, supply: 60, extract: 45, exhaust: 60 },
     flow: 340,
+    // The bypass fully open, where its path is widest and closest to the figure.
+    bypass: 100,
   };
-  for (const layout of ['auto', 'full'] as const) {
-    test(`airflow-diagram-card "Moisture put-outside figure clear of the bypass", ${layout} layout: clear of the bypass, the outdoor symbol, the coil, the streams and the corner labels, 280 to 600 px`, async () => {
-      const shown = await show(
-        280,
-        'light',
-        layout,
-        { ...BROUGHT_IN, preHeater: 1000 },
-        {
-          exchanger_type: 'erv',
-          smoothing: 0,
-          pre_heater: { power: id.preHeater },
-        },
-      );
-      const { root } = shown;
-      for (const width of [280, 300, 340, 400, 600]) {
-        await resize(shown, width);
-        const where = `${layout} ${String(width)} px`;
-        const figure = box(root, '.moisture-outside .figure');
-        const value = root.querySelector('.moisture-outside .value');
-        if (!value) throw new Error('no put-outside value');
-        expect(root.querySelector('.moisture-outside .number')?.textContent, where).toMatch(/^\d,\d{3}$/);
-        expect(clearOfBypass(root)(figure), `${where} bypass`).toBe(true);
-        expect(streamCrossing(root)(figure), `${where} streams`).toBe(false);
-        const outdoor = root.querySelectorAll('svg .symbol circle')[0]?.getBoundingClientRect();
-        if (!outdoor) throw new Error('no outdoor symbol');
-        expect(overlap(figure, outdoor), `${where} outdoor symbol`).toBe(false);
-        expect(overlap(figure, box(root, '.pre-heater')), `${where} coil`).toBe(false);
-        expect(overlap(figure, box(root, '.moisture-recovery .figure')), `${where} recovered figure`).toBe(false);
-        for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
-          expect(overlap(corner.getBoundingClientRect(), figure), `${where} ${corner.textContent}`).toBe(false);
-        expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
-        expect(getComputedStyle(value).overflow, where).toBe('visible');
-        // The unit under the number up to 500 px (MOISTURE_OUTSIDE_TWO_LINES), beside it from there.
-        const [number, unit] = [box(root, '.moisture-outside .number'), box(root, '.moisture-outside .unit')];
-        if (width <= 500) expect(unit.top, where).toBeGreaterThanOrEqual(number.bottom - 0.5);
-        else expect(unit.left, where).toBeGreaterThan(number.right + 1);
-        expect(value.scrollWidth, where).toBeLessThanOrEqual(value.clientWidth);
-      }
-    });
+  const OUTSIDE_WIDTHS = [280, 300, 340, 400, 450, 500, 501, 520, 600];
+  for (const theme of ['light', 'dark'] as const) {
+    for (const layout of ['auto', 'full', 'compact'] as const) {
+      test(`airflow-diagram-card "Moisture put-outside figure clear of the bypass", ${theme}, ${layout} layout: clear of the bypass at 100 %, the outdoor symbol, the coil, the streams and the corner labels, and 4.5:1 text, 280 to 600 px`, async () => {
+        const shown = await show(
+          280,
+          theme,
+          layout,
+          { ...BROUGHT_IN, preHeater: 1000 },
+          {
+            exchanger_type: 'erv',
+            smoothing: 0,
+            pre_heater: { power: id.preHeater },
+          },
+        );
+        const { root } = shown;
+        for (const width of OUTSIDE_WIDTHS) {
+          await resize(shown, width);
+          const where = `${theme} ${layout} ${String(width)} px`;
+          const figure = box(root, '.moisture-outside .figure');
+          const value = root.querySelector('.moisture-outside .value');
+          if (!value) throw new Error('no put-outside value');
+          expect(root.querySelector('.moisture-outside .number')?.textContent, where).toMatch(/^\d,\d{3}$/);
+          expect(clearOfBypass(root)(figure), `${where} bypass`).toBe(true);
+          expect(streamCrossing(root)(figure), `${where} streams`).toBe(false);
+          const outdoor = root.querySelectorAll('svg .symbol circle')[0]?.getBoundingClientRect();
+          if (!outdoor) throw new Error('no outdoor symbol');
+          expect(overlap(figure, outdoor), `${where} outdoor symbol`).toBe(false);
+          expect(overlap(figure, box(root, '.pre-heater')), `${where} coil`).toBe(false);
+          expect(overlap(figure, box(root, '.moisture-recovery .figure')), `${where} recovered figure`).toBe(false);
+          for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
+            expect(overlap(corner.getBoundingClientRect(), figure), `${where} ${corner.textContent}`).toBe(false);
+          expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
+          expect(getComputedStyle(value).overflow, where).toBe('visible');
+          // The coil glows (the pre-heater power is above 0) and the figure's text keeps 4.5:1 on the card background.
+          expect(root.querySelector('svg path.coil-glow'), `${where} glow`).not.toBeNull();
+          expect(
+            contrast(THEMES[theme]['--card-background-color'], getComputedStyle(value).color),
+            `${where} contrast`,
+          ).toBeGreaterThanOrEqual(4.5);
+          // The unit under the number up to 500 px (MOISTURE_OUTSIDE_TWO_LINES), beside it from there.
+          const [number, unit] = [box(root, '.moisture-outside .number'), box(root, '.moisture-outside .unit')];
+          if (width <= 500) expect(unit.top, where).toBeGreaterThanOrEqual(number.bottom - 0.5);
+          else expect(unit.left, where).toBeGreaterThan(number.right + 1);
+          expect(value.scrollWidth, where).toBeLessThanOrEqual(value.clientWidth);
+        }
+      });
+    }
   }
 
   test('airflow-diagram-card "Four-digit rate on a narrow card": the two-line form fits the wedge at 280 px', async () => {

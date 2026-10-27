@@ -88,56 +88,62 @@ export interface MoistureFigure {
   title: string;
 }
 
+interface RateFigureTexts {
+  noValue: string;
+  /** Shown while the rate shows with a sign (below 0 after rounding). */
+  negative: { icon: string; title: (magnitude: string) => string };
+  /** Shown otherwise: a rate that rounds to 0 counts here. */
+  positive: { icon: string; title: (magnitude: string) => string };
+}
+
+/** A moisture rate as a figure: the magnitude with an icon and tooltip for the direction, or hidden / "n/a" without a rate. */
+function rateFigure(
+  rate: number | undefined,
+  options: { exchanger: ExchangerType; badge: boolean; showUnavailable: boolean },
+  locale: LocaleLike,
+  texts: RateFigureTexts,
+): MoistureFigure | undefined {
+  if (options.exchanger !== 'erv' || !options.badge) return undefined;
+  if (rate === undefined) return options.showUnavailable ? { text: NO_VALUE, title: texts.noValue } : undefined;
+  const text = formatNumber(Math.abs(rate), locale);
+  const direction = Math.round(rate) < 0 ? texts.negative : texts.positive;
+  return { text, unit: DIAGRAM.moistureUnit, icon: direction.icon, title: direction.title(DIAGRAM.moisture(text)) };
+}
+
 /**
  * The moisture recovery figure of an ERV for a calculation result: the magnitude of the recovered moisture rate, with
  * an icon for the direction (no sign). None for an HRV or without the badge's inputs (`badge`). Without a moisture rate
- * (an input has no value) it is hidden like the badge, or "n/a" with `showUnavailable`.
+ * (an input has no value) it is hidden like the badge, or "n/a" with `showUnavailable`. Kept out while the rate shows
+ * with a sign, recovered otherwise (a rate that rounds to 0 counts as recovered).
  */
 export function moistureFigure(
   result: RecoveryResult | undefined,
   options: { exchanger: ExchangerType; badge: boolean; showUnavailable: boolean },
   locale: LocaleLike,
 ): MoistureFigure | undefined {
-  if (options.exchanger !== 'erv' || !options.badge) return undefined;
-  const rate = result?.moisture?.recovered;
-  if (rate === undefined)
-    return options.showUnavailable ? { text: NO_VALUE, title: DIAGRAM.moistureNoValue } : undefined;
-  const text = formatNumber(Math.abs(rate), locale);
-  // Kept out only when the rate shows with a sign: a rate that rounds to 0 counts as recovered.
-  const keptOut = Math.round(rate) < 0;
-  const magnitude = DIAGRAM.moisture(text);
-  return {
-    text,
-    unit: DIAGRAM.moistureUnit,
-    icon: keptOut ? DIAGRAM.moistureKeptOutIcon : DIAGRAM.moistureRecoveredIcon,
-    title: keptOut ? DIAGRAM.moistureKeptOut(magnitude) : DIAGRAM.moistureRecovered(magnitude),
-  };
+  return rateFigure(result?.moisture?.recovered, options, locale, {
+    noValue: DIAGRAM.moistureNoValue,
+    negative: { icon: DIAGRAM.moistureKeptOutIcon, title: DIAGRAM.moistureKeptOut },
+    positive: { icon: DIAGRAM.moistureRecoveredIcon, title: DIAGRAM.moistureRecovered },
+  });
 }
 
 /**
  * The moisture put-outside figure of an ERV: the magnitude of the rate at which the exhaust carries moisture out of
  * the house (extracted minus recovered), with an icon for the direction (no sign). Same conditions as
- * `moistureFigure`; none for an HRV or without the badge's inputs, hidden or "n/a" without a rate.
+ * `moistureFigure`; none for an HRV or without the badge's inputs, hidden or "n/a" without a rate. Brought in while
+ * the rate shows with a sign, put outside otherwise (a rate that rounds to 0 counts as put outside).
  */
 export function moistureOutsideFigure(
   result: RecoveryResult | undefined,
   options: { exchanger: ExchangerType; badge: boolean; showUnavailable: boolean },
   locale: LocaleLike,
 ): MoistureFigure | undefined {
-  if (options.exchanger !== 'erv' || !options.badge) return undefined;
-  const rate = result?.moisture?.outside;
-  if (rate === undefined)
-    return options.showUnavailable ? { text: NO_VALUE, title: DIAGRAM.moistureOutsideNoValue } : undefined;
-  const text = formatNumber(Math.abs(rate), locale);
-  // Brought in only when the rate shows with a sign: a rate that rounds to 0 counts as put outside.
-  const broughtIn = Math.round(rate) < 0;
-  const magnitude = DIAGRAM.moisture(text);
-  return {
-    text,
-    unit: DIAGRAM.moistureUnit,
-    icon: broughtIn ? DIAGRAM.moistureBroughtInIcon : DIAGRAM.moisturePutOutsideIcon,
-    title: broughtIn ? DIAGRAM.moistureBroughtIn(magnitude) : DIAGRAM.moisturePutOutside(magnitude),
-  };
+  return rateFigure(result?.moisture?.outside, options, locale, {
+    noValue: DIAGRAM.moistureOutsideNoValue,
+    negative: { icon: DIAGRAM.moistureBroughtInIcon, title: DIAGRAM.moistureBroughtIn },
+    positive: { icon: DIAGRAM.moisturePutOutsideIcon, title: DIAGRAM.moisturePutOutside },
+  });
 }
 
 /**
