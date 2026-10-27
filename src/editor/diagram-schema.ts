@@ -58,6 +58,7 @@ export const DIAGRAM_SCHEMA: EditorSchema = [
       sensorField('heating_saving', ADVANCED),
       sensorField('cooling_saving', ADVANCED),
       sensorField('moisture_recovery', ADVANCED),
+      sensorField('moisture_outside', ADVANCED),
     ],
   },
   {

@@ -182,6 +182,7 @@ const ROLES = {
   heating_saving: 'sensor.hrv_heating_saving',
   cooling_saving: 'sensor.hrv_cooling_saving',
   moisture_recovery: 'sensor.hrv_moisture',
+  moisture_outside: 'sensor.hrv_moisture_out',
 };
 
 // `extra` states replace the defaults of the same entity; a bypass above 0 puts the calculation in cooling mode.
@@ -196,6 +197,7 @@ async function renderInputs(config: CardConfig, bypass = '0', extra: readonly Ha
     state(ROLES.heating_saving, '400', 'W'),
     state(ROLES.cooling_saving, '0', 'W'),
     state(ROLES.moisture_recovery, '400', 'g/h'),
+    state(ROLES.moisture_outside, '200', 'g/h'),
     ...extra,
   ]);
 }
@@ -207,7 +209,13 @@ async function renderCalculation(config: CardConfig, bypass = '0', extra: readon
     if (!found) throw new Error(`no ${selector}`);
     return found;
   };
-  return { card, root, badge: find('.saving .badge'), figure: () => find('.moisture-recovery .figure') };
+  return {
+    card,
+    root,
+    badge: find('.saving .badge'),
+    figure: () => find('.moisture-recovery .figure'),
+    outside: () => find('.moisture-outside .figure'),
+  };
 }
 
 describe('the labels', () => {
@@ -415,6 +423,24 @@ describe('the labels', () => {
       expect(bare.figure().getAttribute('aria-label')).toBe(nb('Moisture recovered: 400 g/h'));
     });
 
+    test('the ERV put-outside figure opens the moisture put-outside entity, and nothing without it', async () => {
+      const erv = { ...CALCULATION, exchanger_type: 'erv' };
+      const configured = await renderCalculation({ ...erv, status: { moisture_outside: ROLES.moisture_outside } });
+      const opened = moreInfo(configured.card);
+      press(configured.outside());
+      expect(opened).toEqual([ROLES.moisture_outside, ROLES.moisture_outside]);
+      expect(configured.outside().getAttribute('tabindex')).toBe('0');
+      // The recovered figure has no role of its own here.
+      expect(configured.figure().hasAttribute('tabindex')).toBe(false);
+      const bare = await renderCalculation(erv);
+      const none = moreInfo(bare.card);
+      press(bare.outside());
+      expect(none).toEqual([]);
+      for (const attribute of ['tabindex', 'data-entity']) expect(bare.outside().hasAttribute(attribute)).toBe(false);
+      expect(bare.outside().getAttribute('role')).toBe('img');
+      expect(bare.outside().getAttribute('aria-label')).toMatch(/^Moisture (put outside|brought in): /);
+    });
+
     test('airflow-diagram-card "Pre-heater after roles": the badge uses the inlet after the pre-heater, and no label shows the two entities', async () => {
       const watts = (badge: HTMLElement): number => Number(badge.textContent.replace(/[^0-9]/g, ''));
       const heater = { power: 'sensor.hrv_pre_heater' };
@@ -438,17 +464,22 @@ describe('the labels', () => {
     test('airflow-diagram-card "Roles configured": the same badge and figure, and no label or grid cell', async () => {
       const erv = { ...CALCULATION, exchanger_type: 'erv' };
       const plain = await renderCalculation(erv);
-      const [badgeText, figureText] = [plain.badge.textContent, plain.figure().textContent];
+      const [badgeText, figureText, outsideText] = [
+        plain.badge.textContent,
+        plain.figure().textContent,
+        plain.outside().textContent,
+      ];
       document.body.innerHTML = '';
-      const { root, badge, figure } = await renderCalculation({ ...erv, status: ROLES });
+      const { root, badge, figure, outside } = await renderCalculation({ ...erv, status: ROLES });
       expect(badge.textContent).toBe(badgeText);
       expect(figure().textContent).toBe(figureText);
+      expect(outside().textContent).toBe(outsideText);
       // Only the season sensors make the top row; the two roles add no label there or in the grid.
       expect(root.querySelectorAll('.top .label')).toHaveLength(0);
       expect(root.querySelector('.status')).toBeNull();
       expect(
         root.querySelectorAll(
-          '.label:not(.figure)[data-entity="sensor.hrv_heating_saving"], .label:not(.figure)[data-entity="sensor.hrv_moisture"]',
+          '.label:not(.figure)[data-entity="sensor.hrv_heating_saving"], .label:not(.figure)[data-entity="sensor.hrv_moisture"], .label:not(.figure)[data-entity="sensor.hrv_moisture_out"]',
         ),
       ).toHaveLength(0);
     });
@@ -666,6 +697,7 @@ describe('recovery while ventilation is disabled', () => {
   const figures = (root: ShadowRoot) => ({
     badge: root.querySelector('.saving .badge')?.textContent.trim(),
     moisture: root.querySelector('.moisture-recovery .figure')?.textContent.trim(),
+    outside: root.querySelector('.moisture-outside .figure')?.textContent.trim(),
     rings: root.querySelector('.on-drawing.effectiveness')?.getAttribute('title'),
     totalRing: root.querySelector('svg .ring.total')?.getAttribute('stroke-dasharray'),
     flow: root.querySelector('.supply-flow .label')?.textContent.trim(),
@@ -686,6 +718,7 @@ describe('recovery while ventilation is disabled', () => {
     expect({ ...disabled, flow: undefined }).toEqual({ ...none, flow: undefined });
     expect(disabled.badge).toBe(nb('0 W'));
     expect(disabled.moisture).toBe('0g/h');
+    expect(disabled.outside).toBe('0g/h');
     expect(disabled.rings).toBe('Effectiveness: heat not measurable, moisture not measurable');
     expect(active.badge).not.toBe(disabled.badge);
   });
@@ -695,6 +728,7 @@ describe('recovery while ventilation is disabled', () => {
     const shown = figures(root);
     expect(shown.badge).not.toBe(nb('0 W'));
     expect(shown.moisture).not.toBe('0g/h');
+    expect(shown.outside).not.toBe('0g/h');
     expect(shown.rings).toBe(nb('Effectiveness: heat 78 % (226 / 289 W), moisture 65 % (137 / 210 g/h)'));
     expect(shown.totalRing).toBe('78.14 100');
   });

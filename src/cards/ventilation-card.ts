@@ -13,6 +13,7 @@ import {
   hasRings,
   modeColor,
   moistureFigure,
+  moistureOutsideFigure,
   savingBadge,
   savingTarget,
   type Badge,
@@ -78,6 +79,7 @@ interface DiagramSettings {
    */
   savings: Record<RecoveryResult['mode'], string | undefined>;
   moistureRecovery?: string;
+  moistureOutside?: string;
   /** The `pre_heater.power` entity, which draws the coil, and the rated power its glow is a share of. */
   preHeater?: { entityId: string; maxPower: number | undefined; glowColor: string };
   /**
@@ -97,6 +99,11 @@ interface DiagramSettings {
 
 /** The card width, in px, up to which the moisture figure's unit goes under its number (see the styles). */
 const MOISTURE_TWO_LINES = 400;
+/**
+ * The same for the put-outside figure left of the exchanger. Its box (about 71 units wide, against 89 on the right) is
+ * narrower, so the unit goes under the number up to a wider card: 400 x 89 / 71 is 500 px.
+ */
+const MOISTURE_OUTSIDE_TWO_LINES = 500;
 
 /** A label's tooltip: what it is and its state, e.g. "Next bypass change: 01:30". */
 const roleTitle = (role: RolePath, text: string): string => {
@@ -336,21 +343,36 @@ export class HrvVentilationCard extends HrvCard {
      * x 299.5, halfway between the exchanger's right vertex (x 255) and the house symbol (x 344), in the wedge the
      * streams leave there. Where the number and its unit do not fit one line, the unit goes under the number.
      */
-    .moisture-recovery {
+    .moisture-recovery,
+    .moisture-outside {
       top: 50%;
-      left: 74.9%;
       transform: translate(-50%, -50%);
       /* Two lines of 11 px have to fit the wedge at 280 px (about 40 units high at its left end). */
       line-height: 1.1;
     }
     /* More specific than the label value rule below, whose ellipsis would clip a long figure. */
-    .moisture-recovery .figure .value {
+    .moisture-recovery .figure .value,
+    .moisture-outside .figure .value {
       overflow: visible;
       text-align: center;
     }
     /* The width of a space between the number and its unit; none where the unit goes under the number. */
-    .moisture-recovery .unit {
+    .moisture-recovery .unit,
+    .moisture-outside .unit {
       margin-left: 0.25em;
+    }
+    .moisture-recovery {
+      left: 74.9%;
+    }
+    /*
+     * Left of the exchanger, centred at x 91 and y 103 in the free box between the outdoor symbol (right edge x 56),
+     * the bypass path (left edge about x 127 at y 100), the outdoor lead and coil (to y 75) and the exhaust lead
+     * (from y 131): about 34 units each way, where the mirror of the recovered figure (x 100.5) would leave 26.
+     * The same two-line layout as the recovered figure, up to a wider card because the box is narrower.
+     */
+    .moisture-outside {
+      left: 22.75%;
+      top: 51.5%;
     }
     @container (max-width: ${MOISTURE_TWO_LINES}px) {
       .moisture-recovery .figure .value {
@@ -358,6 +380,15 @@ export class HrvVentilationCard extends HrvCard {
         flex-direction: column;
       }
       .moisture-recovery .unit {
+        margin-left: 0;
+      }
+    }
+    @container (max-width: ${MOISTURE_OUTSIDE_TWO_LINES}px) {
+      .moisture-outside .figure .value {
+        display: flex;
+        flex-direction: column;
+      }
+      .moisture-outside .unit {
         margin-left: 0;
       }
     }
@@ -532,6 +563,7 @@ export class HrvVentilationCard extends HrvCard {
         cooling: entityAt(config, 'status.cooling_saving'),
       },
       moistureRecovery: entityAt(config, 'status.moisture_recovery'),
+      moistureOutside: entityAt(config, 'status.moisture_outside'),
       preHeater: preHeaterEntity
         ? {
             entityId: preHeaterEntity,
@@ -738,12 +770,17 @@ export class HrvVentilationCard extends HrvCard {
    * The ERV's moisture recovery figure: the rate's magnitude after a direction icon, styled as a label, with the direction in words in its
    * tooltip.
    * Tapping it opens the moisture recovery entity (status.moisture_recovery); without one it is not tappable, and an
-   * image, so its label (with the direction in words) is still read out.
+   * image, so its label (with the direction in words) is still read out. The same box shows the put-outside rate left
+   * of the exchanger, which opens status.moisture_outside.
    */
-  private moistureFigure(figure: MoistureFigure | undefined): TemplateResult | typeof nothing {
+  private moistureFigure(
+    figure: MoistureFigure | undefined,
+    entityId: string | undefined,
+    position: 'recovery' | 'outside',
+  ): TemplateResult | typeof nothing {
     if (!figure) return nothing;
-    const tap = this.tap(this.settings?.moistureRecovery, 'img');
-    return html`<div class="on-drawing moisture-recovery">
+    const tap = this.tap(entityId, 'img');
+    return html`<div class="on-drawing moisture-${position}">
       <span
         class="label figure"
         title=${figure.title}
@@ -795,6 +832,7 @@ export class HrvVentilationCard extends HrvCard {
     const locale = localeFromHass(hass);
     const badge = settings.badge ? savingBadge(result, settings, locale) : undefined;
     const moisture = moistureFigure(result, settings, locale);
+    const outside = moistureOutsideFigure(result, settings, locale);
     const { states } = hass;
     const { temperatures, flows } = settings;
     const { rings } = settings;
@@ -847,7 +885,8 @@ export class HrvVentilationCard extends HrvCard {
         ${disabled && ventilationMode ? this.alert(ventilationMode, formatState(hass, ventilationMode)) : nothing}
         <div class="on-drawing bypass-position">${model.centre.map((label) => this.label(label))}</div>
         ${badge ? html`<div class="on-drawing saving">${this.badge(badge, savingTarget(result, settings.savings, states))}</div>` : nothing}
-        ${this.moistureFigure(moisture)}
+        ${this.moistureFigure(moisture, settings.moistureRecovery, 'recovery')}
+        ${this.moistureFigure(outside, settings.moistureOutside, 'outside')}
         ${model.flows.map(
           (label) =>
             html`<div class="on-drawing ${label.role === 'fans.supply_flow' ? 'supply-flow' : 'exhaust-flow'}">

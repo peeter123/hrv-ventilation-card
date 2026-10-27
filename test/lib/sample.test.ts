@@ -67,6 +67,9 @@ describe('the sample', () => {
     expect(
       Math.abs(Number(sampleState('status.moisture_recovery')) - (result?.moisture?.recovered ?? NaN)),
     ).toBeLessThan(1);
+    expect(Math.abs(Number(sampleState('status.moisture_outside')) - (result?.moisture?.outside ?? NaN))).toBeLessThan(
+      1,
+    );
   });
 
   test('formats like real sensors through the formatState fallback, a number with its unit', () => {

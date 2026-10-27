@@ -22,7 +22,7 @@ export type RolePath =
   | `${Stream}.${'temperature' | 'humidity' | 'absolute_humidity'}`
   | `fans.${'level' | 'supply_flow' | 'exhaust_flow' | 'ventilation_mode'}`
   | `bypass.${'position' | 'mode' | 'next_change'}`
-  | `status.${'operating_mode' | 'target_temperature' | 'temperature_profile' | 'next_fan_change' | 'filter_days' | 'power' | 'rmot' | 'heating_saving' | 'cooling_saving' | 'moisture_recovery'}`
+  | `status.${'operating_mode' | 'target_temperature' | 'temperature_profile' | 'next_fan_change' | 'filter_days' | 'power' | 'rmot' | 'heating_saving' | 'cooling_saving' | 'moisture_recovery' | 'moisture_outside'}`
   | `pre_heater.${'power' | 'energy' | 'temperature_after' | 'humidity_after'}`
   | `seasons.${'heating' | 'cooling'}`;
 

@@ -114,6 +114,7 @@ describe('DIAGRAM_SCHEMA', () => {
       'heating_saving',
       'cooling_saving',
       'moisture_recovery',
+      'moisture_outside',
     ]);
     expect(named.get('bypass')).toEqual(['position', 'mode', 'next_change']);
     expect(named.get('fans')).toEqual(['level', 'ventilation_mode', 'stopped_states', 'supply_flow', 'exhaust_flow']);

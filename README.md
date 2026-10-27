@@ -176,6 +176,7 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 | `heating_saving` | entity | | yes | Saved heating power sensor, opened by tapping the saving badge when it reads more than the cooling saving, or by default in heating mode. Not shown as a label. |
 | `cooling_saving` | entity | | yes | Saved cooling power sensor, opened by tapping the saving badge when it reads more than the heating saving, or by default in cooling mode. Not shown as a label. |
 | `moisture_recovery` | entity | | yes | Moisture recovery rate sensor, opened by tapping the ERV's moisture figure. Not shown as a label. |
+| `moisture_outside` | entity | | yes | Sensor opened by tapping the ERV's put-outside figure (left of the exchanger). Not shown as a label. |
 
 #### Pre-heater object
 
@@ -288,7 +289,7 @@ supply air, in g/h, from the same calculation and sensors as the badge. An icon 
 while moisture is recovered (the exchanger hands it back) and water-remove while the exchanger keeps moisture out
 (the outdoor air is more humid than the indoor air). The number is the size of the rate, without a sign, and the
 tooltip says which. On narrow cards the unit moves to a second line under the number. It is hidden or "n/a" like the
-badge, is shown in both layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. The type
+badge, is shown in both layouts, and tapping it opens the `status.moisture_recovery` sensor, if configured. A second figure left of the exchanger shows the moisture put outside with the exhaust air (the extracted moisture minus the recovered), with a home-export icon (home-import while moisture is brought in), and opens `status.moisture_outside`. The type
 changes only the drawing: the calculation and the bar cards are the same for both.
 
 **Effectiveness rings.** With `show_effectiveness: true` the exchanger gets progress rings that start at its top
@@ -542,6 +543,7 @@ status:
   heating_saving: sensor.hrv_saved_heating_power
   cooling_saving: sensor.hrv_saved_cooling_power
   moisture_recovery: sensor.hrv_moisture_recovery
+  moisture_outside: sensor.hrv_moisture_outside
 pre_heater:
   power: sensor.hrv_pre_heater_power
   energy: sensor.hrv_pre_heater_energy

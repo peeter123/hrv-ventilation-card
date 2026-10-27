@@ -29,6 +29,7 @@ export const SAMPLE_CONFIG: CardConfig = {
     heating_saving: id('status.heating_saving'),
     cooling_saving: id('status.cooling_saving'),
     moisture_recovery: id('status.moisture_recovery'),
+    moisture_outside: id('status.moisture_outside'),
   },
   pre_heater: {
     power: id('pre_heater.power'),
@@ -95,6 +96,7 @@ const VALUES: readonly (readonly [role: string, state: string, unit?: string])[]
   ['status.heating_saving', '1452', 'W'],
   ['status.cooling_saving', '0', 'W'],
   ['status.moisture_recovery', '478', 'g/h'],
+  ['status.moisture_outside', '462', 'g/h'],
   ['pre_heater.power', '0', 'W'],
   ['pre_heater.energy', '8', 'kWh'],
   ['pre_heater.temperature_after', '2', '°C'],
