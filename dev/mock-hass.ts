@@ -54,6 +54,8 @@ export const id = {
   /** The pre-heater as an on/off entity: on while its power is above 0. */
   preHeaterOn: 'binary_sensor.hrv_pre_heater',
   preHeaterEnergy: 'sensor.hrv_pre_heater_energy',
+  /** The air temperature after the pre-heater: the outdoor air plus the coil's heat over the flow. */
+  preHeaterAfter: 'sensor.hrv_pre_heater_temperature_after',
   heating: 'binary_sensor.hrv_heating_season',
   cooling: 'binary_sensor.hrv_cooling_season',
 } as const;
@@ -123,6 +125,13 @@ function fanLevel(flow: number): string {
   return FAN_LEVELS[fanLevelIndex(flow)] ?? 'Away';
 }
 
+/** The outdoor temperature plus the pre-heater's heat over the flow: dT = P / (flow / 3600 * 1.2 * 1006). */
+function afterPreHeater(values: MockValues): number {
+  const power = values.preHeater ?? 0;
+  if (power <= 0 || values.flow <= 0) return values.temperature.outdoor;
+  return values.temperature.outdoor + power / ((values.flow / 3600) * 1.2 * 1006);
+}
+
 function readings(values: MockValues): Record<string, Reading> {
   const result: Record<string, Reading> = {};
   for (const stream of STREAMS) {
@@ -158,6 +167,7 @@ function readings(values: MockValues): Record<string, Reading> {
     [id.preHeater]: { state: (values.preHeater ?? 0).toFixed(0), unit: 'W', decimals: 0 },
     [id.preHeaterOn]: { state: (values.preHeater ?? 0) > 0 ? 'on' : 'off' },
     [id.preHeaterEnergy]: { state: (values.preHeaterEnergy ?? 8).toFixed(0), unit: 'kWh', decimals: 0 },
+    [id.preHeaterAfter]: { state: afterPreHeater(values).toFixed(1), unit: '°C', decimals: 1 },
     [id.heating]: { state: values.season === 'heating' ? 'on' : 'off' },
     [id.cooling]: { state: values.season === 'cooling' ? 'on' : 'off' },
   } satisfies Record<string, Reading>);

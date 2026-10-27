@@ -145,6 +145,7 @@ const SWITCHABLE: Readonly<Record<string, string>> = {
   'pre-heater power': id.preHeater,
   'pre-heater on/off': id.preHeaterOn,
   'pre-heater energy': id.preHeaterEnergy,
+  'pre-heater T after': id.preHeaterAfter,
 };
 
 function element(elementId: string): HTMLElement {
@@ -164,6 +165,7 @@ function preHeaterConfig(): Record<string, unknown> {
     pre_heater: {
       power: options.preHeaterKind === 'power sensor' ? id.preHeater : id.preHeaterOn,
       energy: id.preHeaterEnergy,
+      temperature_after: id.preHeaterAfter,
       ...(options.preHeaterMax >= 1 && options.preHeaterMax <= 4000 ? { max_power: options.preHeaterMax } : {}),
     },
   };
@@ -186,6 +188,10 @@ function cardConfig(tag: Tag, sample: boolean): Record<string, unknown> {
     ...(fans ? { fans: { ...fans, level: FAN_LEVEL_ENTITIES[options.fanLevelKind] } } : {}),
     smoothing: options.smoothing,
   };
+  // The recovery bar shows the pre-heater's part from its power and the temperature after it.
+  if (tag === 'hrv-recovery-balance-card') {
+    return { ...shared, pre_heater: { power: id.preHeater, temperature_after: id.preHeaterAfter } };
+  }
   if (tag !== 'hrv-ventilation-card') return shared;
   return {
     ...shared,
