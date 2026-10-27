@@ -130,7 +130,7 @@ switch is on.
 |---|---|---|
 | ![Diagram card in a light theme, heating in winter](docs/images/diagram-light.png) | ![Diagram card in a dark theme](docs/images/diagram-dark.png) | ![Diagram card in the compact layout](docs/images/diagram-compact.png) |
 
-![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture recovery right of it](docs/images/diagram-erv.png)
+![Diagram card of an energy recovery unit (`exchanger_type: erv`): blue-grey exchanger with the moisture put outside left of it and the moisture recovered right of it](docs/images/diagram-erv.png)
 
 | With effectiveness rings (`show_effectiveness`) | Frost: pre-heater coil glowing, its power in the top row |
 |---|---|
@@ -184,7 +184,7 @@ On the diagram the stream's `absolute_humidity` is a shown label, so its picker 
 |---|---|---|---|---|
 | `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Draws the coil on the diagram. |
 | `energy` | entity | | | The pre-heater's energy sensor. Shown in the status grid (second column, bottom cell, heat wave icon). |
-| `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). ComfoAir Q: "pre-heater temperature after" (T21). Read by the calculation (the airflow card's badge and rings, and the recovery card from v0.5); it matters only while the pre-heater runs. |
+| `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). ComfoAir Q: "pre-heater temperature after" (T21). Read by the calculation (the airflow card's badge and rings and the recovery card); it matters only while the pre-heater runs. |
 | `humidity_after` | entity | | | The relative humidity of the air after the pre-heater. ComfoAir Q: "pre-heater humidity after" (H21). Read by the calculation like the temperature, only while the pre-heater runs; without it the outdoor humidity is used for the inlet. |
 | `max_power` | number | | yes | Rated power of the pre-heater in W (1 to 4000); e.g. Zehnder ComfoAir Q450: 1740 W. It differs per unit, so take it from the unit's documentation. Without it the coil glows fully at any power above 0. |
 | `glow_color` | color | `#ff9800` | yes | The colour the coil glows in while the heater is on: a CSS colour, by default a warm orange. |
@@ -787,7 +787,11 @@ Planned with OpenSpec (CLI `openspec`, installed globally with npm).
   figure in the top row and its energy in the status grid, and the shown defaults in the editor.
 - **Done: v0.4 of the cards**: the fan level from a fan entity or a select, the ventilation disabled state
   (`fans.ventilation_mode` with `stopped_states`), and the coil centreline.
-- **Next: a custom integration for history and energy statistics.** The cards show the present only. Power,
+- **Done: v0.5 of the cards** (released 2026-10-27): the exchanger inlet after the pre-heater (the new
+  `pre_heater.temperature_after` and `humidity_after` keys), the exchanger effectiveness measured on that inlet, and
+  the pre-heater part on the recovery bar; and the moisture put-outside figure on the diagram cards of an ERV.
+- **Next: the air density** from the pressure and the unit's altitude setting, instead of the fixed value.
+- **Then: a custom integration for history and energy statistics.** The cards show the present only. Power,
   energy, effectiveness and moisture rate sensors for charts and the energy dashboard come from template, filter
   and Riemann helpers in the author's installation today (a Jinja macro hard-coded to one unit); an integration
   will create them from the raw sensors with the same formulas. The cards will not depend on it.

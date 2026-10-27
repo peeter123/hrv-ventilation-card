@@ -2,15 +2,14 @@
 
 Ideas for later OpenSpec changes, outside the change in progress. Pick one up with `/opsx:propose`.
 
-Order (decided 2026-10-15): first a v0.2 of the cards with improvements; the integration and packaging below wait
-until after that.
+Released so far:
 
-v0.2 was released on 2026-10-15, v0.3 on 2026-10-20 (OpenSpec change `v0-3-preheater-and-effectiveness`: the
-editor's shown defaults, the pre-heater on the airflow card and the effectiveness rings) and v0.4 on 2026-10-22
-(OpenSpec change `v0-4-coil-and-fan-level`: the fan level from a fan entity, ventilation disabled and the coil's
-centreline) and v0.5 on 2026-10-27 (OpenSpec change `v0-5-preheater-inlet-and-moisture-outside`: the exchanger
-inlet after the pre-heater and the moisture put-outside figure). Next is the air density entry, then the
-integration, then packaging.
+- v0.2 on 2026-10-15.
+- v0.3 on 2026-10-20 (change `v0-3-preheater-and-effectiveness`: the editor's shown defaults, the pre-heater on the airflow card and the effectiveness rings).
+- v0.4 on 2026-10-22 (change `v0-4-coil-and-fan-level`: the fan level from a fan entity, ventilation disabled and the coil's centreline).
+- v0.5 on 2026-10-27 (change `v0-5-preheater-inlet-and-moisture-outside`: the exchanger inlet after the pre-heater and the moisture put-outside figure).
+
+Order now: the air density entry below, then the integration, then packaging.
 
 - **Air density from pressure, elevation and the unit's altitude setting** (before the integration, which copies
   the formulas). The sensible terms use a fixed `air_density` (1.2 kg/m³), right near sea level but about 25 % too
