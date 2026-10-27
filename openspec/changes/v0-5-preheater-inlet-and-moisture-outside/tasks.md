@@ -36,7 +36,7 @@
   why the 0.5 K gate, the three parts, the exchanger effectiveness and why not the free share, the (1 - effectiveness)
   note on where the pre-heater heat goes, the T21 / H21 PDOs) and the new roles in `README.md`; update
   `private/installation.md` (the macro's new inputs, T21 equal to T20 on this unit); verify the README tests pass
-- [ ] 1.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 1.8 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 2. Recovery balance bar: the pre-heater part
