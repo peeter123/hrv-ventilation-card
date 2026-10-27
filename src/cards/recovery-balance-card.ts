@@ -92,6 +92,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
         color: optionValue(config, RECOVERY_OPTIONS.coolingColor),
         latent: optionValue(config, RECOVERY_OPTIONS.coolingLatent),
       },
+      preHeater: optionValue(config, RECOVERY_OPTIONS.preHeaterColor),
     };
     this.minScale = optionValue(config, RECOVERY_OPTIONS.minScale);
   }
@@ -102,7 +103,7 @@ export class HrvRecoveryBalanceCard extends BarCard {
     const { result } = this.calculator(hass);
     const view = recoveryView(result, { colors: this.colors, minScale: this.minScale }, localeFromHass(hass));
     const parts = view.legend.filter((entry) => entry.kind === 'part');
-    const texts = view.legend.filter((entry) => entry.kind === 'text');
+    const others = view.legend.filter((entry) => entry.kind !== 'part');
     return html`<ha-card>
       <div class="head">
         <span class="title">${view.title}</span>
@@ -122,7 +123,11 @@ export class HrvRecoveryBalanceCard extends BarCard {
               </div>`,
           )}
         </div>
-        ${texts.map((entry) => html`<span>${entry.text}</span>`)}
+        ${others.map((entry) =>
+          entry.kind === 'swatch'
+            ? html`<span class="item">${swatch(entry.color)}${entry.text}</span>`
+            : html`<span>${entry.text}</span>`,
+        )}
       </div>
       ${this.sampleNote()}
     </ha-card>`;

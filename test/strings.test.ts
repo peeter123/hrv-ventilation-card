@@ -112,6 +112,7 @@ describe('texts', () => {
       RECOVERY.cooling('1'),
       RECOVERY.lost('1'),
       RECOVERY.missed('1'),
+      RECOVERY.preHeater('1'),
       RECOVERY.scale('1'),
       MOISTURE.flow(figures),
       MOISTURE.flow({ ...figures, gaining: true }),

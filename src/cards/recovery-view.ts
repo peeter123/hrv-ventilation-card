@@ -25,6 +25,7 @@ export const RECOVERY_OPTIONS = {
   heatingLatent: color('heating.color_latent', '#f4a09a'),
   coolingColor: color('cooling.color', '#039be5'),
   coolingLatent: color('cooling.color_latent', '#8fd3f7'),
+  preHeaterColor: color('pre_heater.color', '#ff9800'),
 } as const satisfies Record<string, NumberOption | ColorOption>;
 
 export const RECOVERY_OPTION_LIST: readonly OptionSpec[] = Object.values(RECOVERY_OPTIONS);
@@ -32,18 +33,21 @@ export const RECOVERY_OPTION_LIST: readonly OptionSpec[] = Object.values(RECOVER
 export interface RecoveryColors {
   heating: { color: string; latent: string };
   cooling: { color: string; latent: string };
+  preHeater: string;
 }
 
-/** One legend entry: a lane's name with its recovered and lost part, or plain text. */
+/** One legend entry: a lane's name with its recovered and lost part, plain text, or text with one solid swatch. */
 export type LegendEntry =
-  { kind: 'part'; color: string; label: string; recovered: string; lost: string } | { kind: 'text'; text: string };
+  | { kind: 'part'; color: string; label: string; recovered: string; lost: string }
+  | { kind: 'text'; text: string }
+  | { kind: 'swatch'; color: string; text: string };
 
 export interface RecoveryView {
   title: string;
   header: string;
   /** The header's colour; undefined for the theme's secondary text colour (no value). */
   headerColor?: string;
-  /** The temperature lane and, with humidity, the moisture lane: each its recovered then its lost part. */
+  /** The temperature lane and, with humidity, the moisture lane: each its recovered, its lost and, while the pre-heater runs, its pre-heater part. */
   lanes: DrawnSegment[][];
   legend: LegendEntry[];
 }
@@ -61,14 +65,18 @@ export function recoveryView(
   const { recovered: recoveredTotal, potential, parts } = recoveryTotals(result);
   const { recovered, lost } = parts;
 
+  // The pre-heater parts in whole W like the others; the header's potential leaves them out.
+  const preHeater = { sensible: Math.round(result.preHeater.sensible), latent: Math.round(result.preHeater.latent) };
+  const preHeaterTotal = Math.round(result.preHeater.sensible + result.preHeater.latent);
+
   // One lane per kind (temperature, and moisture with humidity), each its solid recovered and its hatched lost part,
-  // on the scale of the fuller lane.
-  const lane = (recoveredPart: number, lostPart: number, laneColor: string) => ({
-    values: [recoveredPart, lostPart],
-    backgrounds: [laneColor, hatch(laneColor)],
+  // then the solid pre-heater part while it runs, on the scale of the fuller lane.
+  const lane = (recoveredPart: number, lostPart: number, preHeaterPart: number, laneColor: string) => ({
+    values: preHeaterPart === 0 ? [recoveredPart, lostPart] : [recoveredPart, lostPart, preHeaterPart],
+    backgrounds: [laneColor, hatch(laneColor), options.colors.preHeater],
   });
-  const laneParts = [lane(recovered.sensible, lost.sensible, color)];
-  if (result.latentKnown) laneParts.push(lane(recovered.latent, lost.latent, latentColor));
+  const laneParts = [lane(recovered.sensible, lost.sensible, preHeater.sensible, color)];
+  if (result.latentKnown) laneParts.push(lane(recovered.latent, lost.latent, preHeater.latent, latentColor));
   const scale = Math.max(...laneParts.map(({ values }) => barScale(values, options.minScale)));
   const lanes = laneParts.map(({ values, backgrounds }) =>
     layoutSegments(values, scale).map((segment, i) => ({ ...segment, background: backgrounds[i] ?? color })),
@@ -104,6 +112,9 @@ export function recoveryView(
       recovered: recoveredText(watts(recovered.latent)),
       lost: lostText(watts(lost.latent)),
     });
+  }
+  if (preHeaterTotal >= 1) {
+    legend.push({ kind: 'swatch', color: options.colors.preHeater, text: RECOVERY.preHeater(watts(preHeaterTotal)) });
   }
   legend.push({ kind: 'text', text: RECOVERY.scale(watts(scale)) });
 

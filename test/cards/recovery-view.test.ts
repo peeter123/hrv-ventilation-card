@@ -6,6 +6,7 @@ import { nb } from '../nbsp';
 const COLORS: RecoveryColors = {
   heating: { color: '#db4437', latent: '#f4a09a' },
   cooling: { color: '#039be5', latent: '#8fd3f7' },
+  preHeater: '#ff9800',
 };
 const EN = { language: 'en', number_format: 'language' };
 
@@ -23,7 +24,7 @@ const result = (overrides: Partial<RecoveryResult> = {}): RecoveryResult => ({
 });
 
 const texts = (legend: LegendEntry[]): string[] =>
-  legend.map((entry) => (entry.kind === 'text' ? entry.text : `${entry.label}: ${entry.recovered} | ${entry.lost}`));
+  legend.map((entry) => (entry.kind === 'part' ? `${entry.label}: ${entry.recovered} | ${entry.lost}` : entry.text));
 
 describe('recoveryView', () => {
   test('recovery-balance-card "Positive potential": "Recovered 300 W of 400 W (75 %)"', () => {
@@ -151,5 +152,59 @@ describe('recoveryView', () => {
   test('without a result: the no-value view', () => {
     const view = recoveryView(undefined, { colors: COLORS, minScale: 500 }, EN);
     expect(view).toEqual({ title: 'Recovery', header: 'n/a', lanes: [], legend: [] });
+  });
+
+  describe('pre-heater', () => {
+    const running = result({
+      recovered: { sensible: 1073, latent: 0 },
+      lost: { sensible: 402, latent: 0 },
+      preHeater: { sensible: 335, latent: 0 },
+      latentKnown: false,
+    });
+    const options = { colors: COLORS, minScale: 500 };
+
+    test('recovery-balance-card "Pre-heater running": a solid pre-heater segment after recovered and lost', () => {
+      const view = recoveryView(running, options, EN);
+      const hatched = expect.stringMatching(/repeating-linear-gradient.*#db4437/) as unknown;
+      expect(view.lanes).toHaveLength(1);
+      expect(view.lanes[0]?.map((segment) => segment.background)).toEqual(['#db4437', hatched, '#ff9800']);
+      expect(view.header).toBe(nb('Recovered 1,073 W of 1,475 W (73 %)'));
+    });
+
+    test('recovery-balance-card "Pre-heater running": the moisture lane gets the latent part, the scale includes it', () => {
+      const view = recoveryView(
+        result({ preHeater: { sensible: 335.4, latent: 120 } }),
+        { colors: COLORS, minScale: 100 },
+        EN,
+      );
+      expect(view.lanes.map((lane) => lane.at(-1)?.background)).toEqual(['#ff9800', '#ff9800']);
+      expect(view.legend.at(-2)).toEqual({ kind: 'swatch', color: '#ff9800', text: nb('Pre-Heater 455 W') });
+      // 250 + 80 + 335 = 665 W in the temperature lane, rounded up to the scale step of 750 W.
+      expect(view.lanes[0]?.at(-1)?.width).toBeCloseTo((335 / 750) * 50, 9);
+    });
+
+    test('recovery-balance-card "Pre-heater not running": two segments per lane as before', () => {
+      const view = recoveryView(result(), options, EN);
+      expect(view.lanes.map((lane) => lane.length)).toEqual([2, 2]);
+    });
+
+    test('recovery-balance-card "Pre-heater entry": the lanes, the pre-heater with its colour, then the scale', () => {
+      const view = recoveryView(running, options, EN);
+      expect(view.legend.map((entry) => entry.kind)).toEqual(['part', 'swatch', 'text']);
+      expect(view.legend[1]).toEqual({ kind: 'swatch', color: '#ff9800', text: nb('Pre-Heater 335 W') });
+    });
+
+    test('recovery-balance-card "No pre-heater entry": without the part, only the lanes and the scale', () => {
+      expect(recoveryView(result(), options, EN).legend.map((entry) => entry.kind)).toEqual(['part', 'part', 'text']);
+      const tiny = result({ preHeater: { sensible: 0.4, latent: 0.0 } });
+      expect(recoveryView(tiny, options, EN).legend.map((entry) => entry.kind)).toEqual(['part', 'part', 'text']);
+      expect(recoveryView(tiny, options, EN).lanes.map((lane) => lane.length)).toEqual([2, 2]);
+    });
+
+    test('recovery-balance-card "Custom pre-heater colour": the segment and the swatch use it', () => {
+      const view = recoveryView(running, { colors: { ...COLORS, preHeater: '#ffc107' }, minScale: 500 }, EN);
+      expect(view.lanes[0]?.at(-1)?.background).toBe('#ffc107');
+      expect(view.legend[1]).toMatchObject({ kind: 'swatch', color: '#ffc107' });
+    });
   });
 });

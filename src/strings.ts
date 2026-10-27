@@ -198,6 +198,8 @@ export const RECOVERY = {
   lost: (watts: string): string => `Lost ${watts}${NBSP}W`,
   /** The lost part's legend while free cooling: cooling the outdoor air could have brought but the supply did not. */
   missed: (watts: string): string => `Missed ${watts}${NBSP}W`,
+  /** The pre-heater's legend: the power it adds to the air before the exchanger. */
+  preHeater: (watts: string): string => `Pre-Heater ${watts}${NBSP}W`,
   scale: (watts: string): string => `Scale ±${watts}${NBSP}W`,
 } as const;
 

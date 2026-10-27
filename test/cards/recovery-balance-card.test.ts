@@ -87,6 +87,9 @@ describe('checkRecoveryConfig', () => {
       checkRecoveryConfig({ ...CONFIG, heating: { color: 'red; x' } });
     }).toThrow('heating.color');
     expect(() => {
+      checkRecoveryConfig({ ...CONFIG, pre_heater: { color: 'red; x' } });
+    }).toThrow('pre_heater.color');
+    expect(() => {
       checkRecoveryConfig({ ...CONFIG, min_scale: 0 });
     }).toThrow('min_scale');
     expect(() => {
