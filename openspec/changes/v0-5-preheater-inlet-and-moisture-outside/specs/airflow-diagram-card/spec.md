@@ -102,19 +102,19 @@ SHALL keep showing what the flow entities report.
 
 ### Requirement: Moisture put-outside figure on ERV
 Under the same conditions as the moisture recovery figure, the card SHALL show the calculated moisture put outside in
-g/h left of the exchanger: its magnitude without a sign after a direction icon, `mdi:home-export-outline` while
-moisture is put outside (0 or more) and `mdi:home-import-outline` while the ventilation brings it in. The tooltip
+g/h left of the exchanger: its magnitude without a sign after a direction icon, `mdi:water-remove` while
+moisture is put outside (0 or more) and `mdi:water-plus` while the ventilation brings it in. The tooltip
 SHALL name the direction with the magnitude. Where the figure does not fit on one line, its unit SHALL go to a second
 line.
 
 #### Scenario: Moisture put outside
 - **WHEN** the type is ERV and the calculated moisture put outside is 230 g/h
-- **THEN** left of the exchanger a home-export icon is followed by "230 g/h", with the tooltip "Moisture put outside:
+- **THEN** left of the exchanger a water-remove icon is followed by "230 g/h", with the tooltip "Moisture put outside:
   230 g/h"
 
 #### Scenario: Moisture brought in
 - **WHEN** the type is ERV and the calculated moisture put outside is -200 g/h
-- **THEN** left of the exchanger a home-import icon is followed by "200 g/h", without a minus sign, with the tooltip
+- **THEN** left of the exchanger a water-plus icon is followed by "200 g/h", without a minus sign, with the tooltip
   "Moisture brought in: 200 g/h"
 
 #### Scenario: Input unavailable

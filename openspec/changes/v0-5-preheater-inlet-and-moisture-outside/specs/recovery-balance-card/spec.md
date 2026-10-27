@@ -18,8 +18,8 @@ SHALL compute its figures with the shared recovery calculation.
 ### Requirement: Diverging segment layout
 The bar SHALL have a zero line in the centre and two lanes on the same scale, divided by a line: the temperature
 (sensible) lane on top and, with humidity, the moisture (latent) lane below it. The two lanes SHALL be equally high
-and the dividing line SHALL NOT take height from either one. Each lane SHALL show its recovered part, its lost part
-and then its pre-heater part, each a segment whose width is proportional to its absolute value; positive parts grow
+and the dividing line SHALL NOT take height from either one. Each lane SHALL show its pre-heater part, its recovered
+part and then its lost part, each a segment whose width is proportional to its absolute value; positive parts grow
 to the right and negative parts to the left. Recovered parts SHALL be solid, lost parts hatched, both in the lane's
 colour, and pre-heater parts solid in the pre-heater colour.
 
@@ -39,8 +39,8 @@ colour, and pre-heater parts solid in the pre-heater colour.
 
 #### Scenario: Pre-heater running
 - **WHEN** the calculation gives 1073 W recovered, 402 W lost and a pre-heater part of 335 W, all sensible
-- **THEN** the temperature lane shows a solid 1073 W and a hatched 402 W segment in the temperature colour, then a
-  solid 335 W segment in the pre-heater colour
+- **THEN** the temperature lane shows from the zero line a solid 335 W segment in the pre-heater colour, then a solid
+  1073 W and a hatched 402 W segment in the temperature colour
 
 #### Scenario: Pre-heater not running
 - **WHEN** the pre-heater part is 0 W

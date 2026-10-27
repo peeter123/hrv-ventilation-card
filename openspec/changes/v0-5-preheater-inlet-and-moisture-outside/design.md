@@ -7,7 +7,7 @@ config and `hass` into its inputs, with the streams' absolute humidities smoothe
 recovery balance card and the airflow card use it; the moisture balance card uses only `calculateMoisture`, which this
 change does not touch. The ComfoAir Q reports the air after the pre-heater as T21 / H21 (PDO 277 / 293); on the
 author's unit these read the same as T20 / H20 (monthly means from January to October 2026 agree to 0.001 K, minimum
--4.3 °C), and the pre-heater has never run (0 kWh since start). So the pre-heater path can only be checked with
+-4.3 °C), and the pre-heater, which works, has not been needed with the ERV core (0 kWh since start). So the pre-heater path can only be checked with
 synthetic vectors and the preview page, not with live data.
 
 On the drawing (`src/diagram/drawing.ts`, viewBox 400 x 200) the recovered moisture figure sits at x 299.5, y 100, in
@@ -82,15 +82,17 @@ lane would then not sum to the load whenever the two humidity sensors disagree.
 
 ### Recovery bar: a third value per lane
 
-Each lane's values become `[recovered, lost, preHeater]` with backgrounds `[colour, hatch(colour), preHeaterColour]`;
-`layoutSegments` and `barScale` already take any number of values. The pre-heater segment comes last, so the solid
-recovered segment keeps starting at the zero line and recovered plus lost stay adjacent, as the header's percentage
-reads them. The legend gets a plain entry kind with one swatch, shown while the pre-heater total rounds to 1 W or
-more. The colour option is `pre_heater.glow_color` (default `#ff9800`), an advanced field in a new pre-heater section of the
-recovery editor, next to the shared `pre_heater` power, `temperature_after` and `humidity_after` pickers.
+Each lane's values become `[preHeater, recovered, lost]` with backgrounds `[preHeaterColour, colour, hatch(colour)]`;
+`layoutSegments` and `barScale` already take any number of values. The pre-heater segment comes first, from the zero
+line, in the physical order of the air (outdoor, pre-heater, exchanger, house), and the hatched lost segment stays at
+the outer end of the lane instead of sitting between two solid segments. Recovered and lost stay adjacent, as the
+header's percentage reads them. The legend gets a plain entry kind with one swatch, shown while a pre-heater segment is
+drawn. The colour option is `pre_heater.glow_color` (default `#ff9800`), an advanced field in a new pre-heater section
+of the recovery editor, next to the shared `pre_heater` power, `temperature_after` and `humidity_after` pickers.
 
-Alternative considered: the pre-heater segment first (the physical order outdoor, pre-heater, exchanger, house).
-Rejected for now because it moves the recovered segment off the zero line; the feedback round can revisit it.
+Alternative considered: the pre-heater segment last, so the recovered segment keeps starting at the zero line. That
+was built first and changed on the user's feedback (2026-10-27): the hatched lost segment between two solid segments
+did not look good.
 
 ### Moisture put-outside figure: centred in the left box, not mirrored
 
@@ -134,7 +136,7 @@ the vectors with an after humidity are computed from the formulas and recorded i
 
 1. Release v0.5.0 with the roles optional: existing configs render exactly as before, except that ERV diagram cards
    show the new put-outside figure.
-2. Deploy the macro with the two extra inputs; the live pre-heater has never run, so the helpers' values and the
+2. Deploy the macro with the two extra inputs; the live pre-heater has not been needed, so the helpers' values and the
    energy totals do not change. Reload the custom templates.
 3. With the user's confirmation, add `pre_heater.temperature_after` and `pre_heater.humidity_after` (and, if the user
    wants, `pre_heater.power` back, which also draws the coil) to the live diagram and recovery cards.

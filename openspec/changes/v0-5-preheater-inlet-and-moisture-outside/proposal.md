@@ -29,24 +29,25 @@ moisture balance card shows it; the diagram does not.
   recovered / (recovered + lost), so with the pre-heater running (supply - inlet) / (extract - inlet): the core's own
   effectiveness, which does not drop when the pre-heater switches on. The moisture effectiveness, the moisture rates
   and the moisture balance card are unchanged.
-- **Recovery balance bar.** While the pre-heater part is above 0 W, the temperature lane gets a third segment after the
-  lost part in a pre-heater colour (option `pre_heater.glow_color`, default the coil's orange `#ff9800`), the legend a
+- **Recovery balance bar.** While the pre-heater part is above 0 W, the temperature lane gets a third segment, first from
+  the zero line, in a pre-heater colour (option `pre_heater.glow_color`, default the coil's orange `#ff9800`), the legend a
   "Pre-heater X W" entry. The header keeps "Recovered X W of Y W (N %)" with Y = recovered + lost. The card gets the
   pre-heater roles (power, temperature after, humidity after) in its config and editor.
 - **Moisture put outside on the airflow diagram (ERV).** A second moisture figure left of the exchanger, centred in the
   space between the outdoor symbol and the bypass path (not mirrored from the right figure: the mirrored spot is too
   close to the bypass path), with the magnitude of `moisture.outside` in g/h after a direction icon:
-  `mdi:home-export-outline` while moisture is put outside, `mdi:home-import-outline` while the ventilation brings it
+  `mdi:water-remove` while moisture is put outside, `mdi:water-plus` while the ventilation brings it
   in (outdoor air more humid). Same conditions as the recovered figure (ERV with the badge's inputs). A new optional
   advanced role `status.moisture_outside` sets what a tap opens.
 - **Installation.** The formula macro of the author's installation takes T21 and the pre-heater power the same way
-  (the live pre-heater has never run, so the energy totals do not change). With the user's confirmation the live
+  (the live pre-heater works but has not been needed, so the energy totals do not change). With the user's confirmation the live
   cards get the new roles.
 - **Release v0.5.0** on the existing GitHub repository. The backlog entry "Exchanger inlet after the pre-heater"
   moves into this change.
 
 Assumptions (defaults chosen in the explore session, open to the user's feedback rounds): the two icons, the tap
-role, the pre-heater segment's place after the lost part and its colour, and the 0.5 K gate.
+role, the pre-heater segment's place (moved first, before
+recovered, on the user's feedback) and its colour, and the 0.5 K gate.
 
 ## Out of scope
 
