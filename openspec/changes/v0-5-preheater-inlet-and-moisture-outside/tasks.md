@@ -21,7 +21,7 @@
   tri-state, the after temperature, and the after humidity through the smoothing store with a derived key, all in
   `used`; verify calculator tests with a mock `hass` (roles absent, after temperature only, both, power entity as a
   sensor and as a binary sensor, after humidity smoothed over the window)
-- [ ] 1.5 Update the installation's macro `private/templates/comfoair_q450.jinja` (design: "Formula macro"): two
+- [x] 1.5 Update the installation's macro `private/templates/comfoair_q450.jinja` (design: "Formula macro"): two
   optional inputs (after temperature, pre-heater power), the same running rule, the inlet with the outdoor AH,
   `eff_sensible` on the inlet and a `heating_pre_heater` kind; keep a copy of the current macro first, deploy it (the
   hook), run `homeassistant.reload_custom_templates`, and verify with `ha_eval_template` that the live helpers'
