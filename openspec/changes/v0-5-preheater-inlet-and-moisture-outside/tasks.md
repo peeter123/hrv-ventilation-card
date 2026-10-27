@@ -96,7 +96,7 @@
   image the README links exists and the ERV images show both moisture figures
 - [x] 4.2 Set the version to `0.5.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
-- [ ] 4.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; with the user's
+- [x] 4.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; with the user's
   confirmation before each dashboard save, add `pre_heater.temperature_after` and `pre_heater.humidity_after` to the
   live diagram and recovery cards; verify with Playwright (service workers blocked) on the dashboards that the cards
   render as in v0.4 apart from the put-outside figure, the badge and the bar are unchanged (pre-heater off), and the
