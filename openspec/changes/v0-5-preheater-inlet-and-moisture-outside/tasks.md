@@ -17,7 +17,7 @@
   with a sensor offset", "No power entity" at 0.3 and 0.6 K, "Cooling mode", "Only the after temperature", "Moisture
   figures unchanged", "Parts sum to the load" with and without humidity, "After humidity differs" 14 W, both "After
   temperature unavailable" cases, "Unit without pre-heater roles"), and that every existing vector still passes
-- [ ] 1.4 Read the new roles in `src/calc/inputs.ts` (design: "After humidity smoothed like a stream"): the power's
+- [x] 1.4 Read the new roles in `src/calc/inputs.ts` (design: "After humidity smoothed like a stream"): the power's
   tri-state, the after temperature, and the after humidity through the smoothing store with a derived key, all in
   `used`; verify calculator tests with a mock `hass` (roles absent, after temperature only, both, power entity as a
   sensor and as a binary sensor, after humidity smoothed over the window)
