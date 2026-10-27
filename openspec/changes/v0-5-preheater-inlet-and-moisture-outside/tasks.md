@@ -72,7 +72,7 @@
   (design: "Moisture put-outside figure"); verify unit tests for "Moisture put outside" (230 g/h), "Moisture brought
   in" (-200 g/h, no minus), a rate that rounds to 0 (put outside), "Input unavailable" (hidden, or "n/a" with
   show-unavailable) and "HRV" (none), and the strings and NBSP tests
-- [x] 3.3 Render it in `src/cards/ventilation-card.ts` left of the exchanger (class, CSS at about 22.75 % / 51.5 %, its
+- [x] 3.3 Render it in `src/cards/ventilation-card.ts` left of the exchanger (class, CSS at about 22.75 % / 50 %, its
   own two-line container threshold), with the tap role `status.moisture_outside` (`RolePath`, advanced status picker)
   and no recovery while ventilation is disabled; verify card tests for "Entity configured", "No entity" (no
   `tabindex`), "Roles configured" and "Recovery while ventilation disabled" (both figures)

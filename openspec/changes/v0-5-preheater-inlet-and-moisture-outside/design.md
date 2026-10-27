@@ -94,7 +94,8 @@ Rejected for now because it moves the recovered segment off the zero line; the f
 
 ### Moisture put-outside figure: centred in the left box, not mirrored
 
-The figure sits at about x 91 (22.75 %), y 103 (51.5 %), the centre of the free box, leaving about 34 units on each
+The figure sits at about x 91 (22.75 %), y 100 (50 %), the height of the exchanger's centre and of the recovered
+figure, so the pair lines up (the free box's own centre, y 103, was tried and showed as an offset), leaving about 34 units on each
 side. The mirrored spot (x 100.5) leaves only 26 units to the bypass edge, which a two-line figure at 280 px (about
 50 units wide) would touch. `moistureFigure` in `src/diagram/badge.ts` gets a sibling for the outside rate (or one
 function with a kind), with its own icons, tooltips and "n/a" text in `src/strings.ts` ("Moisture put outside: X g/h",
