@@ -92,9 +92,9 @@
 
 ## 4. Release
 
-- [ ] 4.1 Retake the README images that show an ERV diagram or the recovery bar with `npm run capture`; verify every
+- [x] 4.1 Retake the README images that show an ERV diagram or the recovery bar with `npm run capture`; verify every
   image the README links exists and the ERV images show both moisture figures
-- [ ] 4.2 Set the version to `0.5.0` in `package.json`, run `npm run release` and commit `dist/`; verify
+- [x] 4.2 Set the version to `0.5.0` in `package.json`, run `npm run release` and commit `dist/`; verify
   `npm run release` and `npm run check` pass from a clean checkout and produce the committed bundle
 - [ ] 4.3 Deploy `dist/` with the workspace's deploy script and bump the Lovelace resource `?v=`; with the user's
   confirmation before each dashboard save, add `pre_heater.temperature_after` and `pre_heater.humidity_after` to the
