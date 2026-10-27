@@ -7,6 +7,7 @@ import '../../dev/ha-stubs';
 import { CONFIGS, id, MockHass, type MockValues } from '../../dev/mock-hass';
 import '../../src/cards/ventilation-card';
 import { COMPACT_BELOW } from '../../src/diagram/labels';
+import { PATHS } from '../../src/diagram/drawing';
 
 const THEMES = {
   light: {
@@ -404,6 +405,30 @@ function streamCrossing(root: ShadowRoot): (rect: DOMRect) => boolean {
   };
 }
 
+/** Whether a screen rectangle keeps clear of the bypass path's stroke (PATHS.bypass, 14 units wide), for the card in `root`. */
+function clearOfBypass(root: ShadowRoot): (rect: DOMRect) => boolean {
+  const toScreen = root.querySelector<SVGGraphicsElement>('svg .exchanger')?.getScreenCTM();
+  if (!toScreen) throw new Error('no exchanger');
+  const toDrawing = toScreen.inverse();
+  // The path is drawn even at strength 0 only when the bypass is open, so measure the path itself.
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', PATHS.bypass);
+  const length = path.getTotalLength();
+  return (rect) => {
+    const [a, b] = [new DOMPoint(rect.left, rect.top), new DOMPoint(rect.right, rect.bottom)].map((point) =>
+      point.matrixTransform(toDrawing),
+    ) as [DOMPoint, DOMPoint];
+    for (let at = 0; at <= length; at += 1) {
+      const point = path.getPointAtLength(at);
+      // The distance of the path's centreline to the box, in drawing units; the stroke reaches 7 units from it.
+      const dx = Math.max(a.x - point.x, 0, point.x - b.x);
+      const dy = Math.max(a.y - point.y, 0, point.y - b.y);
+      if (Math.hypot(dx, dy) < 7) return false;
+    }
+    return true;
+  };
+}
+
 /** The boxes of a node's text, one per text node (the browser's text boxes, not the label's line box). */
 const textNodes = (element: Element): { node: Node; box: DOMRect }[] => {
   const found: { node: Node; box: DOMRect }[] = [];
@@ -489,6 +514,16 @@ describe('exchanger type', () => {
     expect(overlap(bypass, badge)).toBe(false);
     expect(overlap(badge, figure)).toBe(false);
     expect(overlap(bypass, figure)).toBe(false);
+    // The put-outside figure left of the exchanger: clear of the bypass and the other figures.
+    const outside = box(root, '.moisture-outside .figure');
+    expect(outside.right).toBeLessThan(room.left);
+    expect(streamCrossing(root)(outside)).toBe(false);
+    expect(clearOfBypass(root)(outside)).toBe(true);
+    // The check can fail: the box of the bypass path's own corner is not clear of it.
+    expect(clearOfBypass(root)(box(root, 'svg .bypass'))).toBe(false);
+    expect(overlap(outside, figure)).toBe(false);
+    expect(overlap(outside, badge)).toBe(false);
+    expect(overlap(outside, bypass)).toBe(false);
   });
 
   const FIGURE_WIDTHS = [280, 320, COMPACT_BELOW, 360, 400, 401, 450, 500, 600];
@@ -538,6 +573,53 @@ describe('exchanger type', () => {
         }
       });
     }
+  }
+
+  // The supply air more humid than the extract air at a high flow: about -1,500 g/h put outside, so moisture brought in.
+  const BROUGHT_IN: MockValues = {
+    ...KEPT_OUT,
+    humidity: { outdoor: 70, supply: 60, extract: 45, exhaust: 60 },
+    flow: 340,
+  };
+  for (const layout of ['auto', 'full'] as const) {
+    test(`airflow-diagram-card "Moisture put-outside figure clear of the bypass", ${layout} layout: clear of the bypass, the outdoor symbol, the coil, the streams and the corner labels, 280 to 600 px`, async () => {
+      const shown = await show(
+        280,
+        'light',
+        layout,
+        { ...BROUGHT_IN, preHeater: 1000 },
+        {
+          exchanger_type: 'erv',
+          smoothing: 0,
+          pre_heater: { power: id.preHeater },
+        },
+      );
+      const { root } = shown;
+      for (const width of [280, 300, 340, 400, 600]) {
+        await resize(shown, width);
+        const where = `${layout} ${String(width)} px`;
+        const figure = box(root, '.moisture-outside .figure');
+        const value = root.querySelector('.moisture-outside .value');
+        if (!value) throw new Error('no put-outside value');
+        expect(root.querySelector('.moisture-outside .number')?.textContent, where).toMatch(/^\d,\d{3}$/);
+        expect(clearOfBypass(root)(figure), `${where} bypass`).toBe(true);
+        expect(streamCrossing(root)(figure), `${where} streams`).toBe(false);
+        const outdoor = root.querySelectorAll('svg .symbol circle')[0]?.getBoundingClientRect();
+        if (!outdoor) throw new Error('no outdoor symbol');
+        expect(overlap(figure, outdoor), `${where} outdoor symbol`).toBe(false);
+        expect(overlap(figure, box(root, '.pre-heater')), `${where} coil`).toBe(false);
+        expect(overlap(figure, box(root, '.moisture-recovery .figure')), `${where} recovered figure`).toBe(false);
+        for (const corner of root.querySelectorAll('.corner .label:not(.hidden)'))
+          expect(overlap(corner.getBoundingClientRect(), figure), `${where} ${corner.textContent}`).toBe(false);
+        expect(parseFloat(getComputedStyle(value).fontSize), where).toBeGreaterThanOrEqual(11);
+        expect(getComputedStyle(value).overflow, where).toBe('visible');
+        // The unit under the number up to 500 px (MOISTURE_OUTSIDE_TWO_LINES), beside it from there.
+        const [number, unit] = [box(root, '.moisture-outside .number'), box(root, '.moisture-outside .unit')];
+        if (width <= 500) expect(unit.top, where).toBeGreaterThanOrEqual(number.bottom - 0.5);
+        else expect(unit.left, where).toBeGreaterThan(number.right + 1);
+        expect(value.scrollWidth, where).toBeLessThanOrEqual(value.clientWidth);
+      }
+    });
   }
 
   test('airflow-diagram-card "Four-digit rate on a narrow card": the two-line form fits the wedge at 280 px', async () => {
