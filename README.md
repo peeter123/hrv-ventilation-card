@@ -426,7 +426,7 @@ numbers (`rgb(219, 68, 55)`, `hsl(5, 70%, 54%)`, `oklch(62% 0.2 28)`) or a theme
 The same `pre_heater` object as on the airflow diagram card (see [Pre-heater](#pre-heater-object)); the recovery card
 reads these keys. While the pre-heater runs, the bar shows the heat it adds as a third, solid segment after the lost
 part, with a swatch and its power in the legend; the segment is the pre-heater's own heat, apart from the recovered
-and the lost part. Without `temperature_after` the bar shows no pre-heater part.
+and the lost part. It is there in the temperature lane (sensible) and in the moisture lane (latent), in the pre-heater colour, with its legend entry from 1 W; the header's figure and percentage leave it out (they are the exchanger's own). Without `temperature_after` the bar shows no pre-heater part.
 
 | Name | Type | Default | Advanced | Description |
 |---|---|---|---|---|
