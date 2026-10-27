@@ -201,4 +201,107 @@ describe('calculateFromConfig', () => {
     const { inputs } = calculateFromConfig(smoothed, failing(later), store);
     expect(inputs.absoluteHumidity?.extract).toBeCloseTo(7.6, 9);
   });
+
+  describe('the pre-heater', () => {
+    const AFTER_STATES = [
+      ...STATES,
+      state('sensor.after_t', '5', '°C'),
+      state('sensor.after_rh', '60', '%'),
+      state('sensor.pre_heater_power', '350', 'W'),
+    ];
+    // The derived series is stamped with the later of its two entities, so both start an hour back.
+    const EARLIER = replace(
+      replace(AFTER_STATES, state('sensor.after_rh', '60', '%', NOW - 3600_000)),
+      state('sensor.after_t', '5', '°C', NOW - 3600_000),
+    );
+    const withPreHeater = (preHeater: Record<string, string>): CardConfig => ({ ...COMPLETE, pre_heater: preHeater });
+    const TEMPERATURE_ONLY = withPreHeater({ temperature_after: 'sensor.after_t', power: 'sensor.pre_heater_power' });
+    const BOTH = withPreHeater({
+      temperature_after: 'sensor.after_t',
+      humidity_after: 'sensor.after_rh',
+      power: 'sensor.pre_heater_power',
+    });
+
+    test('without the roles the inputs have no pre-heater block', () => {
+      expect(calculateFromConfig(COMPLETE, hassWith(AFTER_STATES), store).inputs).not.toHaveProperty('preHeater');
+      // The power and the humidity alone do not make a block: it needs the temperature after.
+      const config = withPreHeater({ power: 'sensor.pre_heater_power', humidity_after: 'sensor.after_rh' });
+      expect(calculateFromConfig(config, hassWith(AFTER_STATES), store).inputs).not.toHaveProperty('preHeater');
+    });
+
+    test('the temperature after alone gives a block without the humidity key', () => {
+      const { inputs } = calculateFromConfig(TEMPERATURE_ONLY, hassWith(AFTER_STATES), store);
+      expect(inputs.preHeater).toEqual({ on: true, temperatureAfter: 5 });
+      expect(inputs.preHeater).not.toHaveProperty('absoluteHumidityAfter');
+    });
+
+    test('without a power entity the pre-heater state is undefined', () => {
+      const config = withPreHeater({ temperature_after: 'sensor.after_t' });
+      expect(calculateFromConfig(config, hassWith(AFTER_STATES), store).inputs.preHeater?.on).toBeUndefined();
+    });
+
+    test('the humidity after is derived from its relative humidity and temperature, smoothed over the window', async () => {
+      const smoothed = { ...BOTH, smoothing: 10 };
+      const failing = (states: HassEntityState[]): SmoothingHass => ({
+        ...hassWith(states),
+        callWS: () => Promise.reject(new Error('no history')),
+      });
+      expect(
+        calculateFromConfig(BOTH, hassWith(AFTER_STATES), new SmoothingStore()).inputs.preHeater?.absoluteHumidityAfter,
+      ).toBeCloseTo(absoluteHumidity(5, 60) ?? NaN, 9);
+
+      calculateFromConfig(smoothed, failing(EARLIER), store);
+      await Promise.resolve();
+      await Promise.resolve();
+      // The relative humidity steps to 80 % at NOW; the supply flow updates 5 minutes later, so half the window each.
+      const later = replace(
+        replace(AFTER_STATES, state('sensor.after_rh', '80', '%', NOW)),
+        state('sensor.supply_flow', '230', 'm³/h', NOW + 5 * 60_000),
+      );
+      const { inputs } = calculateFromConfig(smoothed, failing(later), store);
+      const expected = ((absoluteHumidity(5, 60) ?? NaN) + (absoluteHumidity(5, 80) ?? NaN)) / 2;
+      expect(inputs.preHeater?.absoluteHumidityAfter).toBeCloseTo(expected, 9);
+    });
+
+    test('the pre-heater entities move the smoothing time', async () => {
+      const smoothed = { ...BOTH, smoothing: 10 };
+      const failing = (states: HassEntityState[]): SmoothingHass => ({
+        ...hassWith(states),
+        callWS: () => Promise.reject(new Error('no history')),
+      });
+      calculateFromConfig(smoothed, failing(EARLIER), store);
+      await Promise.resolve();
+      await Promise.resolve();
+      const later = replace(
+        replace(AFTER_STATES, state('sensor.after_rh', '80', '%', NOW)),
+        state('sensor.pre_heater_power', '350', 'W', NOW + 5 * 60_000),
+      );
+      const { inputs } = calculateFromConfig(smoothed, failing(later), store);
+      const expected = ((absoluteHumidity(5, 60) ?? NaN) + (absoluteHumidity(5, 80) ?? NaN)) / 2;
+      expect(inputs.preHeater?.absoluteHumidityAfter).toBeCloseTo(expected, 9);
+    });
+
+    test.each([
+      ['350', 'W', true],
+      ['0', 'W', false],
+      ['on', undefined, true],
+      ['off', undefined, false],
+      ['unavailable', undefined, undefined],
+    ])('the power entity reading %s %s gives on %s', (value, unit, on) => {
+      const states = replace(AFTER_STATES, state('sensor.pre_heater_power', value, unit));
+      expect(calculateFromConfig(TEMPERATURE_ONLY, hassWith(states), store).inputs.preHeater?.on).toBe(on);
+    });
+
+    test('a running pre-heater changes the recovered figures, a stopped one does not', () => {
+      const plain = calculateFromConfig(COMPLETE, hassWith(AFTER_STATES), store).result;
+      const running = calculateFromConfig(BOTH, hassWith(AFTER_STATES), store).result;
+      const stopped = calculateFromConfig(
+        BOTH,
+        hassWith(replace(AFTER_STATES, state('sensor.pre_heater_power', '0', 'W'))),
+        new SmoothingStore(),
+      ).result;
+      expect(running?.recovered.sensible).not.toBeCloseTo(plain?.recovered.sensible ?? NaN, 3);
+      expect(stopped?.recovered).toEqual(plain?.recovered);
+    });
+  });
 });

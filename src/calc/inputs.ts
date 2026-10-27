@@ -4,6 +4,7 @@
 import { entityAt, humidityRoles, type CardConfig, type Stream } from '../lib/config';
 import { optionValue, type NumberOption } from '../lib/options';
 import { convertedState, type Quantity } from '../lib/units';
+import { preHeaterRunning } from '../lib/preheater';
 import { absoluteHumidity } from './humidity';
 import {
   calculateRecovery,
@@ -53,10 +54,15 @@ function humiditySource(config: CardConfig, stream: Stream): SmoothingSource | u
       value: ([state]) => convertedState(state, 'absolute_humidity'),
     };
   }
+  return derivedSource(roles.relative, roles.temperature);
+}
+
+/** The smoothing source of the absolute humidity computed from a relative humidity and a temperature entity. */
+function derivedSource(relative: string, temperature: string): SmoothingSource {
   return {
     // The computed series is shared by every card with the same pair of entities.
-    key: `derived:${roles.relative}|${roles.temperature}`,
-    entityIds: [roles.relative, roles.temperature],
+    key: `derived:${relative}|${temperature}`,
+    entityIds: [relative, temperature],
     value: ([rh, t]) => {
       const [humidity, celsius] = [convertedState(rh, 'relative_humidity'), convertedState(t, 'temperature')];
       return humidity === undefined || celsius === undefined ? undefined : absoluteHumidity(celsius, humidity);
@@ -78,10 +84,22 @@ export function createCalculator(config: CardConfig, store: SmoothingStore = smo
   const humidity = sources.every((source) => source !== undefined) ? sources : undefined;
   const supplyFlow = entityAt(config, 'fans.supply_flow');
   const bypass = entityAt(config, 'bypass.position');
+  // The pre-heater block exists only with the temperature after it; its humidity only with that role too.
+  const preHeaterPower = entityAt(config, 'pre_heater.power');
+  const temperatureAfter = entityAt(config, 'pre_heater.temperature_after');
+  const humidityAfterRole = entityAt(config, 'pre_heater.humidity_after');
+  const humidityAfter =
+    temperatureAfter !== undefined && humidityAfterRole !== undefined
+      ? derivedSource(humidityAfterRole, temperatureAfter)
+      : undefined;
   // The entities the calculation uses, for the smoothing time.
-  const used = [...temperatures, ...(humidity ?? []).flatMap((source) => source.entityIds), supplyFlow, bypass].filter(
-    (id): id is string => id !== undefined,
-  );
+  const used = [
+    ...temperatures,
+    ...(humidity ?? []).flatMap((source) => source.entityIds),
+    supplyFlow,
+    bypass,
+    ...(temperatureAfter === undefined ? [] : [preHeaterPower, temperatureAfter, ...(humidityAfter?.entityIds ?? [])]),
+  ].filter((id): id is string => id !== undefined);
   const perStream = <T>([outdoor, supply, extract]: T[]): Streams<T> => ({
     outdoor: outdoor as T,
     supply: supply as T,
@@ -100,6 +118,15 @@ export function createCalculator(config: CardConfig, store: SmoothingStore = smo
     };
     if (humidity !== undefined) {
       inputs.absoluteHumidity = perStream(humidity.map((source) => store.smoothed(hass, source, smoothing, at)));
+    }
+    if (temperatureAfter !== undefined) {
+      inputs.preHeater = {
+        on: preHeaterPower === undefined ? undefined : preHeaterRunning(hass.states[preHeaterPower]),
+        temperatureAfter: read(temperatureAfter, 'temperature'),
+      };
+      if (humidityAfter !== undefined) {
+        inputs.preHeater.absoluteHumidityAfter = store.smoothed(hass, humidityAfter, smoothing, at);
+      }
     }
     const result = calculateRecovery(inputs);
     return result === undefined ? { inputs } : { inputs, result };
