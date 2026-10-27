@@ -41,12 +41,12 @@
 
 ## 2. Recovery balance bar: the pre-heater part
 
-- [ ] 2.1 Add the third value per lane, the pre-heater legend entry and the `pre_heater.color` option to
+- [x] 2.1 Add the third value per lane, the pre-heater legend entry and the `pre_heater.color` option to
   `src/cards/recovery-view.ts` and the card (design: "Recovery bar: a third value per lane"), with the texts in
   `src/strings.ts`; verify view tests for the delta's "Pre-heater running" (segments and header "Recovered 1,073 W of
   1,475 W (73 %)"), "Pre-heater not running", "Pre-heater entry", "No pre-heater entry", "Custom pre-heater colour"
   and an invalid colour reported as a configuration error, and the title-case and NBSP tests
-- [ ] 2.2 Add the pre-heater section to `src/editor/recovery-schema.ts` (power as a switchable field, after
+- [x] 2.2 Add the pre-heater section to `src/editor/recovery-schema.ts` (power as a switchable field, after
   temperature and after humidity as sensor fields, the colour as an advanced field); verify the editor tests for
   "Editing the card" and "Advanced settings on" of the recovery-balance-card delta
 - [ ] 2.3 Add an after-temperature control to the preview page (`dev/`): a mock `pre_heater.temperature_after` that
