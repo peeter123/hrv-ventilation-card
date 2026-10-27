@@ -356,6 +356,7 @@ the card does not know (see the types below) makes the bar show "n/a".
 | `min_scale` | number | `500` | yes | Watts that fill half the bar at least (50 to 100000); larger values grow it in steps of 250 W. |
 | `heating` | object | | yes | Colours in heating mode, see [Mode colours](#mode-colours-object). |
 | `cooling` | object | | yes | Colours in cooling mode, see [Mode colours](#mode-colours-object). |
+| `pre_heater` | object | | | The pre-heater's readings and colour, see [Recovery pre-heater](#recovery-pre-heater-object). |
 
 #### Stream object
 
@@ -419,6 +420,20 @@ numbers (`rgb(219, 68, 55)`, `hsl(5, 70%, 54%)`, `oklch(62% 0.2 28)`) or a theme
 |---|---|---|---|---|
 | `color` | colour | `#db4437` (heating), `#039be5` (cooling) | yes | Temperature part, header and swatches. |
 | `color_latent` | colour | `#f4a09a` (heating), `#8fd3f7` (cooling) | yes | Moisture part. |
+
+#### Recovery pre-heater object
+
+The same `pre_heater` object as on the airflow diagram card (see [Pre-heater](#pre-heater-object)); the recovery card
+reads these keys. While the pre-heater runs, the bar shows the heat it adds as a third, solid segment after the lost
+part, with a swatch and its power in the legend; the segment is the pre-heater's own heat, apart from the recovered
+and the lost part. Without `temperature_after` the bar shows no pre-heater part.
+
+| Name | Type | Default | Advanced | Description |
+|---|---|---|---|---|
+| `power` | entity | | | Pre-heater power: a sensor in W or kW, or an on/off entity (sensor, binary sensor or switch). Optional; without it the pre-heater counts as running when the air after it is warmer than the outdoor air. |
+| `temperature_after` | entity | | | The temperature of the air after the pre-heater (the exchanger's inlet). Needed for the pre-heater part. |
+| `humidity_after` | entity | | | The relative humidity of the air after the pre-heater; used for the moisture part only while the pre-heater runs. |
+| `color` | colour | `#ff9800` | yes | The pre-heater segment and its legend swatch: a CSS colour, by default a warm orange. |
 
 **Smoothing.** Many units report relative humidity in whole percent, so absolute humidity moves in steps of about
 0.2 g/m³, about 50 g/h of moisture at 230 m³/h. The card therefore averages absolute humidity over `smoothing`
@@ -592,6 +607,11 @@ heating:
 cooling:
   color: '#039be5'
   color_latent: '#8fd3f7'
+pre_heater:
+  power: sensor.hrv_pre_heater_power
+  temperature_after: sensor.hrv_pre_heater_temperature_after
+  humidity_after: sensor.hrv_pre_heater_humidity_after
+  color: '#ff9800'
 ```
 
 ### Moisture balance card

@@ -22,6 +22,9 @@ describe('RECOVERY_SCHEMA', () => {
       ...RECOVERY_REQUIREMENTS.paths,
       ...['outdoor', 'supply', 'extract'].flatMap((s) => [`${s}.humidity`, `${s}.absolute_humidity`]),
       'bypass.position',
+      'pre_heater.power',
+      'pre_heater.temperature_after',
+      'pre_heater.humidity_after',
       ...RECOVERY_OPTION_LIST.map((option) => option.path),
     ];
     const paths = fieldsWithPaths(RECOVERY_SCHEMA).map(({ path }) => path);
@@ -36,6 +39,7 @@ describe('RECOVERY_SCHEMA', () => {
     expect(shown.get('extract')).toEqual(['temperature', 'humidity']);
     expect(shown.get('fans')).toEqual(['supply_flow']);
     expect(shown.get('bypass')).toEqual(['position']);
+    expect(shown.get('pre_heater')).toEqual(['power', 'temperature_after', 'humidity_after']);
     expect(shown.has('calculation')).toBe(false);
   });
 
@@ -48,6 +52,7 @@ describe('RECOVERY_SCHEMA', () => {
     expect(named.get('calculation')).toEqual(['smoothing', 'air_density']);
     expect(named.get('heating')).toEqual(['color', 'color_latent']);
     expect(named.get('cooling')).toEqual(['color', 'color_latent']);
+    expect(named.get('pre_heater')).toEqual(['power', 'temperature_after', 'humidity_after', 'color']);
     expect(shown.some((item) => item.name === 'min_scale')).toBe(true);
   });
 
@@ -59,8 +64,11 @@ describe('RECOVERY_SCHEMA', () => {
   test('pickers only offer sensors; the temperatures and the supply flow are required', () => {
     const fields = fieldsWithPaths(RECOVERY_SCHEMA);
     const pickers = fields.filter(({ field }) => 'entity' in field.selector);
+    // The pre-heater power may also be an on/off entity.
     expect(
-      pickers.every(({ field }) => (field.selector as { entity: { domain: string } }).entity.domain === 'sensor'),
+      pickers
+        .filter(({ path }) => path !== 'pre_heater.power')
+        .every(({ field }) => (field.selector as { entity: { domain: string } }).entity.domain === 'sensor'),
     ).toBe(true);
     const required = fields
       .filter(({ field }: { field: FormField }) => field.required === true)

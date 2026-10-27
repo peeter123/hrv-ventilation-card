@@ -50,6 +50,19 @@ export function undocumented(paths: readonly string[], names: Set<string>): stri
   return paths.filter((path) => !path.split('.').every((segment) => names.has(segment)));
 }
 
+/** The cells of every row named `name` in a text (the same leaf name can be in several tables, like `color`). */
+export function rowsCells(text: string, name: string): string[][] {
+  return text
+    .split('\n')
+    .filter((line) => line.startsWith(`| \`${name}\` |`))
+    .map((row) =>
+      row
+        .split('|')
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    );
+}
+
 /** The cells of an option's row in a table (Name, Type, Default, Advanced, Description), or [] without one. */
 export function rowCells(text: string, name: string): string[] {
   const row = text.split('\n').find((line) => line.startsWith(`| \`${name}\` |`));

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { checkRecoveryConfig } from '../../src/cards/recovery-balance-card';
 import { RECOVERY_OPTION_LIST, RECOVERY_REQUIREMENTS } from '../../src/cards/recovery-view';
-import { cardSection, rowCells, tableNames, undocumented, yamlExamples } from '../readme';
+import { cardSection, rowsCells, tableNames, undocumented, yamlExamples } from '../readme';
 
 const CARD = 'Recovery balance card';
 
@@ -19,8 +19,11 @@ describe('README: recovery balance card', () => {
   test('every option row states the default (and for numbers the range) of the code', () => {
     const text = cardSection('Options', CARD);
     for (const option of RECOVERY_OPTION_LIST) {
-      const [, , defaultCell, , description] = rowCells(text, option.path.split('.').at(-1) ?? '');
-      expect(defaultCell, option.path).toContain(`\`${String(option.default)}\``);
+      // The same leaf name (`color`) is in several tables: one of the rows must state this option's default.
+      const rows = rowsCells(text, option.path.split('.').at(-1) ?? '');
+      const row = rows.find((cells) => cells[2]?.includes(`\`${String(option.default)}\``));
+      expect(row, option.path).toBeDefined();
+      const description = row?.[4] ?? '';
       if (option.kind === 'number') {
         expect(description, option.path).toContain(`(${String(option.min)} to ${String(option.max)}`);
       }

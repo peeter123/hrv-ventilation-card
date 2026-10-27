@@ -67,7 +67,7 @@ export function recoveryView(
 
   // The pre-heater parts in whole W like the others; the header's potential leaves them out.
   const preHeater = { sensible: Math.round(result.preHeater.sensible), latent: Math.round(result.preHeater.latent) };
-  const preHeaterTotal = Math.round(result.preHeater.sensible + result.preHeater.latent);
+  const preHeaterTotal = preHeater.sensible + preHeater.latent;
 
   // One lane per kind (temperature, and moisture with humidity), each its solid recovered and its hatched lost part,
   // then the solid pre-heater part while it runs, on the scale of the fuller lane.
