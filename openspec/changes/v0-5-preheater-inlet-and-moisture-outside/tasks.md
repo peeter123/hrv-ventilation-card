@@ -87,7 +87,7 @@
   feedback on the icons, the place and the wording; verify the user approves before the docs
 - [x] 3.6 Document it in `README.md` (the ERV figures, `status.moisture_outside`, the pre-heater after keys) and
   `docs/hrv-ventilation.md` (the figure, why it is not mirrored, the box it lives in); verify the README tests pass
-- [ ] 3.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
+- [x] 3.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
 
 ## 4. Release
