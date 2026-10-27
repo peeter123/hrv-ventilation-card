@@ -81,11 +81,11 @@
   11 px, at 280, 300, 340, 400 and 600 px in both layouts with -1500 g/h and the coil drawn; if 280 px fails, apply the
   icon-above fallback from the design and test again; verify the test passes and the existing "ERV at the narrowest
   width" test covers both figures
-- [ ] 3.5 Add the put-outside figure to the preview page's ERV scenarios and a bypass-at-100 % control if none exists;
+- [x] 3.5 Add the put-outside figure to the preview page's ERV scenarios and a bypass-at-100 % control if none exists;
   feedback round: start `npm run dev` for the user and show screenshots (bypass 0 and 100 %, the coil on and off,
   drying and gaining, both layouts, 280, 400 and 600 px, light and dark), inspected by an agent, and apply the user's
   feedback on the icons, the place and the wording; verify the user approves before the docs
-- [ ] 3.6 Document it in `README.md` (the ERV figures, `status.moisture_outside`, the pre-heater after keys) and
+- [x] 3.6 Document it in `README.md` (the ERV figures, `status.moisture_outside`, the pre-heater after keys) and
   `docs/hrv-ventilation.md` (the figure, why it is not mirrored, the box it lives in); verify the README tests pass
 - [ ] 3.7 Review the group: run `/code-review` on this group's changes and fix every confirmed finding; verify
   `npm run check` passes, then commit the group
