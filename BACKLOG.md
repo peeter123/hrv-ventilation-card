@@ -8,20 +8,10 @@ until after that.
 v0.2 was released on 2026-10-15, v0.3 on 2026-10-20 (OpenSpec change `v0-3-preheater-and-effectiveness`: the
 editor's shown defaults, the pre-heater on the airflow card and the effectiveness rings) and v0.4 on 2026-10-22
 (OpenSpec change `v0-4-coil-and-fan-level`: the fan level from a fan entity, ventilation disabled and the coil's
-centreline). Next is the integration, then packaging.
+centreline) and v0.5 on 2026-10-27 (OpenSpec change `v0-5-preheater-inlet-and-moisture-outside`: the exchanger
+inlet after the pre-heater and the moisture put-outside figure). Next is the air density entry, then the
+integration, then packaging.
 
-- **Exchanger inlet after the pre-heater** (before the integration, which copies the formulas). While a
-  pre-heater runs, the recovery calculation counts its electric heat as recovered: it takes the outdoor air
-  temperature, measured before the pre-heater, as the exchanger's inlet. Recovered heat (thermal saving, sensible
-  part) is then too high by up to the pre-heater's heat into the supply air, and the sensible effectiveness (inner
-  ring) is too high and can reach the cap. Moisture recovery and the outer ring are unaffected (heating does not
-  change absolute humidity). The fix: a new optional role `pre_heater.temperature_after` (the ComfoAir Q exposes
-  "pre-heater temperature after"; its outdoor air temperature is measured before the pre-heater). When it is set, the
-  exchanger's inlet is that temperature: effectiveness (supply - after) / (extract - after), recovered heat
-  flow x cp x (supply - after), with the pre-heater's own energy kept as a separate figure (`pre_heater.energy`).
-  Touches `src/calc/recovery.ts` (rings and bars), the formula macro and template sensors of an installation, new
-  sets in `test/vectors.json`, and the docs. Mostly matters with an HRV core: with an ERV core the moisture exchange
-  lowers the frost risk, so the pre-heater rarely runs. Check against real data from a run of the pre-heater.
 - **Air density from pressure, elevation and the unit's altitude setting** (before the integration, which copies
   the formulas). The sensible terms use a fixed `air_density` (1.2 kg/m³), right near sea level but about 25 % too
   high at 2000 m. Two parts:
